@@ -1,0 +1,9 @@
+## Copy this file to local.properties (or add the FLICKR_API_KEY line to your existing local.properties)
+## Do NOT commit your real local.properties file to version control.
+
+# Path to your local Android SDK (managed automatically by Android Studio)
+# sdk.dir=/path/to/Android/Sdk
+
+# Flickr REST API Key (obtain from https://www.flickr.com/services/apps/create/)
+# Note: Keys compiled into client APKs via BuildConfig can be extracted from distributed binaries.
+FLICKR_API_KEY=your_flickr_api_key_here

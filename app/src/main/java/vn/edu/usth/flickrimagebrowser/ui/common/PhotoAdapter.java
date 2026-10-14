@@ -1,0 +1,95 @@
+package vn.edu.usth.flickrimagebrowser.ui.common;
+
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+
+import vn.edu.usth.flickrimagebrowser.R;
+import vn.edu.usth.flickrimagebrowser.databinding.ItemPhotoBinding;
+import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
+
+/**
+ * Shared RecyclerView adapter for rendering photo grids in Search and Favorites screens.
+ * Uses Glide to load square/small thumbnails rather than full-resolution originals.
+ */
+public class PhotoAdapter extends ListAdapter<Photo, PhotoAdapter.PhotoViewHolder> {
+
+    public interface OnPhotoActionListener {
+        void onPhotoClicked(@NonNull Photo photo);
+
+        void onFavoriteClicked(@NonNull Photo photo);
+    }
+
+    private final OnPhotoActionListener listener;
+
+    public PhotoAdapter(@NonNull OnPhotoActionListener listener) {
+        super(DIFF_CALLBACK);
+        this.listener = listener;
+    }
+
+    @NonNull
+    @Override
+    public PhotoViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        ItemPhotoBinding binding = ItemPhotoBinding.inflate(
+                LayoutInflater.from(parent.getContext()),
+                parent,
+                false
+        );
+        return new PhotoViewHolder(binding);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull PhotoViewHolder holder, int position) {
+        holder.bind(getItem(position), listener);
+    }
+
+    static class PhotoViewHolder extends RecyclerView.ViewHolder {
+
+        private final ItemPhotoBinding binding;
+
+        PhotoViewHolder(@NonNull ItemPhotoBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
+        }
+
+        void bind(@NonNull Photo photo, @NonNull OnPhotoActionListener listener) {
+            binding.textPhotoTitle.setText(photo.getTitle());
+            binding.textPhotoOwner.setText(photo.getOwnerName());
+            binding.buttonItemFavorite.setImageResource(
+                    photo.isFavorite()
+                            ? R.drawable.ic_favorite_filled
+                            : R.drawable.ic_favorite_border
+            );
+
+            Glide.with(binding.imageThumbnail.getContext())
+                    .load(photo.getThumbnailUrl())
+                    .placeholder(R.drawable.ic_photo_placeholder)
+                    .error(R.drawable.ic_broken_image)
+                    .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                    .centerCrop()
+                    .into(binding.imageThumbnail);
+
+            binding.getRoot().setOnClickListener(v -> listener.onPhotoClicked(photo));
+            binding.buttonItemFavorite.setOnClickListener(v -> listener.onFavoriteClicked(photo));
+        }
+    }
+
+    private static final DiffUtil.ItemCallback<Photo> DIFF_CALLBACK = new DiffUtil.ItemCallback<Photo>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull Photo oldItem, @NonNull Photo newItem) {
+            return oldItem.getId().equals(newItem.getId());
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull Photo oldItem, @NonNull Photo newItem) {
+            return oldItem.equals(newItem);
+        }
+    };
+}

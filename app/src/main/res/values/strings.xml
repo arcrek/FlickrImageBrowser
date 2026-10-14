@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FlickrImage Browser</string>
+
+    <!-- Navigation -->
+    <string name="nav_search">Search</string>
+    <string name="nav_favorites">Favorites</string>
+    <string name="nav_collections">Collections</string>
+
+    <!-- Search Screen -->
+    <string name="search_hint">Search public Flickr photos…</string>
+    <string name="action_search">Search</string>
+    <string name="action_retry">Retry</string>
+    <string name="search_prompt_state">Enter a keyword above to search public Flickr photos.</string>
+    <string name="search_empty_state">No photos matched your query.</string>
+
+    <!-- Favorites Screen -->
+    <string name="favorites_empty_state">No favorite photos saved yet. Tap the heart icon on any photo to save it offline.</string>
+
+    <!-- Collections Screen -->
+    <string name="collections_empty_state">No collections yet. Create a collection to organize saved photos.</string>
+    <string name="action_new_collection">New Collection</string>
+    <string name="collection_name_hint">Collection name</string>
+    <string name="collection_photo_count">%1$d photos</string>
+
+    <!-- Detail Screen -->
+    <string name="detail_title">Photo Details</string>
+    <string name="detail_by_owner">By %1$s</string>
+    <string name="detail_no_description">No description provided.</string>
+    <string name="action_toggle_favorite">Toggle Favorite</string>
+    <string name="content_desc_photo">Flickr photo</string>
+</resources>
