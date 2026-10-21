@@ -11,25 +11,26 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import vn.edu.usth.flickrimagebrowser.BuildConfig;
 
 /**
- * Factory for configuring OkHttp and Retrofit instances for the Flickr REST API.
+ * Factory for configuring OkHttp and Retrofit instances for the Pexels REST API.
  */
-public final class FlickrClient {
+public final class PexelsClient {
 
     private static final long CONNECT_TIMEOUT_SECONDS = 15L;
     private static final long READ_TIMEOUT_SECONDS = 20L;
     private static final long WRITE_TIMEOUT_SECONDS = 15L;
 
-    private FlickrClient() {
+    private PexelsClient() {
     }
 
     @NonNull
-    public static FlickrApiService createService() {
-        return createService(BuildConfig.FLICKR_BASE_URL);
+    public static PexelsApiService createService() {
+        return createService(BuildConfig.PEXELS_BASE_URL);
     }
 
     @NonNull
-    public static FlickrApiService createService(@NonNull String baseUrl) {
+    public static PexelsApiService createService(@NonNull String baseUrl) {
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+        loggingInterceptor.redactHeader("Authorization");
         loggingInterceptor.setLevel(
                 BuildConfig.DEBUG
                         ? HttpLoggingInterceptor.Level.BASIC
@@ -49,6 +50,6 @@ public final class FlickrClient {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        return retrofit.create(FlickrApiService.class);
+        return retrofit.create(PexelsApiService.class);
     }
 }

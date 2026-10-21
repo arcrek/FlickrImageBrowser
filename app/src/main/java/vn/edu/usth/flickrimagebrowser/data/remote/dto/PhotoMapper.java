@@ -6,7 +6,6 @@ import androidx.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 import vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionWithPhotos;
@@ -15,7 +14,7 @@ import vn.edu.usth.flickrimagebrowser.domain.model.Collection;
 import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
 
 /**
- * Pure Java mapper converting between remote Flickr DTOs, Room entities, and domain models.
+ * Pure Java mapper converting between remote Pexels DTOs, Room entities, and domain models.
  */
 public final class PhotoMapper {
 
@@ -23,21 +22,27 @@ public final class PhotoMapper {
     }
 
     @Nullable
-    public static Photo fromDto(@Nullable PhotoDto dto, boolean isFavorite) {
-        if (dto == null || isBlank(dto.getId())) {
+    public static Photo fromDto(@Nullable PexelsPhotoDto dto, boolean isFavorite) {
+        if (dto == null || dto.getId() == null || dto.getId() <= 0L) {
             return null;
         }
 
-        String id = dto.getId().trim();
+        PexelsPhotoSrcDto src = dto.getSrc();
+        if (src == null) {
+            return null;
+        }
+
+        String id = String.valueOf(dto.getId());
         String thumbnailUrl = firstNonBlank(
-                dto.getUrlQ(),
-                dto.getUrlM(),
-                buildStaticFlickrUrl(dto.getServer(), id, dto.getSecret(), "q")
+                src.getTiny(),
+                src.getSmall(),
+                src.getMedium(),
+                src.getLarge()
         );
         String detailUrl = firstNonBlank(
-                dto.getUrlZ(),
-                dto.getUrlM(),
-                buildStaticFlickrUrl(dto.getServer(), id, dto.getSecret(), "z"),
+                src.getLarge(),
+                src.getLarge2x(),
+                src.getMedium(),
                 thumbnailUrl
         );
 
@@ -45,16 +50,15 @@ public final class PhotoMapper {
             return null;
         }
 
-        String descriptionText = dto.getDescription() != null && dto.getDescription().getContent() != null
-                ? dto.getDescription().getContent()
-                : "";
-        String owner = firstNonBlank(dto.getOwnerName(), dto.getOwner(), "Unknown Author");
+        String title = dto.getAlt();
+        String owner = firstNonBlank(dto.getPhotographer(), "Unknown Author");
+        String descriptionText = firstNonBlank(dto.getAlt(), dto.getUrl());
 
         return new Photo(
                 id,
-                dto.getTitle(),
+                title,
                 owner,
-                descriptionText,
+                descriptionText != null ? descriptionText : "",
                 thumbnailUrl,
                 detailUrl,
                 isFavorite,
@@ -63,14 +67,14 @@ public final class PhotoMapper {
     }
 
     @NonNull
-    public static List<Photo> fromDtoList(@Nullable List<PhotoDto> dtos, @Nullable Set<String> favoriteIds) {
+    public static List<Photo> fromDtoList(@Nullable List<PexelsPhotoDto> dtos, @Nullable Set<String> favoriteIds) {
         if (dtos == null || dtos.isEmpty()) {
             return Collections.emptyList();
         }
         Set<String> favSet = favoriteIds != null ? favoriteIds : Collections.emptySet();
         List<Photo> result = new ArrayList<>(dtos.size());
-        for (PhotoDto dto : dtos) {
-            boolean isFav = dto != null && dto.getId() != null && favSet.contains(dto.getId().trim());
+        for (PexelsPhotoDto dto : dtos) {
+            boolean isFav = dto != null && dto.getId() != null && favSet.contains(String.valueOf(dto.getId()));
             Photo mapped = fromDto(dto, isFav);
             if (mapped != null) {
                 result.add(mapped);
@@ -140,24 +144,6 @@ public final class PhotoMapper {
             }
         }
         return result;
-    }
-
-    @Nullable
-    static String buildStaticFlickrUrl(@Nullable String server,
-                                       @Nullable String id,
-                                       @Nullable String secret,
-                                       @NonNull String sizeSuffix) {
-        if (isBlank(server) || isBlank(id) || isBlank(secret)) {
-            return null;
-        }
-        return String.format(
-                Locale.US,
-                "https://live.staticflickr.com/%s/%s_%s_%s.jpg",
-                server.trim(),
-                id.trim(),
-                secret.trim(),
-                sizeSuffix
-        );
     }
 
     @Nullable

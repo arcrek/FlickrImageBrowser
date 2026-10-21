@@ -18,24 +18,26 @@ import vn.edu.usth.flickrimagebrowser.data.local.entity.PhotoEntity;
 import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
 
 /**
- * Unit tests verifying DTO-to-domain and entity-to-domain mapping behavior.
+ * Unit tests verifying Pexels DTO-to-domain and entity-to-domain mapping behavior.
  */
 public class PhotoMapperTest {
 
     @Test
     public void fromDto_mapsExplicitUrlsAndMetadata() {
-        PhotoDto dto = new PhotoDto(
-                "101",
-                "owner_id",
-                "sec123",
-                "65535",
-                66,
+        PexelsPhotoSrcDto src = new PexelsPhotoSrcDto(
+                "https://images.pexels.com/photos/101/tiny.jpg",
+                "https://images.pexels.com/photos/101/small.jpg",
+                "https://images.pexels.com/photos/101/medium.jpg",
+                "https://images.pexels.com/photos/101/large.jpg",
+                "https://images.pexels.com/photos/101/large2x.jpg",
+                "https://images.pexels.com/photos/101/original.jpg"
+        );
+        PexelsPhotoDto dto = new PexelsPhotoDto(
+                101L,
                 "Sunset over West Lake",
                 "usth_photographer",
-                new PhotoDto.DescriptionDto("Golden hour reflection"),
-                "https://live.staticflickr.com/65535/101_sec123_q.jpg",
-                "https://live.staticflickr.com/65535/101_sec123_m.jpg",
-                "https://live.staticflickr.com/65535/101_sec123_z.jpg"
+                "https://www.pexels.com/photo/101/",
+                src
         );
 
         Photo photo = PhotoMapper.fromDto(dto, true);
@@ -44,58 +46,72 @@ public class PhotoMapperTest {
         assertEquals("101", photo.getId());
         assertEquals("Sunset over West Lake", photo.getTitle());
         assertEquals("usth_photographer", photo.getOwnerName());
-        assertEquals("Golden hour reflection", photo.getDescription());
-        assertEquals("https://live.staticflickr.com/65535/101_sec123_q.jpg", photo.getThumbnailUrl());
-        assertEquals("https://live.staticflickr.com/65535/101_sec123_z.jpg", photo.getDetailUrl());
+        assertEquals("Sunset over West Lake", photo.getDescription());
+        assertEquals("https://images.pexels.com/photos/101/tiny.jpg", photo.getThumbnailUrl());
+        assertEquals("https://images.pexels.com/photos/101/large.jpg", photo.getDetailUrl());
         assertTrue(photo.isFavorite());
     }
 
     @Test
-    public void fromDto_constructsStaticFlickrUrlsWhenExtrasMissing() {
-        PhotoDto dto = new PhotoDto(
-                "202",
-                "owner_fallback",
-                "abc999",
-                "7001",
-                7,
-                "",
+    public void fromDto_fallsBackWhenPrimarySizesAndMetadataMissing() {
+        PexelsPhotoSrcDto src = new PexelsPhotoSrcDto(
                 null,
-                null,
+                "https://images.pexels.com/photos/202/small.jpg",
+                "https://images.pexels.com/photos/202/medium.jpg",
                 null,
                 null,
                 null
+        );
+        PexelsPhotoDto dto = new PexelsPhotoDto(
+                202L,
+                "",
+                null,
+                "https://www.pexels.com/photo/202/",
+                src
         );
 
         Photo photo = PhotoMapper.fromDto(dto, false);
 
         assertNotNull(photo);
+        assertEquals("202", photo.getId());
         assertEquals("Untitled Photo", photo.getTitle());
-        assertEquals("owner_fallback", photo.getOwnerName());
-        assertEquals("https://live.staticflickr.com/7001/202_abc999_q.jpg", photo.getThumbnailUrl());
-        assertEquals("https://live.staticflickr.com/7001/202_abc999_z.jpg", photo.getDetailUrl());
+        assertEquals("Unknown Author", photo.getOwnerName());
+        assertEquals("https://www.pexels.com/photo/202/", photo.getDescription());
+        assertEquals("https://images.pexels.com/photos/202/small.jpg", photo.getThumbnailUrl());
+        assertEquals("https://images.pexels.com/photos/202/medium.jpg", photo.getDetailUrl());
         assertFalse(photo.isFavorite());
     }
 
     @Test
     public void fromDto_returnsNullWhenIdOrUrlsCannotBeResolved() {
-        PhotoDto missingId = new PhotoDto(null, "u", "s", "srv", 1, "Title", "Owner", null, null, null, null);
-        PhotoDto missingUrls = new PhotoDto("303", "u", null, null, 1, "Title", "Owner", null, null, null, null);
+        PexelsPhotoSrcDto validSrc = new PexelsPhotoSrcDto(
+                "https://images.pexels.com/1/tiny.jpg", null, null, null, null, null
+        );
+        PexelsPhotoSrcDto emptySrc = new PexelsPhotoSrcDto(null, null, null, null, null, null);
+
+        PexelsPhotoDto missingId = new PexelsPhotoDto(null, "Title", "Owner", null, validSrc);
+        PexelsPhotoDto missingSrc = new PexelsPhotoDto(303L, "Title", "Owner", null, null);
+        PexelsPhotoDto missingUrls = new PexelsPhotoDto(303L, "Title", "Owner", null, emptySrc);
 
         assertNull(PhotoMapper.fromDto(missingId, false));
+        assertNull(PhotoMapper.fromDto(missingSrc, false));
         assertNull(PhotoMapper.fromDto(missingUrls, false));
     }
 
     @Test
     public void fromDtoList_marksFavoritesAndFiltersInvalidEntries() {
-        PhotoDto validFav = new PhotoDto(
-                "1", "u1", "s1", "srv1", 1, "First", "Alice", null,
-                "https://example.com/1_q.jpg", null, "https://example.com/1_z.jpg"
+        PexelsPhotoSrcDto src1 = new PexelsPhotoSrcDto(
+                "https://images.pexels.com/1_tiny.jpg", null, null,
+                "https://images.pexels.com/1_large.jpg", null, null
         );
-        PhotoDto invalidDto = new PhotoDto(null, null, null, null, 0, null, null, null, null, null, null);
-        PhotoDto validNonFav = new PhotoDto(
-                "2", "u2", "s2", "srv2", 1, "Second", "Bob", null,
-                "https://example.com/2_q.jpg", null, "https://example.com/2_z.jpg"
+        PexelsPhotoSrcDto src2 = new PexelsPhotoSrcDto(
+                "https://images.pexels.com/2_tiny.jpg", null, null,
+                "https://images.pexels.com/2_large.jpg", null, null
         );
+
+        PexelsPhotoDto validFav = new PexelsPhotoDto(1L, "First", "Alice", null, src1);
+        PexelsPhotoDto invalidDto = new PexelsPhotoDto(null, null, null, null, null);
+        PexelsPhotoDto validNonFav = new PexelsPhotoDto(2L, "Second", "Bob", null, src2);
 
         Set<String> favoriteIds = new HashSet<>(Collections.singletonList("1"));
         List<Photo> mapped = PhotoMapper.fromDtoList(
