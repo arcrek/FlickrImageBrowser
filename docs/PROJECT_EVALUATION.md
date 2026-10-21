@@ -1,4 +1,4 @@
-# Project Evaluation — FlickrImage Browser
+# Project Evaluation — FlickrImage Browser (Pexels API Edition)
 
 ## 1. Repository Inspection & Current State
 
@@ -11,20 +11,18 @@ Before modifying any project files, the repository was inspected to evaluate exi
   - **Android Gradle Plugin (AGP):** `9.4.1` (`gradle/libs.versions.toml`)
   - **Daemon JVM Toolchain:** JDK `25` (`gradle/gradle-daemon-jvm.properties`), with Java compilation target set to `JavaVersion.VERSION_11` in `app/build.gradle.kts`.
   - **Android SDK Configuration:** `compileSdk = 37` (`android-37.0` installed locally), `targetSdk = 37`, and `minSdk = 36`.
-- **Existing Code & Assets:**
-  - Only untouched default template files existed: `MainActivity.kt`, `ui/theme/{Color,Theme,Type}.kt`, `ExampleUnitTest.kt`, and `ExampleInstrumentedTest.kt`.
-  - No domain models, networking code, database entities, or XML layouts existed.
 - **Identified Blockers & Required Adjustments:**
-  1. **Kotlin & Compose vs. Project Constraints:** The project requires **Java-only application source code** and **Android Views / XML layouts**. Because the existing `.kt` files are 100% default template scaffolding with zero project-specific logic, removing them and replacing the Compose plugin with ViewBinding + Material Components is fully justified.
-  2. **`minSdk = 36` Compatibility Risk:** Requiring API 36 (Android 16) prevents installation on nearly all physical Android devices and standard university lab emulators (API 24–35). Lowering `minSdk` to `24` (Android 7.0) while keeping `compileSdk = 37` and `targetSdk = 37` requires no extra SDK downloads and maximizes compatibility.
-  3. **Theme Incompatibility:** `app/src/main/res/values/themes.xml` used `android:Theme.Material.Light.NoActionBar` (meant for Compose `ComponentActivity`), which crashes `AppCompatActivity` and Material Components XML widgets unless updated to `Theme.MaterialComponents.DayNight.NoActionBar`.
-  4. **Missing `INTERNET` Permission & API Key Setup:** `AndroidManifest.xml` lacked `android.permission.INTERNET`, and `local.properties` had no `FLICKR_API_KEY` entry.
+  1. **Flickr API Paywall (Pro-Only Restriction):** Flickr changed its policy so that registering new API keys is restricted exclusively to paid Flickr Pro subscribers. To keep the project 100% free and accessible for university students and graders, the remote networking layer was migrated to the **Pexels REST API** (`https://api.pexels.com/v1/`), which provides instant free API keys (200 req/hr, 20,000 req/month) with full keyword search and pagination.
+  2. **Kotlin & Compose vs. Project Constraints:** The project requires **Java-only application source code** and **Android Views / XML layouts**. Replacing the default Compose scaffolding with ViewBinding + Material Components satisfies the Java-only requirement.
+  3. **`minSdk = 36` Compatibility Risk:** Lowering `minSdk` to `24` (Android 7.0) while keeping `compileSdk = 37` and `targetSdk = 37` maximizes device and emulator compatibility.
+  4. **Theme Incompatibility:** Updated `app/src/main/res/values/themes.xml` to `Theme.MaterialComponents.DayNight.NoActionBar`.
+  5. **Missing `INTERNET` Permission & API Key Setup:** Added `android.permission.INTERNET` to `AndroidManifest.xml` and configured `PEXELS_API_KEY` injection via `local.properties`.
 
 ---
 
 ## 2. Project Purpose & Scope
 
-**FlickrImage Browser** is a native Android application written in Java that allows users to search and discover public photos on Flickr, inspect high-resolution photo details and metadata, bookmark favorite photos for offline viewing, and organize saved photos into custom local collections.
+**FlickrImage Browser** is a native Android application written in Java that allows users to search and discover public photography via the **Pexels REST API**, inspect high-resolution photo details and photographer metadata, bookmark favorite photos for offline viewing, and organize saved photos into custom local collections.
 
 The application is designed for a **4–8-week university final project**, balancing clean architectural separation (MVVM + Repository pattern) with pragmatic Java concurrency (`ExecutorService` + `LiveData`) and reliable automated testing.
 
@@ -34,11 +32,11 @@ The application is designed for a **4–8-week university final project**, balan
 
 ### Functional Requirements
 1. **Public Photo Search:**
-   - Users can search public Flickr photos by keyword using `flickr.photos.search`.
-   - Supports pagination (`page`, `per_page`) and requests sized image URLs (`url_q`, `url_m`, `url_z`) directly via Flickr's `extras` parameter.
+   - Users can search public photos by keyword using Pexels' `GET /v1/search` endpoint.
+   - Supports pagination (`page`, `per_page`) and maps sized image URLs (`src.tiny` / `src.small` for thumbnails, `src.large` for detail view).
    - Displays explicit **Loading**, **Empty**, **Error (with Retry)**, and **Content** states.
 2. **Photo Detail View:**
-   - Selecting a photo opens a detail screen displaying a larger image (`url_z` / `url_m`), title, owner name, description, and a favorite toggle action.
+   - Selecting a photo opens a detail screen displaying a larger image (`src.large`), title (`alt`), photographer name (`photographer`), description, and a favorite toggle action.
 3. **Favorites Persistence:**
    - Users can mark/unmark any photo as a favorite.
    - Favorites are persisted locally in Room (`photos` table) and remain accessible offline across app restarts.
@@ -50,7 +48,7 @@ The application is designed for a **4–8-week university final project**, balan
 - **XML Views + ViewBinding:** All screens use Android XML layouts (`CoordinatorLayout`, `ConstraintLayout`, `RecyclerView`, `BottomNavigationView`) bound safely via `ViewBinding`.
 - **Main-Thread Safety:** All network calls and Room database writes execute on background threads (`Retrofit.enqueue` and `AppExecutors`).
 - **Configuration-Change Resilience:** Screen rotation preserves search results and UI state inside lifecycle-aware `ViewModel` + `LiveData` instances without re-triggering network calls.
-- **API Key Hygiene:** `FLICKR_API_KEY` is injected from untracked `local.properties` into `BuildConfig.FLICKR_API_KEY`; no real API keys are committed to version control.
+- **API Key Hygiene:** `PEXELS_API_KEY` is injected from untracked `local.properties` into `BuildConfig.PEXELS_API_KEY`; no real API keys are committed to version control.
 
 ---
 
@@ -63,7 +61,7 @@ The application is designed for a **4–8-week university final project**, balan
 - **Domain Layer (`domain/model`):**
   - Immutable Java models (`Photo`, `Collection`) decoupled from Retrofit annotations and Room table details.
 - **Data Layer (`data/remote`, `data/local`, `data/repository`):**
-  - `PhotoRepository` interface and `PhotoRepositoryImpl` coordinate remote Flickr API responses and local Room DAOs (`PhotoDao`, `CollectionDao`).
+  - `PhotoRepository` interface and `PhotoRepositoryImpl` coordinate remote Pexels API responses (`PexelsApiService`) and local Room DAOs (`PhotoDao`, `CollectionDao`).
 
 ### Dependency Choices
 | Category | Library | Version | Rationale |
@@ -79,9 +77,9 @@ The application is designed for a **4–8-week university final project**, balan
 
 ## 5. Key Risks, Assumptions & Technical Trade-Offs
 
-1. **Flickr HTTP 200 Application-Level Errors:**
-   - *Risk:* Flickr's REST API returns HTTP `200 OK` with `{"stat":"fail","code":100,"message":"Invalid API Key"}` when a key is invalid or missing.
-   - *Mitigation:* `PhotosSearchResponse` explicitly maps `stat`, `code`, and `message`, and `PhotoRepositoryImpl` validates `"ok".equalsIgnoreCase(body.getStat())` before emitting `Resource.success(...)`.
+1. **HTTP Authentication & Rate Limit Handling:**
+   - *Risk:* Invalid Pexels API keys return HTTP `401`/`403`, and exceeding 200 requests/hour returns HTTP `429`.
+   - *Mitigation:* `PhotoRepositoryImpl` explicitly inspects HTTP status codes (`401`, `403`, `429`) and surfaces descriptive, actionable messages to the UI error state.
 2. **Client-Side API Key Exposure:**
    - *Risk:* Any key compiled into `BuildConfig` can be extracted from a distributed APK using `apktool` or `jadx`.
    - *Trade-off:* Avoiding a custom proxy backend keeps the project within a 4–8-week student scope. Keeping the key in untracked `local.properties` prevents leaking credentials in public Git repositories.
@@ -96,17 +94,17 @@ The application is designed for a **4–8-week university final project**, balan
 ## 6. In-Scope vs. Out-of-Scope Features
 
 ### In-Scope (Project & Boilerplate)
-- Public photo search via `flickr.photos.search` with keyword query and pagination parameters.
-- Thumbnail grid display (`url_q` / `url_m`) and detail photo display (`url_z` / `url_m`) via Glide.
+- Public photo search via Pexels `GET /v1/search` with keyword query and pagination parameters.
+- Thumbnail grid display (`src.tiny` / `src.small`) and detail photo display (`src.large`) via Glide.
 - Saving/removing favorite photos in Room and viewing them offline.
 - Local collection entities, cross-reference junction table, DAO queries, and Collections UI skeleton.
 - Loading, empty, error, and retry UI states.
 - Unit tests (DTO mapper, Repository, ViewModel) and Room DAO instrumentation tests.
 
 ### Out-of-Scope
-- Flickr OAuth 1.0a user authentication or write operations against remote Flickr accounts.
+- OAuth user authentication or write operations against remote accounts.
 - Custom backend server, cloud synchronization, or multi-device user accounts.
-- Full-resolution original image redistribution or bulk downloading without license checks.
+- Full-resolution original (`src.original`) image redistribution or bulk downloading without license checks.
 - AI-powered visual search or complex image editing.
 
 ---
@@ -116,8 +114,8 @@ The application is designed for a **4–8-week university final project**, balan
 | Timeline | Phase | Deliverables |
 |---|---|---|
 | **Week 1** | **Phase 1: Bootstrap & Architecture Skeleton** | Strip Kotlin/Compose template, configure Gradle (`minSdk 24`), establish MVVM package structure, wire Retrofit/Room/Glide boilerplate, and pass initial unit/DAO tests. |
-| **Week 2** | **Phase 2: Flickr Search & Pagination** | Complete keyword search UX, recent search suggestions, endless scroll pagination in `SearchFragment`, and error/retry edge cases. |
-| **Week 3** | **Phase 3: Photo Detail & Metadata View** | Enhance `PhotoDetailActivity` with pinch-to-zoom or full metadata display (tags, date taken, license info) and instant favorite state synchronization. |
+| **Week 2** | **Phase 2: Pexels Search & Pagination** | Complete keyword search UX, recent search suggestions, endless scroll pagination in `SearchFragment`, and error/retry edge cases. |
+| **Week 3** | **Phase 3: Photo Detail & Metadata View** | Enhance `PhotoDetailActivity` with pinch-to-zoom or full metadata display (photographer, dimensions, Pexels URL) and instant favorite state synchronization. |
 | **Week 4** | **Phase 4: Offline Favorites Management** | Polish `FavoritesFragment` grid, swipe-to-remove with Snackbar undo, and offline image caching verification with Glide. |
 | **Weeks 5–6** | **Phase 5: Collections Feature** | Build create/rename/delete collection dialogs in `CollectionsFragment`, "Add to Collection" bottom sheet on photo detail, and collection detail photo grid. |
 | **Weeks 7–8** | **Phase 6: QA, Testing & Final Polish** | Expand JUnit/Mockito/Espresso test coverage, profile main-thread/memory performance, verify accessibility/night mode, and finalize project documentation. |

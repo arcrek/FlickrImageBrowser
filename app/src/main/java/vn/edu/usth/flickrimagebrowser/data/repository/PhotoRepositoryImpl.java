@@ -19,29 +19,29 @@ import vn.edu.usth.flickrimagebrowser.data.local.PhotoDao;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionEntity;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionPhotoCrossRef;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.PhotoEntity;
-import vn.edu.usth.flickrimagebrowser.data.remote.FlickrApiService;
-import vn.edu.usth.flickrimagebrowser.data.remote.dto.PhotoDto;
+import vn.edu.usth.flickrimagebrowser.data.remote.PexelsApiService;
+import vn.edu.usth.flickrimagebrowser.data.remote.dto.PexelsPhotoDto;
+import vn.edu.usth.flickrimagebrowser.data.remote.dto.PexelsSearchResponse;
 import vn.edu.usth.flickrimagebrowser.data.remote.dto.PhotoMapper;
-import vn.edu.usth.flickrimagebrowser.data.remote.dto.PhotosSearchResponse;
 import vn.edu.usth.flickrimagebrowser.domain.model.Collection;
 import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
 import vn.edu.usth.flickrimagebrowser.util.AppExecutors;
 import vn.edu.usth.flickrimagebrowser.util.Resource;
 
 /**
- * Default repository implementation coordinating Flickr REST API searches and Room persistence.
+ * Default repository implementation coordinating Pexels REST API searches and Room persistence.
  */
 public class PhotoRepositoryImpl implements PhotoRepository {
 
-    public static final String PLACEHOLDER_API_KEY = "your_flickr_api_key_here";
+    public static final String PLACEHOLDER_API_KEY = "your_pexels_api_key_here";
 
-    private final FlickrApiService apiService;
+    private final PexelsApiService apiService;
     private final PhotoDao photoDao;
     private final CollectionDao collectionDao;
     private final AppExecutors executors;
     private final String apiKey;
 
-    public PhotoRepositoryImpl(@NonNull FlickrApiService apiService,
+    public PhotoRepositoryImpl(@NonNull PexelsApiService apiService,
                                @NonNull PhotoDao photoDao,
                                @NonNull CollectionDao collectionDao,
                                @NonNull AppExecutors executors,
@@ -65,7 +65,7 @@ public class PhotoRepositoryImpl implements PhotoRepository {
 
         if (apiKey.isEmpty() || PLACEHOLDER_API_KEY.equalsIgnoreCase(apiKey)) {
             result.setValue(Resource.error(
-                    "Flickr API key is not configured. Add FLICKR_API_KEY to local.properties.",
+                    "Pexels API key is not configured. Add PEXELS_API_KEY to local.properties.",
                     null
             ));
             return result;
@@ -73,42 +73,38 @@ public class PhotoRepositoryImpl implements PhotoRepository {
 
         result.setValue(Resource.loading(null));
 
-        Call<PhotosSearchResponse> call = apiService.searchPhotos(
-                FlickrApiService.METHOD_PHOTOS_SEARCH,
+        Call<PexelsSearchResponse> call = apiService.searchPhotos(
                 apiKey,
                 trimmedQuery,
                 Math.max(1, page),
-                Math.max(1, perPage),
-                FlickrApiService.DEFAULT_EXTRAS,
-                FlickrApiService.SAFE_SEARCH_SAFE,
-                FlickrApiService.FORMAT_JSON,
-                FlickrApiService.NO_JSON_CALLBACK
+                Math.max(1, perPage)
         );
 
-        call.enqueue(new Callback<PhotosSearchResponse>() {
+        call.enqueue(new Callback<PexelsSearchResponse>() {
             @Override
-            public void onResponse(@NonNull Call<PhotosSearchResponse> call,
-                                   @NonNull Response<PhotosSearchResponse> response) {
+            public void onResponse(@NonNull Call<PexelsSearchResponse> call,
+                                   @NonNull Response<PexelsSearchResponse> response) {
                 if (!response.isSuccessful() || response.body() == null) {
-                    result.postValue(Resource.error(
-                            "Server returned HTTP " + response.code(),
-                            null
-                    ));
+                    int code = response.code();
+                    String errorMsg;
+                    if (code == 401 || code == 403) {
+                        errorMsg = "Invalid or unauthorized Pexels API key (HTTP " + code + ").";
+                    } else if (code == 429) {
+                        errorMsg = "Pexels API rate limit exceeded (HTTP 429). Please wait before retrying.";
+                    } else {
+                        errorMsg = "Server returned HTTP " + code;
+                    }
+                    result.postValue(Resource.error(errorMsg, null));
                     return;
                 }
 
-                PhotosSearchResponse body = response.body();
-                if (!body.isOk()) {
-                    String apiErrorMessage = body.getMessage() != null && !body.getMessage().trim().isEmpty()
-                            ? body.getMessage().trim()
-                            : "Flickr API error (code " + body.getCode() + ")";
-                    result.postValue(Resource.error(apiErrorMessage, null));
+                PexelsSearchResponse body = response.body();
+                if (body.getError() != null && !body.getError().trim().isEmpty()) {
+                    result.postValue(Resource.error(body.getError().trim(), null));
                     return;
                 }
 
-                List<PhotoDto> dtos = body.getPhotos() != null
-                        ? body.getPhotos().getPhotoList()
-                        : null;
+                List<PexelsPhotoDto> dtos = body.getPhotos();
 
                 executors.diskIO().execute(() -> {
                     Set<String> favoriteIds = new HashSet<>(photoDao.getFavoriteIdsSync());
@@ -122,13 +118,13 @@ public class PhotoRepositoryImpl implements PhotoRepository {
             }
 
             @Override
-            public void onFailure(@NonNull Call<PhotosSearchResponse> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<PexelsSearchResponse> call, @NonNull Throwable t) {
                 if (call.isCanceled()) {
                     return;
                 }
                 String message = t.getMessage() != null && !t.getMessage().trim().isEmpty()
                         ? "Network error: " + t.getMessage().trim()
-                        : "Network error: Unable to reach Flickr.";
+                        : "Network error: Unable to reach Pexels.";
                 result.postValue(Resource.error(message, null));
             }
         });
@@ -189,29 +185,29 @@ public class PhotoRepositoryImpl implements PhotoRepository {
         if (trimmedName.isEmpty()) {
             return;
         }
-        String cleanDescription = description != null ? description.trim() : "";
+        String cleanDesc = description != null ? description.trim() : "";
         executors.diskIO().execute(() -> {
             CollectionEntity entity = new CollectionEntity(
                     0L,
                     trimmedName,
-                    cleanDescription,
+                    cleanDesc,
                     System.currentTimeMillis()
             );
-            try {
-                collectionDao.insertCollection(entity);
-            } catch (RuntimeException ignored) {
-                // Ignore duplicate collection name constraint violations in boilerplate
-            }
+            collectionDao.insertCollection(entity);
         });
     }
 
     @Override
     public void addPhotoToCollection(long collectionId, @NonNull Photo photo) {
+        if (collectionId <= 0L) {
+            return;
+        }
         executors.diskIO().execute(() -> {
             PhotoEntity existing = photoDao.getPhotoByIdSync(photo.getId());
-            boolean isFav = existing != null && existing.isFavorite();
+            boolean keepFavorite = existing != null && existing.isFavorite();
             long savedAt = existing != null ? existing.getSavedAt() : System.currentTimeMillis();
-            photoDao.upsertPhoto(PhotoMapper.toEntity(photo, isFav, savedAt));
+            PhotoEntity entity = PhotoMapper.toEntity(photo, keepFavorite, savedAt);
+            photoDao.upsertPhoto(entity);
             collectionDao.addPhotoToCollection(
                     new CollectionPhotoCrossRef(collectionId, photo.getId(), System.currentTimeMillis())
             );
