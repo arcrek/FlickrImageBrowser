@@ -28,20 +28,27 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+
+        binding.btnActionSparkle.setOnClickListener(v -> {
+            binding.bottomNavigation.setSelectedItemId(R.id.nav_search);
+        });
 
         binding.bottomNavigation.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_search) {
                 switchFragment(new SearchFragment(), "search");
-                binding.toolbar.setTitle(R.string.app_name);
+                updateToolbarForTab(itemId);
                 return true;
             } else if (itemId == R.id.nav_favorites) {
                 switchFragment(new FavoritesFragment(), "favorites");
-                binding.toolbar.setTitle(R.string.nav_favorites);
+                updateToolbarForTab(itemId);
                 return true;
             } else if (itemId == R.id.nav_collections) {
                 switchFragment(new CollectionsFragment(), "collections");
-                binding.toolbar.setTitle(R.string.nav_collections);
+                updateToolbarForTab(itemId);
                 return true;
             }
             return false;
@@ -76,11 +83,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateToolbarForTab(int itemId) {
         if (itemId == R.id.nav_favorites) {
-            binding.toolbar.setTitle(R.string.nav_favorites);
+            binding.toolbarTitle.setText(R.string.nav_favorites);
+            binding.toolbarTagline.setText("Saved");
         } else if (itemId == R.id.nav_collections) {
-            binding.toolbar.setTitle(R.string.nav_collections);
+            binding.toolbarTitle.setText(R.string.nav_collections);
+            binding.toolbarTagline.setText("Boards");
         } else {
-            binding.toolbar.setTitle(R.string.app_name);
+            binding.toolbarTitle.setText(R.string.brand_name_display);
+            binding.toolbarTagline.setText(R.string.brand_tagline);
         }
     }
 }
