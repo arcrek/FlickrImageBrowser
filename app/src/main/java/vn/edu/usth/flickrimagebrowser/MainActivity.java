@@ -5,6 +5,9 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import vn.edu.usth.flickrimagebrowser.databinding.ActivityMainBinding;
@@ -31,6 +34,13 @@ public class MainActivity extends AppCompatActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
+
+        // Apply system window insets so the bottom navigation bar is never obscured by gesture/system bars
+        ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNavigation, (view, insets) -> {
+            Insets navInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            view.setPadding(0, 0, 0, navInsets.bottom);
+            return insets;
+        });
 
         binding.btnActionSparkle.setOnClickListener(v -> {
             binding.bottomNavigation.setSelectedItemId(R.id.nav_search);
