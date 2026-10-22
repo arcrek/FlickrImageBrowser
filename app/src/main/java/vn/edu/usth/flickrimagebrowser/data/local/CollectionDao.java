@@ -25,6 +25,21 @@ public interface CollectionDao {
     @Query("SELECT * FROM collections ORDER BY created_at DESC")
     LiveData<List<CollectionWithPhotos>> observeCollectionsWithPhotos();
 
+    @Transaction
+    @Query("SELECT * FROM collections WHERE id = :collectionId")
+    LiveData<CollectionWithPhotos> observeCollectionById(long collectionId);
+
+    // Alias retained for the method name used in TODO 3.3 of the team plan.
+    @Transaction
+    @Query("SELECT * FROM collections WHERE id = :collectionId")
+    LiveData<CollectionWithPhotos> observeCollectionWithPhotosById(long collectionId);
+
+    @Query("UPDATE collections SET name = :newName WHERE id = :collectionId")
+    int renameCollection(long collectionId, @NonNull String newName);
+
+    @Query("SELECT COUNT(*) FROM collection_photo_cross_ref WHERE collection_id = :collectionId")
+    LiveData<Integer> observePhotoCount(long collectionId);
+
     @Query("SELECT * FROM collections ORDER BY created_at DESC")
     List<CollectionEntity> getCollectionsSync();
 

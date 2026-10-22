@@ -4,9 +4,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
-import androidx.room.Insert;
-import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Upsert;
 
 import java.util.List;
 
@@ -21,6 +20,20 @@ public interface PhotoDao {
     @Query("SELECT * FROM photos WHERE is_favorite = 1 ORDER BY saved_at DESC")
     LiveData<List<PhotoEntity>> observeFavoritePhotos();
 
+    @Query("SELECT * FROM photos WHERE is_favorite = 1 " +
+            "ORDER BY title COLLATE NOCASE ASC, id ASC")
+    LiveData<List<PhotoEntity>> observeFavoritePhotosByTitle();
+
+    @Query("SELECT * FROM photos WHERE is_favorite = 1 " +
+            "AND (title LIKE '%' || :query || '%' OR owner_name LIKE '%' || :query || '%') " +
+            "ORDER BY saved_at DESC, id ASC")
+    LiveData<List<PhotoEntity>> searchFavoritePhotos(@NonNull String query);
+
+    @Query("SELECT * FROM photos WHERE is_favorite = 1 " +
+            "AND (title LIKE '%' || :query || '%' OR owner_name LIKE '%' || :query || '%') " +
+            "ORDER BY title COLLATE NOCASE ASC, id ASC")
+    LiveData<List<PhotoEntity>> searchFavoritePhotosByTitle(@NonNull String query);
+
     @Query("SELECT * FROM photos WHERE is_favorite = 1 ORDER BY saved_at DESC")
     List<PhotoEntity> getFavoritePhotosSync();
 
@@ -34,7 +47,8 @@ public interface PhotoDao {
     @Query("SELECT COALESCE((SELECT is_favorite FROM photos WHERE id = :photoId LIMIT 1), 0)")
     LiveData<Boolean> observeIsFavorite(@NonNull String photoId);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    // REPLACE deletes the old row and cascades away its collection memberships.
+    @Upsert
     void upsertPhoto(@NonNull PhotoEntity photoEntity);
 
     @Query("UPDATE photos SET is_favorite = :isFavorite, saved_at = :savedAt WHERE id = :photoId")
