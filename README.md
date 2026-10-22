@@ -1,6 +1,6 @@
-# FlickrImage Browser (Powered by Pexels API)
+# FlickrImage Browser (Powered by Pixabay API)
 
-A native Android application written in **Java** (Android Views + XML layouts + `ViewBinding`) for discovering public photos via the **Pexels REST API** (migrated from Flickr due to Flickr restricting API keys to paid Pro subscribers), viewing photo details, saving favorites offline, and organizing photos into local collections.
+A native Android application written in **Java** (Android Views + XML layouts + `ViewBinding`) for discovering public photos via the **Pixabay REST API** (migrated from Flickr and Pexels due to API signup/approval restrictions), viewing photo details, saving favorites offline, and organizing photos into local collections.
 
 ---
 
@@ -9,27 +9,27 @@ A native Android application written in **Java** (Android Views + XML layouts + 
 - **Android Studio:** Ladybug / Meerkat or newer (AGP `9.4.1`, Gradle `9.6.0`).
 - **Android SDK:** `compileSdk 37` (`android-37.0`), `minSdk 24` (Android 7.0+).
 - **JDK:** JDK 25 for the Gradle daemon (configured in `gradle/gradle-daemon-jvm.properties`), compiling Java 11 bytecode (`JavaVersion.VERSION_11`).
-- **Pexels API Key:** Optional for building and running unit/database tests; required at runtime to query the live Pexels REST API (migrated from Flickr due to Flickr's Pro-only API restriction).
+- **Pixabay API Key:** Optional for building and running unit/database tests; required at runtime to query the live Pixabay REST API.
 
 ---
 
 ## 2. API Key Configuration & Security Note
 
-1. Copy the template configuration file or append `PEXELS_API_KEY` to your untracked `local.properties` file in the project root:
+1. Copy the template configuration file or append `PIXABAY_API_KEY` to your untracked `local.properties` file in the project root:
    ```bash
    cp local.properties.example local.properties
    ```
-2. Edit `local.properties` and set your free Pexels REST API key (obtainable instantly at [pexels.com/api](https://www.pexels.com/api/)):
+2. Edit `local.properties` and set your free Pixabay REST API key (obtainable instantly upon signing in at [pixabay.com/api/docs/](https://pixabay.com/api/docs/)):
    ```properties
    sdk.dir=/path/to/your/Android/Sdk
-   PEXELS_API_KEY=your_actual_pexels_api_key
+   PIXABAY_API_KEY=your_actual_pixabay_api_key
    ```
-   *(Alternatively, export `PEXELS_API_KEY` as an environment variable before invoking Gradle.)*
+   *(Alternatively, export `PIXABAY_API_KEY` as an environment variable before invoking Gradle.)*
 
 > **Security & Licensing Note:**
 > - `local.properties` is listed in `.gitignore` and must **never** be committed to version control.
-> - At build time, `app/build.gradle.kts` injects `PEXELS_API_KEY` into `BuildConfig.PEXELS_API_KEY`. Be aware that **any API key embedded in a client-side APK can be extracted** by decompiling the distributed binary; client-side `BuildConfig` injection prevents source-repository leaks but does not make a key secret in production distributions.
-> - Respect Pexels' Terms of Service and photographer attribution when viewing or caching images.
+> - At build time, `app/build.gradle.kts` injects `PIXABAY_API_KEY` into `BuildConfig.PIXABAY_API_KEY`. Be aware that **any API key embedded in a client-side APK can be extracted** by decompiling the distributed binary; client-side `BuildConfig` injection prevents source-repository leaks but does not make a key secret in production distributions.
+> - Respect Pixabay's Content License and API Terms of Service (including 24-hour caching guidelines and creator attribution) when viewing or caching images.
 
 ---
 
@@ -44,7 +44,7 @@ app/src/
 │   │   ├── MainActivity.java
 │   │   ├── data/
 │   │   │   ├── local/        # Room AppDatabase, PhotoDao, CollectionDao, Entities
-│   │   │   ├── remote/       # Retrofit PexelsApiService, PexelsClient, Pexels DTOs, PhotoMapper
+│   │   │   ├── remote/       # Retrofit PixabayApiService, PixabayClient, Pixabay DTOs, PhotoMapper
 │   │   │   └── repository/   # PhotoRepository interface & PhotoRepositoryImpl
 │   │   ├── domain/model/     # Immutable Photo and Collection models
 │   │   ├── ui/

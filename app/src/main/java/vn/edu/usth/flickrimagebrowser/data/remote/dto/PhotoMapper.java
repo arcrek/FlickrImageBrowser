@@ -14,7 +14,7 @@ import vn.edu.usth.flickrimagebrowser.domain.model.Collection;
 import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
 
 /**
- * Pure Java mapper converting between remote Pexels DTOs, Room entities, and domain models.
+ * Pure Java mapper converting between remote Pixabay DTOs, Room entities, and domain models.
  */
 public final class PhotoMapper {
 
@@ -22,27 +22,20 @@ public final class PhotoMapper {
     }
 
     @Nullable
-    public static Photo fromDto(@Nullable PexelsPhotoDto dto, boolean isFavorite) {
+    public static Photo fromDto(@Nullable PixabayHitDto dto, boolean isFavorite) {
         if (dto == null || dto.getId() == null || dto.getId() <= 0L) {
-            return null;
-        }
-
-        PexelsPhotoSrcDto src = dto.getSrc();
-        if (src == null) {
             return null;
         }
 
         String id = String.valueOf(dto.getId());
         String thumbnailUrl = firstNonBlank(
-                src.getTiny(),
-                src.getSmall(),
-                src.getMedium(),
-                src.getLarge()
+                dto.getWebformatUrl(),
+                dto.getPreviewUrl(),
+                dto.getLargeImageUrl()
         );
         String detailUrl = firstNonBlank(
-                src.getLarge(),
-                src.getLarge2x(),
-                src.getMedium(),
+                dto.getLargeImageUrl(),
+                dto.getWebformatUrl(),
                 thumbnailUrl
         );
 
@@ -50,9 +43,9 @@ public final class PhotoMapper {
             return null;
         }
 
-        String title = dto.getAlt();
-        String owner = firstNonBlank(dto.getPhotographer(), "Unknown Author");
-        String descriptionText = firstNonBlank(dto.getAlt(), dto.getUrl());
+        String title = dto.getTags();
+        String owner = firstNonBlank(dto.getUser(), "Unknown Author");
+        String descriptionText = firstNonBlank(dto.getTags(), dto.getPageUrl());
 
         return new Photo(
                 id,
@@ -67,13 +60,13 @@ public final class PhotoMapper {
     }
 
     @NonNull
-    public static List<Photo> fromDtoList(@Nullable List<PexelsPhotoDto> dtos, @Nullable Set<String> favoriteIds) {
+    public static List<Photo> fromDtoList(@Nullable List<PixabayHitDto> dtos, @Nullable Set<String> favoriteIds) {
         if (dtos == null || dtos.isEmpty()) {
             return Collections.emptyList();
         }
         Set<String> favSet = favoriteIds != null ? favoriteIds : Collections.emptySet();
         List<Photo> result = new ArrayList<>(dtos.size());
-        for (PexelsPhotoDto dto : dtos) {
+        for (PixabayHitDto dto : dtos) {
             boolean isFav = dto != null && dto.getId() != null && favSet.contains(String.valueOf(dto.getId()));
             Photo mapped = fromDto(dto, isFav);
             if (mapped != null) {

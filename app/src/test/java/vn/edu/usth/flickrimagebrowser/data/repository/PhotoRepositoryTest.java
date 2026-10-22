@@ -3,6 +3,7 @@ package vn.edu.usth.flickrimagebrowser.data.repository;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -32,16 +33,15 @@ import retrofit2.Response;
 import vn.edu.usth.flickrimagebrowser.data.local.CollectionDao;
 import vn.edu.usth.flickrimagebrowser.data.local.PhotoDao;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.PhotoEntity;
-import vn.edu.usth.flickrimagebrowser.data.remote.PexelsApiService;
-import vn.edu.usth.flickrimagebrowser.data.remote.dto.PexelsPhotoDto;
-import vn.edu.usth.flickrimagebrowser.data.remote.dto.PexelsPhotoSrcDto;
-import vn.edu.usth.flickrimagebrowser.data.remote.dto.PexelsSearchResponse;
+import vn.edu.usth.flickrimagebrowser.data.remote.PixabayApiService;
+import vn.edu.usth.flickrimagebrowser.data.remote.dto.PixabayHitDto;
+import vn.edu.usth.flickrimagebrowser.data.remote.dto.PixabaySearchResponse;
 import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
 import vn.edu.usth.flickrimagebrowser.util.AppExecutors;
 import vn.edu.usth.flickrimagebrowser.util.Resource;
 
 /**
- * Unit tests for PhotoRepositoryImpl using mocked PexelsApiService and Room DAOs.
+ * Unit tests for PhotoRepositoryImpl using mocked PixabayApiService and Room DAOs.
  */
 public class PhotoRepositoryTest {
 
@@ -49,7 +49,7 @@ public class PhotoRepositoryTest {
     public final InstantTaskExecutorRule instantTaskExecutorRule = new InstantTaskExecutorRule();
 
     @Mock
-    private PexelsApiService apiService;
+    private PixabayApiService apiService;
 
     @Mock
     private PhotoDao photoDao;
@@ -58,7 +58,7 @@ public class PhotoRepositoryTest {
     private CollectionDao collectionDao;
 
     @Mock
-    private Call<PexelsSearchResponse> mockCall;
+    private Call<PixabaySearchResponse> mockCall;
 
     private AppExecutors directExecutors;
     private PhotoRepositoryImpl repository;
@@ -72,7 +72,7 @@ public class PhotoRepositoryTest {
                 photoDao,
                 collectionDao,
                 directExecutors,
-                "test_valid_pexels_key"
+                "test_valid_pixabay_key"
         );
     }
 
@@ -92,39 +92,40 @@ public class PhotoRepositoryTest {
         assertNotNull(resource);
         assertEquals(Resource.Status.ERROR, resource.getStatus());
         assertNotNull(resource.getMessage());
-        assertTrue(resource.getMessage().contains("PEXELS_API_KEY"));
-        verify(apiService, never()).searchPhotos(anyString(), anyString(), anyInt(), anyInt());
+        assertTrue(resource.getMessage().contains("PIXABAY_API_KEY"));
+        verify(apiService, never()).searchPhotos(
+                anyString(), anyString(), anyString(), anyBoolean(), anyInt(), anyInt()
+        );
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    public void searchPhotos_whenPexelsResponseOk_emitsSuccessWithMergedFavoriteFlag() {
-        PexelsPhotoSrcDto src = new PexelsPhotoSrcDto(
-                "https://images.pexels.com/42/tiny.jpg",
-                null,
-                null,
-                "https://images.pexels.com/42/large.jpg",
-                null,
-                null
-        );
-        PexelsPhotoDto dto = new PexelsPhotoDto(
+    public void searchPhotos_whenPixabayResponseOk_emitsSuccessWithMergedFavoriteFlag() {
+        PixabayHitDto dto = new PixabayHitDto(
                 42L,
-                "Hanoi Street",
+                "hanoi, street, vietnam",
                 "photographer",
-                "https://www.pexels.com/photo/42/",
-                src
+                "https://pixabay.com/photos/42/",
+                "https://cdn.pixabay.com/photo/42_150.jpg",
+                "https://cdn.pixabay.com/photo/42_640.jpg",
+                "https://cdn.pixabay.com/photo/42_1280.jpg"
         );
-        PexelsSearchResponse apiResponse = new PexelsSearchResponse(
-                1, 20, 100, Collections.singletonList(dto), null
+        PixabaySearchResponse apiResponse = new PixabaySearchResponse(
+                100, 100, Collections.singletonList(dto)
         );
 
         when(photoDao.getFavoriteIdsSync()).thenReturn(Collections.singletonList("42"));
         when(apiService.searchPhotos(
-                eq("test_valid_pexels_key"), eq("hanoi"), eq(1), eq(20)
+                eq("test_valid_pixabay_key"),
+                eq("hanoi"),
+                eq(PhotoRepositoryImpl.DEFAULT_IMAGE_TYPE),
+                eq(PhotoRepositoryImpl.DEFAULT_SAFE_SEARCH),
+                eq(1),
+                eq(20)
         )).thenReturn(mockCall);
 
         doAnswer(invocation -> {
-            Callback<PexelsSearchResponse> callback = invocation.getArgument(0);
+            Callback<PixabaySearchResponse> callback = invocation.getArgument(0);
             callback.onResponse(mockCall, Response.success(apiResponse));
             return null;
         }).when(mockCall).enqueue(org.mockito.ArgumentMatchers.any(Callback.class));
@@ -142,15 +143,16 @@ public class PhotoRepositoryTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void searchPhotos_whenHttp401Unauthorized_emitsApiKeyError() {
-        when(apiService.searchPhotos(anyString(), anyString(), anyInt(), anyInt()))
-                .thenReturn(mockCall);
+    public void searchPhotos_whenHttp400Or401InvalidKey_emitsApiKeyError() {
+        when(apiService.searchPhotos(
+                anyString(), anyString(), anyString(), anyBoolean(), anyInt(), anyInt()
+        )).thenReturn(mockCall);
 
         doAnswer(invocation -> {
-            Callback<PexelsSearchResponse> callback = invocation.getArgument(0);
-            Response<PexelsSearchResponse> unauthorizedResponse = Response.error(
-                    401,
-                    ResponseBody.create("{\"error\":\"Invalid API Key\"}", MediaType.parse("application/json"))
+            Callback<PixabaySearchResponse> callback = invocation.getArgument(0);
+            Response<PixabaySearchResponse> unauthorizedResponse = Response.error(
+                    400,
+                    ResponseBody.create("[ERROR 400] \"key\" is missing", MediaType.parse("text/plain"))
             );
             callback.onResponse(mockCall, unauthorizedResponse);
             return null;
@@ -162,7 +164,7 @@ public class PhotoRepositoryTest {
         assertNotNull(resource);
         assertEquals(Resource.Status.ERROR, resource.getStatus());
         assertNotNull(resource.getMessage());
-        assertTrue(resource.getMessage().contains("401"));
+        assertTrue(resource.getMessage().contains("400"));
     }
 
     @Test
