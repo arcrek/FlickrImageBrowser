@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">FlickrImage Browser</string>
+    <string name="brand_name_display">Lumina •</string>
+    <string name="brand_tagline">Visual Gallery</string>
 
     <!-- Navigation -->
     <string name="nav_search">Search</string>

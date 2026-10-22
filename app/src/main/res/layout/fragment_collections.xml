@@ -41,7 +41,7 @@
         android:layout_width="wrap_content"
         android:layout_height="48dp"
         android:backgroundTint="@color/primary"
-        android:fontFamily="sans-serif-medium"
+        android:fontFamily="@font/plus_jakarta_sans"
         android:text="@string/action_new_collection"
         android:textColor="@color/on_primary"
         app:cornerRadius="24dp"
