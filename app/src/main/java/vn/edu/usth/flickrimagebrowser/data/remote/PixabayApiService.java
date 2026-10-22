@@ -19,4 +19,10 @@ public interface PixabayApiService {
             @Query("page") int page,
             @Query("per_page") int perPage
     );
+
+    @GET(".")
+    Call<PixabaySearchResponse> getPhotoById(
+            @Query("key") String apiKey,
+            @Query("id") String photoId
+    );
 }

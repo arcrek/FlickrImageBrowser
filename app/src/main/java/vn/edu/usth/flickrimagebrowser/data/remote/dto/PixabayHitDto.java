@@ -48,6 +48,9 @@ public class PixabayHitDto {
     @SerializedName("imageHeight")
     private int imageHeight;
 
+    @SerializedName("imageSize")
+    private long imageSize;
+
     @SerializedName("views")
     private int views;
 
@@ -139,6 +142,10 @@ public class PixabayHitDto {
 
     public int getImageHeight() {
         return imageHeight;
+    }
+
+    public long getImageSize() {
+        return imageSize;
     }
 
     public int getViews() {
