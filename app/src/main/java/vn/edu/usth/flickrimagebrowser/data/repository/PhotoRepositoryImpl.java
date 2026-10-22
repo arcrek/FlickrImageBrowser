@@ -20,31 +20,35 @@ import vn.edu.usth.flickrimagebrowser.data.local.PhotoDao;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionEntity;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionPhotoCrossRef;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.PhotoEntity;
-import vn.edu.usth.flickrimagebrowser.data.remote.FlickrApiService;
-import vn.edu.usth.flickrimagebrowser.data.remote.dto.PhotoDto;
+import vn.edu.usth.flickrimagebrowser.data.remote.PixabayApiService;
 import vn.edu.usth.flickrimagebrowser.data.remote.dto.PhotoMapper;
-import vn.edu.usth.flickrimagebrowser.data.remote.dto.PhotosSearchResponse;
+import vn.edu.usth.flickrimagebrowser.data.remote.dto.PixabayHitDto;
+import vn.edu.usth.flickrimagebrowser.data.remote.dto.PixabaySearchResponse;
 import vn.edu.usth.flickrimagebrowser.domain.model.Collection;
 import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
 import vn.edu.usth.flickrimagebrowser.util.AppExecutors;
 import vn.edu.usth.flickrimagebrowser.util.Resource;
 
 /**
- * Default repository implementation coordinating Flickr REST API searches, Room persistence,
- * and a mock demo fallback mode for testing without requiring a paid Flickr Pro account.
+ * Default repository implementation coordinating Pixabay REST API searches, Room persistence,
+ * and a mock demo fallback mode for testing without requiring an external API key.
  */
 public class PhotoRepositoryImpl implements PhotoRepository {
 
-    public static final String PLACEHOLDER_API_KEY = "your_flickr_api_key_here";
+    public static final String PLACEHOLDER_API_KEY = "your_pixabay_api_key_here";
     public static final String DEMO_API_KEY = "demo";
+    public static final String DEFAULT_IMAGE_TYPE = "photo";
+    public static final boolean DEFAULT_SAFE_SEARCH = true;
+    public static final int MIN_PER_PAGE = 3;
+    public static final int MAX_PER_PAGE = 200;
 
-    private final FlickrApiService apiService;
+    private final PixabayApiService apiService;
     private final PhotoDao photoDao;
     private final CollectionDao collectionDao;
     private final AppExecutors executors;
     private final String apiKey;
 
-    public PhotoRepositoryImpl(@NonNull FlickrApiService apiService,
+    public PhotoRepositoryImpl(@NonNull PixabayApiService apiService,
                                @NonNull PhotoDao photoDao,
                                @NonNull CollectionDao collectionDao,
                                @NonNull AppExecutors executors,
@@ -68,13 +72,13 @@ public class PhotoRepositoryImpl implements PhotoRepository {
 
         if (apiKey.isEmpty()) {
             result.setValue(Resource.error(
-                    "Flickr API key is not configured. Add FLICKR_API_KEY to local.properties.",
+                    "Pixabay API key is not configured. Add PIXABAY_API_KEY to local.properties.",
                     null
             ));
             return result;
         }
 
-        // Demo / Mock Mode when using demo or placeholder key (bypasses Flickr Pro requirements for university testing)
+        // Demo / Mock Mode when using demo or placeholder key (allows testing without registering an API key)
         if (DEMO_API_KEY.equalsIgnoreCase(apiKey) || PLACEHOLDER_API_KEY.equalsIgnoreCase(apiKey)) {
             loadDemoPhotos(trimmedQuery, page, perPage, result);
             return result;
@@ -82,42 +86,38 @@ public class PhotoRepositoryImpl implements PhotoRepository {
 
         result.setValue(Resource.loading(null));
 
-        Call<PhotosSearchResponse> call = apiService.searchPhotos(
-                FlickrApiService.METHOD_PHOTOS_SEARCH,
+        int clampedPage = Math.max(1, page);
+        int clampedPerPage = Math.max(MIN_PER_PAGE, Math.min(MAX_PER_PAGE, perPage));
+
+        Call<PixabaySearchResponse> call = apiService.searchPhotos(
                 apiKey,
                 trimmedQuery,
-                Math.max(1, page),
-                Math.max(1, perPage),
-                FlickrApiService.DEFAULT_EXTRAS,
-                FlickrApiService.SAFE_SEARCH_SAFE,
-                FlickrApiService.FORMAT_JSON,
-                FlickrApiService.NO_JSON_CALLBACK
+                DEFAULT_IMAGE_TYPE,
+                DEFAULT_SAFE_SEARCH,
+                clampedPage,
+                clampedPerPage
         );
 
-        call.enqueue(new Callback<PhotosSearchResponse>() {
+        call.enqueue(new Callback<PixabaySearchResponse>() {
             @Override
-            public void onResponse(@NonNull Call<PhotosSearchResponse> call,
-                                   @NonNull Response<PhotosSearchResponse> response) {
+            public void onResponse(@NonNull Call<PixabaySearchResponse> call,
+                                   @NonNull Response<PixabaySearchResponse> response) {
                 if (!response.isSuccessful() || response.body() == null) {
-                    result.postValue(Resource.error(
-                            "Server returned HTTP " + response.code(),
-                            null
-                    ));
+                    int code = response.code();
+                    String errorMsg;
+                    if (code == 400 || code == 401 || code == 403) {
+                        errorMsg = "Invalid or unauthorized Pixabay API key or parameters (HTTP " + code + ").";
+                    } else if (code == 429) {
+                        errorMsg = "Pixabay API rate limit exceeded (HTTP 429). Please wait before retrying.";
+                    } else {
+                        errorMsg = "Server returned HTTP " + code;
+                    }
+                    result.postValue(Resource.error(errorMsg, null));
                     return;
                 }
 
-                PhotosSearchResponse body = response.body();
-                if (!body.isOk()) {
-                    String apiErrorMessage = body.getMessage() != null && !body.getMessage().trim().isEmpty()
-                            ? body.getMessage().trim()
-                            : "Flickr API error (code " + body.getCode() + ")";
-                    result.postValue(Resource.error(apiErrorMessage, null));
-                    return;
-                }
-
-                List<PhotoDto> dtos = body.getPhotos() != null
-                        ? body.getPhotos().getPhotoList()
-                        : null;
+                PixabaySearchResponse body = response.body();
+                List<PixabayHitDto> dtos = body.getHits();
 
                 executors.diskIO().execute(() -> {
                     Set<String> favoriteIds = new HashSet<>(photoDao.getFavoriteIdsSync());
@@ -131,13 +131,13 @@ public class PhotoRepositoryImpl implements PhotoRepository {
             }
 
             @Override
-            public void onFailure(@NonNull Call<PhotosSearchResponse> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<PixabaySearchResponse> call, @NonNull Throwable t) {
                 if (call.isCanceled()) {
                     return;
                 }
                 String message = t.getMessage() != null && !t.getMessage().trim().isEmpty()
                         ? "Network error: " + t.getMessage().trim()
-                        : "Network error: Unable to reach Flickr.";
+                        : "Network error: Unable to reach Pixabay.";
                 result.postValue(Resource.error(message, null));
             }
         });
@@ -147,7 +147,7 @@ public class PhotoRepositoryImpl implements PhotoRepository {
 
     /**
      * Generates rich, realistic demo photos supporting multi-page pagination and offline favorites
-     * without requiring an active Flickr Pro API key.
+     * without requiring an active API key.
      */
     private void loadDemoPhotos(@NonNull String query, int page, int perPage,
                                 @NonNull MutableLiveData<Resource<List<Photo>>> result) {
@@ -185,7 +185,7 @@ public class PhotoRepositoryImpl implements PhotoRepository {
                                 photoId,
                                 capitalize(query) + " #" + index,
                                 "Photographer " + ((index % 10) + 1),
-                                "High resolution photo of " + query + " (Demo Mode for testing without Flickr Pro).",
+                                "High resolution photo of " + query + " (Demo Mode for testing without external API key).",
                                 thumbUrl,
                                 detailUrl,
                                 isFav,
@@ -263,29 +263,29 @@ public class PhotoRepositoryImpl implements PhotoRepository {
         if (trimmedName.isEmpty()) {
             return;
         }
-        String cleanDescription = description != null ? description.trim() : "";
+        String cleanDesc = description != null ? description.trim() : "";
         executors.diskIO().execute(() -> {
             CollectionEntity entity = new CollectionEntity(
                     0L,
                     trimmedName,
-                    cleanDescription,
+                    cleanDesc,
                     System.currentTimeMillis()
             );
-            try {
-                collectionDao.insertCollection(entity);
-            } catch (RuntimeException ignored) {
-                // Ignore duplicate collection name constraint violations in boilerplate
-            }
+            collectionDao.insertCollection(entity);
         });
     }
 
     @Override
     public void addPhotoToCollection(long collectionId, @NonNull Photo photo) {
+        if (collectionId <= 0L) {
+            return;
+        }
         executors.diskIO().execute(() -> {
             PhotoEntity existing = photoDao.getPhotoByIdSync(photo.getId());
-            boolean isFav = existing != null && existing.isFavorite();
+            boolean keepFavorite = existing != null && existing.isFavorite();
             long savedAt = existing != null ? existing.getSavedAt() : System.currentTimeMillis();
-            photoDao.upsertPhoto(PhotoMapper.toEntity(photo, isFav, savedAt));
+            PhotoEntity entity = PhotoMapper.toEntity(photo, keepFavorite, savedAt);
+            photoDao.upsertPhoto(entity);
             collectionDao.addPhotoToCollection(
                     new CollectionPhotoCrossRef(collectionId, photo.getId(), System.currentTimeMillis())
             );
