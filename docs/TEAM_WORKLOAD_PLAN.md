@@ -107,6 +107,14 @@ Own the local SQLite persistence layer using Room (`AppDatabase`, `PhotoDao`, `C
 - [ ] **TODO 3.4:** Maintain [`AppDatabase.MIGRATION_1_2`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/local/AppDatabase.java) and exported schema files under `app/schemas/` without using `fallbackToDestructiveMigration()`.
 - [ ] **TODO 3.5:** Expand [`PhotoDaoTest`](../app/src/androidTest/java/vn/edu/usth/flickrimagebrowser/data/local/PhotoDaoTest.java) and add `CollectionDaoTest.java` verifying foreign-key cascades and orphan retention.
 
+#### Member 3 Status — 2026-10-23 (Week 2)
+
+- The user confirmed Week 2: Member 3's data-layer contracts are active. Work is on `feat/database-schema`.
+- **Implemented, verification pending (TODO 3.2 / 3.3):** Favorite search by title/owner, saved-date and case-insensitive title ordering, transactional single-collection observation (both documented method names), collection renaming, and observable photo counts. Photo upserts now preserve existing collection memberships instead of triggering `REPLACE` cascades.
+- **Test coverage added (TODO 3.5):** Expanded `PhotoDaoTest`, added `CollectionDaoTest` and a LiveData helper for search/sorting, updates, database reopen, uniqueness, foreign-key cascades, membership preservation, and orphan retention. TODO 3.5 remains unchecked until these tests execute successfully.
+- **Schema decision (TODO 3.1 / 3.4):** Existing entity keys, foreign keys, and indices were retained. DAO-only changes do not change the database layout; database version 1, exported `app/schemas/.../1.json`, and the existing future `MIGRATION_1_2` placeholder remain unchanged. No destructive migration was introduced.
+- **Verification:** Independent source review found no actionable findings; `git diff --check` and 18 static SQLite checks against the exported v1 schema and DAO SQL passed. Gradle 9.6 started with JDK 25 but failed before task execution because no Android SDK was configured (`SDK location not found`). `assembleDebug`, `testDebugUnitTest`, and `assembleDebugAndroidTest` did not execute; `connectedDebugAndroidTest` was skipped because no SDK/emulator/device was available. Static SQL checks do not verify Room-generated code or LiveData behavior. All Member 3 checkboxes remain open pending Android verification; no completed milestone is claimed.
+
 #### Methods to Implement / Extend
 | Class | Method Signature | Description |
 |---|---|---|
