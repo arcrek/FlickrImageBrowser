@@ -9,8 +9,8 @@ val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localPropertiesFile.inputStream().use { localProperties.load(it) }
 }
-val pexelsApiKey: String = localProperties.getProperty("PEXELS_API_KEY")
-    ?: System.getenv("PEXELS_API_KEY")
+val pixabayApiKey: String = localProperties.getProperty("PIXABAY_API_KEY")
+    ?: System.getenv("PIXABAY_API_KEY")
     ?: ""
 
 android {
@@ -28,8 +28,8 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "PEXELS_API_KEY", "\"${pexelsApiKey.replace("\"", "\\\"")}\"")
-        buildConfigField("String", "PEXELS_BASE_URL", "\"https://api.pexels.com/v1/\"")
+        buildConfigField("String", "PIXABAY_API_KEY", "\"${pixabayApiKey.replace("\"", "\\\"")}\"")
+        buildConfigField("String", "PIXABAY_BASE_URL", "\"https://pixabay.com/api/\"")
 
         javaCompileOptions {
             annotationProcessorOptions {

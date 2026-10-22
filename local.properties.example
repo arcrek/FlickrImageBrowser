@@ -1,9 +1,9 @@
-## Copy this file to local.properties (or add the PEXELS_API_KEY line to your existing local.properties)
+## Copy this file to local.properties (or add the PIXABAY_API_KEY line to your existing local.properties)
 ## Do NOT commit your real local.properties file to version control.
 
 # Path to your local Android SDK (managed automatically by Android Studio)
 # sdk.dir=/path/to/Android/Sdk
 
-# Pexels REST API Key (obtain for free at https://www.pexels.com/api/)
+# Pixabay REST API Key (obtain for free at https://pixabay.com/api/docs/)
 # Note: Keys compiled into client APKs via BuildConfig can be extracted from distributed binaries.
-PEXELS_API_KEY=your_pexels_api_key_here
+PIXABAY_API_KEY=your_pixabay_api_key_here

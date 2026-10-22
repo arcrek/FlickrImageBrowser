@@ -1,4 +1,4 @@
-# Project Evaluation — FlickrImage Browser (Pexels API Edition)
+# Project Evaluation — FlickrImage Browser (Pixabay API Edition)
 
 ## 1. Repository Inspection & Current State
 
@@ -12,17 +12,17 @@ Before modifying any project files, the repository was inspected to evaluate exi
   - **Daemon JVM Toolchain:** JDK `25` (`gradle/gradle-daemon-jvm.properties`), with Java compilation target set to `JavaVersion.VERSION_11` in `app/build.gradle.kts`.
   - **Android SDK Configuration:** `compileSdk = 37` (`android-37.0` installed locally), `targetSdk = 37`, and `minSdk = 36`.
 - **Identified Blockers & Required Adjustments:**
-  1. **Flickr API Paywall (Pro-Only Restriction):** Flickr changed its policy so that registering new API keys is restricted exclusively to paid Flickr Pro subscribers. To keep the project 100% free and accessible for university students and graders, the remote networking layer was migrated to the **Pexels REST API** (`https://api.pexels.com/v1/`), which provides instant free API keys (200 req/hr, 20,000 req/month) with full keyword search and pagination.
+  1. **Flickr Paywall & Pexels Signup Approval Restriction:** Flickr restricted new API keys to paid Pro subscribers, and Pexels API signup/approval is currently unavailable. To keep the project 100% free and immediately accessible for university students and graders, the remote networking layer was migrated to the **Pixabay REST API** (`https://pixabay.com/api/`), which provides instant free API keys (100 req/60s) upon account sign-in with full keyword search and pagination.
   2. **Kotlin & Compose vs. Project Constraints:** The project requires **Java-only application source code** and **Android Views / XML layouts**. Replacing the default Compose scaffolding with ViewBinding + Material Components satisfies the Java-only requirement.
   3. **`minSdk = 36` Compatibility Risk:** Lowering `minSdk` to `24` (Android 7.0) while keeping `compileSdk = 37` and `targetSdk = 37` maximizes device and emulator compatibility.
   4. **Theme Incompatibility:** Updated `app/src/main/res/values/themes.xml` to `Theme.MaterialComponents.DayNight.NoActionBar`.
-  5. **Missing `INTERNET` Permission & API Key Setup:** Added `android.permission.INTERNET` to `AndroidManifest.xml` and configured `PEXELS_API_KEY` injection via `local.properties`.
+  5. **Missing `INTERNET` Permission & API Key Setup:** Added `android.permission.INTERNET` to `AndroidManifest.xml` and configured `PIXABAY_API_KEY` injection via `local.properties`.
 
 ---
 
 ## 2. Project Purpose & Scope
 
-**FlickrImage Browser** is a native Android application written in Java that allows users to search and discover public photography via the **Pexels REST API**, inspect high-resolution photo details and photographer metadata, bookmark favorite photos for offline viewing, and organize saved photos into custom local collections.
+**FlickrImage Browser** is a native Android application written in Java that allows users to search and discover public photography via the **Pixabay REST API**, inspect high-resolution photo details and creator metadata, bookmark favorite photos for offline viewing, and organize saved photos into custom local collections.
 
 The application is designed for a **4–8-week university final project**, balancing clean architectural separation (MVVM + Repository pattern) with pragmatic Java concurrency (`ExecutorService` + `LiveData`) and reliable automated testing.
 
@@ -32,14 +32,14 @@ The application is designed for a **4–8-week university final project**, balan
 
 ### Functional Requirements
 1. **Public Photo Search:**
-   - Users can search public photos by keyword using Pexels' `GET /v1/search` endpoint.
-   - Supports pagination (`page`, `per_page`) and maps sized image URLs (`src.tiny` / `src.small` for thumbnails, `src.large` for detail view).
+   - Users can search public photos by keyword using Pixabay's `GET https://pixabay.com/api/` endpoint (`q`, `image_type=photo`, `safesearch=true`).
+   - Supports pagination (`page`, `per_page` clamped to `3..200`) and maps sized image URLs (`webformatURL` / `previewURL` for thumbnails, `largeImageURL` for detail view).
    - Displays explicit **Loading**, **Empty**, **Error (with Retry)**, and **Content** states.
 2. **Photo Detail View:**
-   - Selecting a photo opens a detail screen displaying a larger image (`src.large`), title (`alt`), photographer name (`photographer`), description, and a favorite toggle action.
+   - Selecting a photo opens a detail screen displaying a larger image (`largeImageURL`), title (`tags`), creator name (`user`), description, and a favorite toggle action.
 3. **Favorites Persistence:**
    - Users can mark/unmark any photo as a favorite.
-   - Favorites are persisted locally in Room (`photos` table) and remain accessible offline across app restarts.
+   - Favorites are persisted locally in Room (`photos` table) and remain accessible offline across app restarts via Glide disk caching.
 4. **Collections Organization:**
    - Users can create local collections (`collections` table) and associate saved photos with collections via a many-to-many cross-reference table (`collection_photo_cross_ref`).
 
@@ -48,7 +48,7 @@ The application is designed for a **4–8-week university final project**, balan
 - **XML Views + ViewBinding:** All screens use Android XML layouts (`CoordinatorLayout`, `ConstraintLayout`, `RecyclerView`, `BottomNavigationView`) bound safely via `ViewBinding`.
 - **Main-Thread Safety:** All network calls and Room database writes execute on background threads (`Retrofit.enqueue` and `AppExecutors`).
 - **Configuration-Change Resilience:** Screen rotation preserves search results and UI state inside lifecycle-aware `ViewModel` + `LiveData` instances without re-triggering network calls.
-- **API Key Hygiene:** `PEXELS_API_KEY` is injected from untracked `local.properties` into `BuildConfig.PEXELS_API_KEY`; no real API keys are committed to version control.
+- **API Key Hygiene:** `PIXABAY_API_KEY` is injected from untracked `local.properties` into `BuildConfig.PIXABAY_API_KEY`, and redacted in OkHttp debug logs; no real API keys are committed to version control.
 
 ---
 
@@ -61,7 +61,7 @@ The application is designed for a **4–8-week university final project**, balan
 - **Domain Layer (`domain/model`):**
   - Immutable Java models (`Photo`, `Collection`) decoupled from Retrofit annotations and Room table details.
 - **Data Layer (`data/remote`, `data/local`, `data/repository`):**
-  - `PhotoRepository` interface and `PhotoRepositoryImpl` coordinate remote Pexels API responses (`PexelsApiService`) and local Room DAOs (`PhotoDao`, `CollectionDao`).
+  - `PhotoRepository` interface and `PhotoRepositoryImpl` coordinate remote Pixabay API responses (`PixabayApiService`) and local Room DAOs (`PhotoDao`, `CollectionDao`).
 
 ### Dependency Choices
 | Category | Library | Version | Rationale |
@@ -78,11 +78,11 @@ The application is designed for a **4–8-week university final project**, balan
 ## 5. Key Risks, Assumptions & Technical Trade-Offs
 
 1. **HTTP Authentication & Rate Limit Handling:**
-   - *Risk:* Invalid Pexels API keys return HTTP `401`/`403`, and exceeding 200 requests/hour returns HTTP `429`.
-   - *Mitigation:* `PhotoRepositoryImpl` explicitly inspects HTTP status codes (`401`, `403`, `429`) and surfaces descriptive, actionable messages to the UI error state.
+   - *Risk:* Invalid or missing Pixabay API keys return HTTP `400`/`401`/`403`, and exceeding 100 requests/60s returns HTTP `429`.
+   - *Mitigation:* `PhotoRepositoryImpl` explicitly inspects HTTP status codes (`400`, `401`, `403`, `429`) and surfaces descriptive, actionable messages to the UI error state.
 2. **Client-Side API Key Exposure:**
    - *Risk:* Any key compiled into `BuildConfig` can be extracted from a distributed APK using `apktool` or `jadx`.
-   - *Trade-off:* Avoiding a custom proxy backend keeps the project within a 4–8-week student scope. Keeping the key in untracked `local.properties` prevents leaking credentials in public Git repositories.
+   - *Trade-off:* Avoiding a custom proxy backend keeps the project within a 4–8-week student scope. Keeping the key in untracked `local.properties` and redacting `key=` in OkHttp debug logs prevents leaking credentials in public Git repositories or log dumps.
 3. **Manual Dependency Injection vs. Hilt/Dagger:**
    - *Trade-off:* Using a lightweight `AppContainer` + `AppViewModelFactory` avoids annotation-processor build complexity while keeping `PhotoRepository` and `ViewModel` dependencies 100% mockable through constructor injection.
 4. **Database Schema Evolution:**
@@ -94,8 +94,8 @@ The application is designed for a **4–8-week university final project**, balan
 ## 6. In-Scope vs. Out-of-Scope Features
 
 ### In-Scope (Project & Boilerplate)
-- Public photo search via Pexels `GET /v1/search` with keyword query and pagination parameters.
-- Thumbnail grid display (`src.tiny` / `src.small`) and detail photo display (`src.large`) via Glide.
+- Public photo search via Pixabay `GET https://pixabay.com/api/` with keyword query (`q`), `image_type=photo`, `safesearch=true`, and pagination parameters.
+- Thumbnail grid display (`webformatURL` / `previewURL`) and detail photo display (`largeImageURL`) via Glide.
 - Saving/removing favorite photos in Room and viewing them offline.
 - Local collection entities, cross-reference junction table, DAO queries, and Collections UI skeleton.
 - Loading, empty, error, and retry UI states.
@@ -104,7 +104,7 @@ The application is designed for a **4–8-week university final project**, balan
 ### Out-of-Scope
 - OAuth user authentication or write operations against remote accounts.
 - Custom backend server, cloud synchronization, or multi-device user accounts.
-- Full-resolution original (`src.original`) image redistribution or bulk downloading without license checks.
+- Full-resolution original image redistribution or bulk downloading without license checks.
 - AI-powered visual search or complex image editing.
 
 ---
@@ -114,8 +114,8 @@ The application is designed for a **4–8-week university final project**, balan
 | Timeline | Phase | Deliverables |
 |---|---|---|
 | **Week 1** | **Phase 1: Bootstrap & Architecture Skeleton** | Strip Kotlin/Compose template, configure Gradle (`minSdk 24`), establish MVVM package structure, wire Retrofit/Room/Glide boilerplate, and pass initial unit/DAO tests. |
-| **Week 2** | **Phase 2: Pexels Search & Pagination** | Complete keyword search UX, recent search suggestions, endless scroll pagination in `SearchFragment`, and error/retry edge cases. |
-| **Week 3** | **Phase 3: Photo Detail & Metadata View** | Enhance `PhotoDetailActivity` with pinch-to-zoom or full metadata display (photographer, dimensions, Pexels URL) and instant favorite state synchronization. |
+| **Week 2** | **Phase 2: Pixabay Search & Pagination** | Complete keyword search UX, recent search suggestions, endless scroll pagination in `SearchFragment`, and error/retry edge cases. |
+| **Week 3** | **Phase 3: Photo Detail & Metadata View** | Enhance `PhotoDetailActivity` with pinch-to-zoom or full metadata display (creator, dimensions, Pixabay page URL) and instant favorite state synchronization. |
 | **Week 4** | **Phase 4: Offline Favorites Management** | Polish `FavoritesFragment` grid, swipe-to-remove with Snackbar undo, and offline image caching verification with Glide. |
 | **Weeks 5–6** | **Phase 5: Collections Feature** | Build create/rename/delete collection dialogs in `CollectionsFragment`, "Add to Collection" bottom sheet on photo detail, and collection detail photo grid. |
 | **Weeks 7–8** | **Phase 6: QA, Testing & Final Polish** | Expand JUnit/Mockito/Espresso test coverage, profile main-thread/memory performance, verify accessibility/night mode, and finalize project documentation. |

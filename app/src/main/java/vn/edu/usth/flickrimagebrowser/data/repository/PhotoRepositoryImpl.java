@@ -19,29 +19,33 @@ import vn.edu.usth.flickrimagebrowser.data.local.PhotoDao;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionEntity;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionPhotoCrossRef;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.PhotoEntity;
-import vn.edu.usth.flickrimagebrowser.data.remote.PexelsApiService;
-import vn.edu.usth.flickrimagebrowser.data.remote.dto.PexelsPhotoDto;
-import vn.edu.usth.flickrimagebrowser.data.remote.dto.PexelsSearchResponse;
+import vn.edu.usth.flickrimagebrowser.data.remote.PixabayApiService;
 import vn.edu.usth.flickrimagebrowser.data.remote.dto.PhotoMapper;
+import vn.edu.usth.flickrimagebrowser.data.remote.dto.PixabayHitDto;
+import vn.edu.usth.flickrimagebrowser.data.remote.dto.PixabaySearchResponse;
 import vn.edu.usth.flickrimagebrowser.domain.model.Collection;
 import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
 import vn.edu.usth.flickrimagebrowser.util.AppExecutors;
 import vn.edu.usth.flickrimagebrowser.util.Resource;
 
 /**
- * Default repository implementation coordinating Pexels REST API searches and Room persistence.
+ * Default repository implementation coordinating Pixabay REST API searches and Room persistence.
  */
 public class PhotoRepositoryImpl implements PhotoRepository {
 
-    public static final String PLACEHOLDER_API_KEY = "your_pexels_api_key_here";
+    public static final String PLACEHOLDER_API_KEY = "your_pixabay_api_key_here";
+    public static final String DEFAULT_IMAGE_TYPE = "photo";
+    public static final boolean DEFAULT_SAFE_SEARCH = true;
+    public static final int MIN_PER_PAGE = 3;
+    public static final int MAX_PER_PAGE = 200;
 
-    private final PexelsApiService apiService;
+    private final PixabayApiService apiService;
     private final PhotoDao photoDao;
     private final CollectionDao collectionDao;
     private final AppExecutors executors;
     private final String apiKey;
 
-    public PhotoRepositoryImpl(@NonNull PexelsApiService apiService,
+    public PhotoRepositoryImpl(@NonNull PixabayApiService apiService,
                                @NonNull PhotoDao photoDao,
                                @NonNull CollectionDao collectionDao,
                                @NonNull AppExecutors executors,
@@ -65,7 +69,7 @@ public class PhotoRepositoryImpl implements PhotoRepository {
 
         if (apiKey.isEmpty() || PLACEHOLDER_API_KEY.equalsIgnoreCase(apiKey)) {
             result.setValue(Resource.error(
-                    "Pexels API key is not configured. Add PEXELS_API_KEY to local.properties.",
+                    "Pixabay API key is not configured. Add PIXABAY_API_KEY to local.properties.",
                     null
             ));
             return result;
@@ -73,24 +77,29 @@ public class PhotoRepositoryImpl implements PhotoRepository {
 
         result.setValue(Resource.loading(null));
 
-        Call<PexelsSearchResponse> call = apiService.searchPhotos(
+        int clampedPage = Math.max(1, page);
+        int clampedPerPage = Math.max(MIN_PER_PAGE, Math.min(MAX_PER_PAGE, perPage));
+
+        Call<PixabaySearchResponse> call = apiService.searchPhotos(
                 apiKey,
                 trimmedQuery,
-                Math.max(1, page),
-                Math.max(1, perPage)
+                DEFAULT_IMAGE_TYPE,
+                DEFAULT_SAFE_SEARCH,
+                clampedPage,
+                clampedPerPage
         );
 
-        call.enqueue(new Callback<PexelsSearchResponse>() {
+        call.enqueue(new Callback<PixabaySearchResponse>() {
             @Override
-            public void onResponse(@NonNull Call<PexelsSearchResponse> call,
-                                   @NonNull Response<PexelsSearchResponse> response) {
+            public void onResponse(@NonNull Call<PixabaySearchResponse> call,
+                                   @NonNull Response<PixabaySearchResponse> response) {
                 if (!response.isSuccessful() || response.body() == null) {
                     int code = response.code();
                     String errorMsg;
-                    if (code == 401 || code == 403) {
-                        errorMsg = "Invalid or unauthorized Pexels API key (HTTP " + code + ").";
+                    if (code == 400 || code == 401 || code == 403) {
+                        errorMsg = "Invalid or unauthorized Pixabay API key or parameters (HTTP " + code + ").";
                     } else if (code == 429) {
-                        errorMsg = "Pexels API rate limit exceeded (HTTP 429). Please wait before retrying.";
+                        errorMsg = "Pixabay API rate limit exceeded (HTTP 429). Please wait before retrying.";
                     } else {
                         errorMsg = "Server returned HTTP " + code;
                     }
@@ -98,13 +107,8 @@ public class PhotoRepositoryImpl implements PhotoRepository {
                     return;
                 }
 
-                PexelsSearchResponse body = response.body();
-                if (body.getError() != null && !body.getError().trim().isEmpty()) {
-                    result.postValue(Resource.error(body.getError().trim(), null));
-                    return;
-                }
-
-                List<PexelsPhotoDto> dtos = body.getPhotos();
+                PixabaySearchResponse body = response.body();
+                List<PixabayHitDto> dtos = body.getHits();
 
                 executors.diskIO().execute(() -> {
                     Set<String> favoriteIds = new HashSet<>(photoDao.getFavoriteIdsSync());
@@ -118,13 +122,13 @@ public class PhotoRepositoryImpl implements PhotoRepository {
             }
 
             @Override
-            public void onFailure(@NonNull Call<PexelsSearchResponse> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<PixabaySearchResponse> call, @NonNull Throwable t) {
                 if (call.isCanceled()) {
                     return;
                 }
                 String message = t.getMessage() != null && !t.getMessage().trim().isEmpty()
                         ? "Network error: " + t.getMessage().trim()
-                        : "Network error: Unable to reach Pexels.";
+                        : "Network error: Unable to reach Pixabay.";
                 result.postValue(Resource.error(message, null));
             }
         });
