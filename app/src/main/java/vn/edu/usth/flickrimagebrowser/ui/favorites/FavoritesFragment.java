@@ -10,7 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +23,7 @@ import vn.edu.usth.flickrimagebrowser.ui.common.PhotoAdapter;
 import vn.edu.usth.flickrimagebrowser.ui.detail.PhotoDetailActivity;
 
 /**
- * Fragment displaying locally saved favorite photos from Room.
+ * Fragment displaying locally saved favorite photos from Room in a Pinterest-style staggered masonry grid.
  */
 public class FavoritesFragment extends Fragment implements PhotoAdapter.OnPhotoActionListener {
 
@@ -55,7 +55,11 @@ public class FavoritesFragment extends Fragment implements PhotoAdapter.OnPhotoA
 
         photoAdapter = new PhotoAdapter(this);
         if (binding != null) {
-            binding.recyclerFavorites.setLayoutManager(new GridLayoutManager(requireContext(), GRID_SPAN_COUNT));
+            StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(
+                    GRID_SPAN_COUNT, StaggeredGridLayoutManager.VERTICAL
+            );
+            layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS);
+            binding.recyclerFavorites.setLayoutManager(layoutManager);
             binding.recyclerFavorites.setAdapter(photoAdapter);
         }
 
@@ -69,7 +73,7 @@ public class FavoritesFragment extends Fragment implements PhotoAdapter.OnPhotoA
         List<Photo> safeList = favorites != null ? favorites : Collections.emptyList();
         photoAdapter.submitList(safeList);
         boolean isEmpty = safeList.isEmpty();
-        binding.textEmptyFavorites.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+        binding.layoutEmptyFavorites.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
         binding.recyclerFavorites.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
     }
 

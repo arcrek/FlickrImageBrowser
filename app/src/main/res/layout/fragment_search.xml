@@ -4,88 +4,210 @@
     android:id="@+id/search_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="12dp">
+    android:background="@color/background_light">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/input_layout_query"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:hint="@string/search_hint"
-        app:layout_constraintEnd_toStartOf="@id/button_search"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/edit_query"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:imeOptions="actionSearch"
-            android:inputType="text"
-            android:maxLines="1" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_search"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/action_search"
-        app:layout_constraintBottom_toBottomOf="@id/input_layout_query"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/input_layout_query" />
-
+    <!-- Masonry Photo Grid: Fills space from top down to the bottom search dock -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_photos"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="12dp"
         android:clipToPadding="false"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:paddingHorizontal="6dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="12dp"
+        app:layout_constraintBottom_toTopOf="@id/search_bottom_dock"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input_layout_query" />
+        app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Initial Loading Indicator -->
     <ProgressBar
         android:id="@+id/progress_loading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:indeterminateTint="@color/primary"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/search_bottom_dock"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input_layout_query" />
+        app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Multi-page Pagination Loading Indicator -->
+    <ProgressBar
+        android:id="@+id/progress_pagination"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:indeterminateTint="@color/primary"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/search_bottom_dock"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Empty / Prompt / Error State View -->
     <LinearLayout
         android:id="@+id/layout_state"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical"
-        android:padding="24dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:padding="28dp"
+        app:layout_constraintBottom_toTopOf="@id/search_bottom_dock"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input_layout_query">
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_search"
+            app:tint="@color/text_tertiary" />
 
         <TextView
             android:id="@+id/text_state_message"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:gravity="center"
+            android:lineSpacingExtra="4dp"
             android:text="@string/search_prompt_state"
             android:textColor="@color/text_secondary"
-            android:textSize="15sp" />
+            android:textSize="14sp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_retry"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="16dp"
             android:text="@string/action_retry"
+            android:textColor="@color/primary"
+            app:cornerRadius="20dp"
+            app:strokeColor="@color/primary"
             android:visibility="gone" />
+
+    </LinearLayout>
+
+    <!-- Bottom Search Dock (White + Mint Tone) with Recommend Banner -->
+    <LinearLayout
+        android:id="@+id/search_bottom_dock"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/surface_light"
+        android:elevation="6dp"
+        android:orientation="vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <!-- Top Divider of Dock -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="8dp"
+            android:background="@color/dock_stroke" />
+
+        <!-- Random Session Recommendation Banner -->
+        <LinearLayout
+            android:id="@+id/layout_recommend"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/bg_recommend_banner"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="7dp">
+
+            <ImageView
+                android:id="@+id/image_sparkle"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_sparkle" />
+
+            <TextView
+                android:id="@+id/text_recommend"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="1"
+                android:text="Khám phá: 'Mùa thu Hà Nội'"
+                android:textColor="@color/mint_pill_text"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="Thử ngay →"
+                android:textColor="@color/primary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Search Input Bar & Action Button -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/input_layout_query"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:hint="@string/search_hint"
+                app:boxCornerRadiusBottomEnd="24dp"
+                app:boxCornerRadiusBottomStart="24dp"
+                app:boxCornerRadiusTopEnd="24dp"
+                app:boxCornerRadiusTopStart="24dp"
+                app:boxStrokeColor="@color/primary"
+                app:endIconMode="clear_text"
+                app:hintTextColor="@color/primary"
+                app:startIconDrawable="@drawable/ic_search"
+                app:startIconTint="@color/primary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edit_query"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:paddingTop="11dp"
+                    android:paddingBottom="11dp"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_search"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:backgroundTint="@color/primary"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/action_search"
+                android:textColor="@color/on_primary"
+                app:cornerRadius="24dp"
+                app:elevation="0dp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

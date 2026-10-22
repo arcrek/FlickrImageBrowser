@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -29,11 +30,13 @@ import vn.edu.usth.flickrimagebrowser.util.AppExecutors;
 import vn.edu.usth.flickrimagebrowser.util.Resource;
 
 /**
- * Default repository implementation coordinating Flickr REST API searches and Room persistence.
+ * Default repository implementation coordinating Flickr REST API searches, Room persistence,
+ * and a mock demo fallback mode for testing without requiring a paid Flickr Pro account.
  */
 public class PhotoRepositoryImpl implements PhotoRepository {
 
     public static final String PLACEHOLDER_API_KEY = "your_flickr_api_key_here";
+    public static final String DEMO_API_KEY = "demo";
 
     private final FlickrApiService apiService;
     private final PhotoDao photoDao;
@@ -63,11 +66,17 @@ public class PhotoRepositoryImpl implements PhotoRepository {
             return result;
         }
 
-        if (apiKey.isEmpty() || PLACEHOLDER_API_KEY.equalsIgnoreCase(apiKey)) {
+        if (apiKey.isEmpty()) {
             result.setValue(Resource.error(
                     "Flickr API key is not configured. Add FLICKR_API_KEY to local.properties.",
                     null
             ));
+            return result;
+        }
+
+        // Demo / Mock Mode when using demo or placeholder key (bypasses Flickr Pro requirements for university testing)
+        if (DEMO_API_KEY.equalsIgnoreCase(apiKey) || PLACEHOLDER_API_KEY.equalsIgnoreCase(apiKey)) {
+            loadDemoPhotos(trimmedQuery, page, perPage, result);
             return result;
         }
 
@@ -134,6 +143,71 @@ public class PhotoRepositoryImpl implements PhotoRepository {
         });
 
         return result;
+    }
+
+    /**
+     * Generates rich, realistic demo photos supporting multi-page pagination and offline favorites
+     * without requiring an active Flickr Pro API key.
+     */
+    private void loadDemoPhotos(@NonNull String query, int page, int perPage,
+                                @NonNull MutableLiveData<Resource<List<Photo>>> result) {
+        result.setValue(Resource.loading(null));
+
+        executors.networkIO().execute(() -> {
+            try {
+                // Simulate realistic network latency (300ms)
+                Thread.sleep(300);
+            } catch (InterruptedException ignored) {
+            }
+
+            executors.diskIO().execute(() -> {
+                Set<String> favoriteIds = new HashSet<>(photoDao.getFavoriteIdsSync());
+                List<Photo> demoList = new ArrayList<>();
+                int maxPages = 5;
+
+                if (page <= maxPages) {
+                    // Page 5 returns fewer photos to demonstrate end-of-feed pagination boundary
+                    int count = (page == maxPages) ? Math.max(1, perPage / 2) : perPage;
+                    int startOffset = (page - 1) * perPage + 1;
+
+                    for (int i = 0; i < count; i++) {
+                        int index = startOffset + i;
+                        String photoId = "demo_" + query.toLowerCase().replaceAll("[^a-zA-Z0-9]", "_") + "_" + index;
+                        boolean isFav = favoriteIds.contains(photoId);
+
+                        // High-quality CDN images with realistic varying aspect ratios for Pinterest masonry effect
+                        int[] sampleHeights = new int[]{380, 260, 430, 310, 350, 280};
+                        int thumbHeight = sampleHeights[index % sampleHeights.length];
+                        String thumbUrl = "https://picsum.photos/seed/" + photoId + "/300/" + thumbHeight;
+                        String detailUrl = "https://picsum.photos/seed/" + photoId + "/800/600";
+
+                        demoList.add(new Photo(
+                                photoId,
+                                capitalize(query) + " #" + index,
+                                "Photographer " + ((index % 10) + 1),
+                                "High resolution photo of " + query + " (Demo Mode for testing without Flickr Pro).",
+                                thumbUrl,
+                                detailUrl,
+                                isFav,
+                                System.currentTimeMillis() - (index * 60000L)
+                        ));
+                    }
+                }
+
+                if (demoList.isEmpty()) {
+                    result.postValue(Resource.empty());
+                } else {
+                    result.postValue(Resource.success(demoList));
+                }
+            });
+        });
+    }
+
+    private static String capitalize(@NonNull String text) {
+        if (text.isEmpty()) {
+            return text;
+        }
+        return Character.toUpperCase(text.charAt(0)) + text.substring(1);
     }
 
     @NonNull

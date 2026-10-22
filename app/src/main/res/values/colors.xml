@@ -1,14 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#FF0063DC</color>
-    <color name="primary_variant">#FF0047A0</color>
-    <color name="secondary">#FFFF0084</color>
-    <color name="secondary_variant">#FFC50066</color>
-    <color name="background_light">#FFF8F9FA</color>
+    <!-- White + Mint Green Modern Palette -->
+    <color name="primary">#FF00BFA5</color>
+    <color name="primary_variant">#FF008E76</color>
+    <color name="primary_light">#FFE0F7F4</color>
+    <color name="secondary">#FF10B981</color>
+    <color name="secondary_variant">#FF059669</color>
+    <color name="background_light">#FFF7FAF9</color>
     <color name="surface_light">#FFFFFFFF</color>
     <color name="on_primary">#FFFFFFFF</color>
     <color name="on_secondary">#FFFFFFFF</color>
-    <color name="text_primary">#FF212121</color>
-    <color name="text_secondary">#FF757575</color>
+    
+    <!-- Typography & Neutral Colors -->
+    <color name="text_primary">#FF111827</color>
+    <color name="text_secondary">#FF6B7280</color>
+    <color name="text_tertiary">#FF9CA3AF</color>
+    
+    <!-- Scrim Overlay for Pinterest Photos -->
     <color name="card_scrim">#99000000</color>
+    <color name="text_on_scrim">#FFFFFFFF</color>
+    <color name="text_on_scrim_secondary">#FFD1FAE5</color>
+    
+    <!-- Navigation & Bottom Dock -->
+    <color name="nav_active">#FF00BFA5</color>
+    <color name="nav_inactive">#FF9CA3AF</color>
+    <color name="dock_background">#EEFFFFFF</color>
+    <color name="dock_stroke">#FFE5E7EB</color>
+    <color name="mint_pill_bg">#1A00BFA5</color>
+    <color name="mint_pill_text">#FF007A69</color>
 </resources>
