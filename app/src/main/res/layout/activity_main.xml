@@ -85,43 +85,38 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
-    <!-- Fragment Container: Ends above the floating navigation island -->
+    <!-- Fragment Container -->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragment_container"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/card_bottom_navigation"
+        app:layout_constraintBottom_toTopOf="@id/bottom_divider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar_divider" />
 
-    <!-- Floating Island Capsule Bottom Navigation -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/card_bottom_navigation"
+    <View
+        android:id="@+id/bottom_divider"
         android:layout_width="0dp"
-        android:layout_height="56dp"
-        android:layout_marginStart="44dp"
-        android:layout_marginEnd="44dp"
-        android:layout_marginBottom="16dp"
-        app:cardBackgroundColor="@color/surface_light"
-        app:cardCornerRadius="28dp"
-        app:cardElevation="8dp"
+        android:layout_height="1dp"
+        android:background="@color/dock_stroke"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Clean, Robust Bottom Navigation Bar with Plus Jakarta Sans -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/surface_light"
+        app:elevation="8dp"
+        app:itemIconSize="22dp"
+        app:itemRippleColor="@color/mint_pill_bg"
+        app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:strokeColor="@color/dock_stroke"
-        app:strokeWidth="1dp">
-
-        <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottom_navigation"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@android:color/transparent"
-            app:elevation="0dp"
-            app:itemIconSize="24dp"
-            app:itemRippleColor="@color/mint_pill_bg"
-            app:labelVisibilityMode="unlabeled"
-            app:menu="@menu/bottom_nav_menu" />
-    </com.google.android.material.card.MaterialCardView>
+        app:menu="@menu/bottom_nav_menu" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
