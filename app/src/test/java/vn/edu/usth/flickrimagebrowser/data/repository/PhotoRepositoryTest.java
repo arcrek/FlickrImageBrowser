@@ -3,6 +3,7 @@ package vn.edu.usth.flickrimagebrowser.data.repository;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -24,22 +25,23 @@ import org.mockito.MockitoAnnotations;
 import java.util.Collections;
 import java.util.List;
 
+import okhttp3.MediaType;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import vn.edu.usth.flickrimagebrowser.data.local.CollectionDao;
 import vn.edu.usth.flickrimagebrowser.data.local.PhotoDao;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.PhotoEntity;
-import vn.edu.usth.flickrimagebrowser.data.remote.FlickrApiService;
-import vn.edu.usth.flickrimagebrowser.data.remote.dto.PhotoDto;
-import vn.edu.usth.flickrimagebrowser.data.remote.dto.PhotosPageDto;
-import vn.edu.usth.flickrimagebrowser.data.remote.dto.PhotosSearchResponse;
+import vn.edu.usth.flickrimagebrowser.data.remote.PixabayApiService;
+import vn.edu.usth.flickrimagebrowser.data.remote.dto.PixabayHitDto;
+import vn.edu.usth.flickrimagebrowser.data.remote.dto.PixabaySearchResponse;
 import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
 import vn.edu.usth.flickrimagebrowser.util.AppExecutors;
 import vn.edu.usth.flickrimagebrowser.util.Resource;
 
 /**
- * Unit tests for PhotoRepositoryImpl using mocked FlickrApiService and Room DAOs.
+ * Unit tests for PhotoRepositoryImpl using mocked PixabayApiService and Room DAOs.
  */
 public class PhotoRepositoryTest {
 
@@ -47,7 +49,7 @@ public class PhotoRepositoryTest {
     public final InstantTaskExecutorRule instantTaskExecutorRule = new InstantTaskExecutorRule();
 
     @Mock
-    private FlickrApiService apiService;
+    private PixabayApiService apiService;
 
     @Mock
     private PhotoDao photoDao;
@@ -56,7 +58,7 @@ public class PhotoRepositoryTest {
     private CollectionDao collectionDao;
 
     @Mock
-    private Call<PhotosSearchResponse> mockCall;
+    private Call<PixabaySearchResponse> mockCall;
 
     private AppExecutors directExecutors;
     private PhotoRepositoryImpl repository;
@@ -70,7 +72,7 @@ public class PhotoRepositoryTest {
                 photoDao,
                 collectionDao,
                 directExecutors,
-                "test_valid_api_key"
+                "test_valid_pixabay_key"
         );
     }
 
@@ -90,32 +92,40 @@ public class PhotoRepositoryTest {
         assertNotNull(resource);
         assertEquals(Resource.Status.ERROR, resource.getStatus());
         assertNotNull(resource.getMessage());
-        assertTrue(resource.getMessage().contains("FLICKR_API_KEY"));
+        assertTrue(resource.getMessage().contains("PIXABAY_API_KEY"));
         verify(apiService, never()).searchPhotos(
-                anyString(), anyString(), anyString(), anyInt(), anyInt(),
-                anyString(), anyInt(), anyString(), anyInt()
+                anyString(), anyString(), anyString(), anyBoolean(), anyInt(), anyInt()
         );
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    public void searchPhotos_whenFlickrStatOk_emitsSuccessWithMergedFavoriteFlag() {
-        PhotoDto dto = new PhotoDto(
-                "photo_42", "owner1", "sec1", "65535", 66,
-                "Hanoi Street", "photographer", null,
-                "https://example.com/q.jpg", null, "https://example.com/z.jpg"
+    public void searchPhotos_whenPixabayResponseOk_emitsSuccessWithMergedFavoriteFlag() {
+        PixabayHitDto dto = new PixabayHitDto(
+                42L,
+                "hanoi, street, vietnam",
+                "photographer",
+                "https://pixabay.com/photos/42/",
+                "https://cdn.pixabay.com/photo/42_150.jpg",
+                "https://cdn.pixabay.com/photo/42_640.jpg",
+                "https://cdn.pixabay.com/photo/42_1280.jpg"
         );
-        PhotosPageDto pageDto = new PhotosPageDto(1, 5, 20, 100, Collections.singletonList(dto));
-        PhotosSearchResponse apiResponse = new PhotosSearchResponse(pageDto, "ok", null, null);
+        PixabaySearchResponse apiResponse = new PixabaySearchResponse(
+                100, 100, Collections.singletonList(dto)
+        );
 
-        when(photoDao.getFavoriteIdsSync()).thenReturn(Collections.singletonList("photo_42"));
+        when(photoDao.getFavoriteIdsSync()).thenReturn(Collections.singletonList("42"));
         when(apiService.searchPhotos(
-                anyString(), eq("test_valid_api_key"), eq("hanoi"), eq(1), eq(20),
-                anyString(), anyInt(), anyString(), anyInt()
+                eq("test_valid_pixabay_key"),
+                eq("hanoi"),
+                eq(PhotoRepositoryImpl.DEFAULT_IMAGE_TYPE),
+                eq(PhotoRepositoryImpl.DEFAULT_SAFE_SEARCH),
+                eq(1),
+                eq(20)
         )).thenReturn(mockCall);
 
         doAnswer(invocation -> {
-            Callback<PhotosSearchResponse> callback = invocation.getArgument(0);
+            Callback<PixabaySearchResponse> callback = invocation.getArgument(0);
             callback.onResponse(mockCall, Response.success(apiResponse));
             return null;
         }).when(mockCall).enqueue(org.mockito.ArgumentMatchers.any(Callback.class));
@@ -127,25 +137,24 @@ public class PhotoRepositoryTest {
         assertEquals(Resource.Status.SUCCESS, resource.getStatus());
         assertNotNull(resource.getData());
         assertEquals(1, resource.getData().size());
-        assertEquals("photo_42", resource.getData().get(0).getId());
+        assertEquals("42", resource.getData().get(0).getId());
         assertTrue(resource.getData().get(0).isFavorite());
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    public void searchPhotos_whenHttp200ButFlickrStatFail_emitsApplicationError() {
-        PhotosSearchResponse failResponse = new PhotosSearchResponse(
-                null, "fail", 100, "Invalid API Key (Key has invalid format)"
-        );
-
+    public void searchPhotos_whenHttp400Or401InvalidKey_emitsApiKeyError() {
         when(apiService.searchPhotos(
-                anyString(), anyString(), anyString(), anyInt(), anyInt(),
-                anyString(), anyInt(), anyString(), anyInt()
+                anyString(), anyString(), anyString(), anyBoolean(), anyInt(), anyInt()
         )).thenReturn(mockCall);
 
         doAnswer(invocation -> {
-            Callback<PhotosSearchResponse> callback = invocation.getArgument(0);
-            callback.onResponse(mockCall, Response.success(failResponse));
+            Callback<PixabaySearchResponse> callback = invocation.getArgument(0);
+            Response<PixabaySearchResponse> unauthorizedResponse = Response.error(
+                    400,
+                    ResponseBody.create("[ERROR 400] \"key\" is missing", MediaType.parse("text/plain"))
+            );
+            callback.onResponse(mockCall, unauthorizedResponse);
             return null;
         }).when(mockCall).enqueue(org.mockito.ArgumentMatchers.any(Callback.class));
 
@@ -154,7 +163,8 @@ public class PhotoRepositoryTest {
 
         assertNotNull(resource);
         assertEquals(Resource.Status.ERROR, resource.getStatus());
-        assertEquals("Invalid API Key (Key has invalid format)", resource.getMessage());
+        assertNotNull(resource.getMessage());
+        assertTrue(resource.getMessage().contains("400"));
     }
 
     @Test

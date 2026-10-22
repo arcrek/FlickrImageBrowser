@@ -11,25 +11,29 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import vn.edu.usth.flickrimagebrowser.BuildConfig;
 
 /**
- * Factory for configuring OkHttp and Retrofit instances for the Flickr REST API.
+ * Factory for configuring OkHttp and Retrofit instances for the Pixabay REST API.
  */
-public final class FlickrClient {
+public final class PixabayClient {
 
     private static final long CONNECT_TIMEOUT_SECONDS = 15L;
     private static final long READ_TIMEOUT_SECONDS = 20L;
     private static final long WRITE_TIMEOUT_SECONDS = 15L;
 
-    private FlickrClient() {
+    private PixabayClient() {
     }
 
     @NonNull
-    public static FlickrApiService createService() {
-        return createService(BuildConfig.FLICKR_BASE_URL);
+    public static PixabayApiService createService() {
+        return createService(BuildConfig.PIXABAY_BASE_URL);
     }
 
     @NonNull
-    public static FlickrApiService createService(@NonNull String baseUrl) {
-        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+    public static PixabayApiService createService(@NonNull String baseUrl) {
+        HttpLoggingInterceptor.Logger sanitizedLogger = message -> {
+            String safeMessage = message.replaceAll("([?&]key=)[^&\\s]+", "$1REDACTED");
+            HttpLoggingInterceptor.Logger.DEFAULT.log(safeMessage);
+        };
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(sanitizedLogger);
         loggingInterceptor.setLevel(
                 BuildConfig.DEBUG
                         ? HttpLoggingInterceptor.Level.BASIC
@@ -49,6 +53,6 @@ public final class FlickrClient {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        return retrofit.create(FlickrApiService.class);
+        return retrofit.create(PixabayApiService.class);
     }
 }

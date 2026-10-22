@@ -1,6 +1,6 @@
 # 7-Member Team Workload, TODOs, Methods & Expected Results
 
-This document defines the complete engineering workload breakdown for a **7-member university project team** building **FlickrImage Browser** (`vn.edu.usth.flickrimagebrowser`) over a **4–8-week timeline**.
+This document defines the complete engineering workload breakdown for a **7-member university project team** building **FlickrImage Browser (Pixabay API Edition)** (`vn.edu.usth.flickrimagebrowser`) over a **4–8-week timeline**.
 
 It is designed so that:
 1. **Every member owns a distinct package boundary** to minimize Git merge conflicts.
@@ -32,7 +32,7 @@ flowchart TD
 | Member | Role Title | Primary Package / File Ownership | Test Ownership |
 |---|---|---|---|
 | **Member 1** | Architecture, Repository & Concurrency Lead | `data/repository/*`, `domain/model/*`, `util/*`, `ui/AppViewModelFactory.java`, `FlickrApplication.java` | `PhotoRepositoryTest.java` |
-| **Member 2** | Remote API, Networking & DTO Mapper Engineer | `data/remote/*`, `data/remote/dto/*`, `local.properties.example` | `PhotoMapperTest.java`, `FlickrApiServiceTest.java` |
+| **Member 2** | Remote API, Networking & DTO Mapper Engineer | `data/remote/*`, `data/remote/dto/*`, `local.properties.example` | `PhotoMapperTest.java`, `PixabayApiServiceTest.java` |
 | **Member 3** | Room Database, Schema & Migration Engineer | `data/local/*`, `data/local/entity/*`, `app/schemas/*` | `PhotoDaoTest.java`, `CollectionDaoTest.java` |
 | **Member 4** | Search Discovery, Pagination & Grid UI Engineer | `ui/search/*`, `ui/common/PhotoAdapter.java`, `res/layout/fragment_search.xml`, `res/layout/item_photo.xml` | `SearchViewModelTest.java` |
 | **Member 5** | Photo Detail, Metadata & Collection Assignment Engineer | `ui/detail/*`, `res/layout/activity_photo_detail.xml` | `DetailViewModelTest.java` |
@@ -51,16 +51,15 @@ flowchart TD
 Own the `PhotoRepository` contract and implementation (`PhotoRepositoryImpl`), background thread orchestration (`AppExecutors`), generic UI state modeling (`Resource<T>`), and dependency wiring (`AppContainer`, `AppViewModelFactory`).
 
 #### Concrete TODOs
-- [ ] **TODO 1.1:** Maintain and extend [`Resource<T>`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/util/Resource.java) to carry pagination metadata (current page, total pages, `hasMorePages`) alongside `Status` (`LOADING`, `SUCCESS`, `EMPTY`, `ERROR`).
+- [ ] **TODO 1.1:** Maintain and extend [`Resource<T>`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/util/Resource.java) to carry pagination metadata (current page, total results, `hasMorePages`) alongside `Status` (`LOADING`, `SUCCESS`, `EMPTY`, `ERROR`).
 - [ ] **TODO 1.2:** Implement multi-page result merging and favorite-flag synchronization in [`PhotoRepositoryImpl`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/repository/PhotoRepositoryImpl.java) off the main thread using [`AppExecutors`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/util/AppExecutors.java).
 - [ ] **TODO 1.3:** Implement collection-photo association methods in `PhotoRepository` (`addPhotoToCollection`, `removePhotoFromCollection`, `observePhotosInCollection`, `deleteCollection`).
-- [ ] **TODO 1.4:** Write comprehensive unit tests in [`PhotoRepositoryTest`](../app/src/test/java/vn/edu/usth/flickrimagebrowser/data/repository/PhotoRepositoryTest.java) covering HTTP errors, Flickr `stat="fail"` errors, missing API keys, and favorite/collection persistence calls.
+- [ ] **TODO 1.4:** Write comprehensive unit tests in [`PhotoRepositoryTest`](../app/src/test/java/vn/edu/usth/flickrimagebrowser/data/repository/PhotoRepositoryTest.java) covering HTTP 400/401/429 errors, missing API keys, and favorite/collection persistence calls.
 
 #### Methods to Implement / Extend
 | Class | Method Signature | Description |
 |---|---|---|
-| `PhotoRepository` / `PhotoRepositoryImpl` | `LiveData<Resource<List<Photo>>> searchPhotos(String query, int page, int perPage)` | Executes asynchronous Retrofit call, validates HTTP status and Flickr `stat="ok"`, merges favorite IDs from `PhotoDao` on `diskIO`, and posts `Resource`. |
-| `PhotoRepository` / `PhotoRepositoryImpl` | `LiveData<Resource<List<Photo>>> getRecentPhotos(int page, int perPage)` | Loads public recent Flickr photos (`flickr.photos.getRecent`) for initial discovery before a keyword is typed. |
+| `PhotoRepository` / `PhotoRepositoryImpl` | `LiveData<Resource<List<Photo>>> searchPhotos(String query, int page, int perPage)` | Executes asynchronous Retrofit call to `PixabayApiService`, clamps `perPage` (`3..200`), validates HTTP status (`400`, `401`, `429`), merges favorite IDs from `PhotoDao` on `diskIO`, and posts `Resource`. |
 | `PhotoRepository` / `PhotoRepositoryImpl` | `void toggleFavorite(Photo photo)` & `void setFavorite(Photo photo, boolean isFavorite)` | Upserts `PhotoEntity` on `diskIO()` and cleans up unreferenced non-favorite rows via `deleteOrphanIfUnreferenced`. |
 | `PhotoRepository` / `PhotoRepositoryImpl` | `void addPhotoToCollection(long collectionId, Photo photo)` & `void removePhotoFromCollection(long collectionId, String photoId)` | Ensures the `PhotoEntity` exists in `photos` and inserts/deletes `CollectionPhotoCrossRef` on `diskIO()`. |
 | `AppViewModelFactory` | `<T extends ViewModel> T create(Class<T> modelClass)` | Supplies `PhotoRepository` to all ViewModels without reflection or heavy DI frameworks. |
@@ -74,25 +73,24 @@ Own the `PhotoRepository` contract and implementation (`PhotoRepositoryImpl`), b
 ### Member 2 — Remote API, Networking & DTO Mapper Engineer
 
 #### Scope & Objective
-Own the Flickr REST API integration (`FlickrApiService`, `FlickrClient`), OkHttp timeout/logging/interceptor configuration, Gson DTO models (`PhotosSearchResponse`, `PhotosPageDto`, `PhotoDto`), and null-safe DTO-to-Domain conversion (`PhotoMapper`).
+Own the Pixabay REST API integration (`PixabayApiService`, `PixabayClient`), OkHttp timeout/logging/interceptor configuration, Gson DTO models (`PixabaySearchResponse`, `PixabayHitDto`), and null-safe DTO-to-Domain conversion (`PhotoMapper`).
 
 #### Concrete TODOs
-- [ ] **TODO 2.1:** Expand [`FlickrApiService`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/remote/FlickrApiService.java) with `flickr.photos.getRecent` (default feed) and `flickr.photos.getInfo` (detailed metadata/tags/date taken).
-- [ ] **TODO 2.2:** Add a common query parameter `Interceptor` in [`FlickrClient`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/remote/FlickrClient.java) that automatically appends `format=json`, `nojsoncallback=1`, and `api_key` to outgoing requests, plus a fallback/mock response mode when `FLICKR_API_KEY` is unconfigured for classroom demos.
-- [ ] **TODO 2.3:** Harden [`PhotoMapper`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/remote/dto/PhotoMapper.java) to sanitize HTML tags in Flickr's `description._content`, resolve `url_q` / `url_m` / `url_z`, and construct static fallback URLs (`https://live.staticflickr.com/{server}/{id}_{secret}_{size}.jpg`).
-- [ ] **TODO 2.4:** Write unit tests in [`PhotoMapperTest`](../app/src/test/java/vn/edu/usth/flickrimagebrowser/data/remote/dto/PhotoMapperTest.java) and `FlickrApiResponseParsingTest.java` using sample Flickr JSON payloads (both `stat="ok"` and `stat="fail"`).
+- [ ] **TODO 2.1:** Maintain [`PixabayApiService`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/remote/PixabayApiService.java) for `GET https://pixabay.com/api/` and optionally extend with `id` or `category`/`order` parameters for advanced filtering.
+- [ ] **TODO 2.2:** Configure [`PixabayClient`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/remote/PixabayClient.java) with timeouts and sanitized logging interceptors (redacting `key=` from logged URLs), plus optional fallback/mock response mode when `PIXABAY_API_KEY` is unconfigured for classroom demos.
+- [ ] **TODO 2.3:** Harden [`PhotoMapper`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/remote/dto/PhotoMapper.java) to map `webformatURL` / `previewURL` to `thumbnailUrl`, `largeImageURL` / `webformatURL` to `detailUrl`, and fallback metadata cleanly when `tags` or `user` are blank.
+- [ ] **TODO 2.4:** Write unit tests in [`PhotoMapperTest`](../app/src/test/java/vn/edu/usth/flickrimagebrowser/data/remote/dto/PhotoMapperTest.java) verifying Pixabay JSON mapping and fallback behavior.
 
 #### Methods to Implement / Extend
 | Class | Method Signature | Description |
 |---|---|---|
-| `FlickrApiService` | `Call<PhotosSearchResponse> searchPhotos(...)` | Queries `?method=flickr.photos.search` with `text`, `page`, `per_page`, `extras`, and `safe_search`. |
-| `FlickrApiService` | `Call<PhotosSearchResponse> getRecentPhotos(...)` | Queries `?method=flickr.photos.getRecent` for initial discovery feed. |
-| `FlickrClient` | `FlickrApiService createService(String baseUrl)` | Builds `OkHttpClient` (15s connect/write, 20s read timeouts, `HttpLoggingInterceptor`) and `Retrofit` with `GsonConverterFactory`. |
-| `PhotoMapper` | `Photo fromDto(PhotoDto dto, boolean isFavorite)` | Safely maps a `PhotoDto` to a domain `Photo` or returns `null` if `id`/URLs are unresolvable. |
-| `PhotoMapper` | `List<Photo> fromDtoList(List<PhotoDto> dtos, Set<String> favoriteIds)` | Batch-maps DTOs while filtering malformed items and marking saved favorites. |
+| `PixabayApiService` | `Call<PixabaySearchResponse> searchPhotos(String apiKey, String query, String imageType, boolean safeSearch, int page, int perPage)` | Queries `GET .` with `key`, `q`, `image_type`, `safesearch`, `page`, `per_page`. |
+| `PixabayClient` | `PixabayApiService createService(String baseUrl)` | Builds `OkHttpClient` (15s connect/write, 20s read timeouts, sanitized `HttpLoggingInterceptor`) and `Retrofit` with `GsonConverterFactory`. |
+| `PhotoMapper` | `Photo fromDto(PixabayHitDto dto, boolean isFavorite)` | Safely maps a `PixabayHitDto` to a domain `Photo` or returns `null` if `id`/URLs are unresolvable. |
+| `PhotoMapper` | `List<Photo> fromDtoList(List<PixabayHitDto> dtos, Set<String> favoriteIds)` | Batch-maps DTOs while filtering malformed items and marking saved favorites. |
 
 #### Expected Results
-- **Functional:** Valid JSON responses from Flickr are parsed without `NullPointerException` or `JsonSyntaxException`, and Flickr application-level errors (`stat="fail"`, code `100` Invalid API Key) are surfaced cleanly via `PhotosSearchResponse.isOk()`.
+- **Functional:** Valid JSON responses from Pixabay are parsed without `NullPointerException` or `JsonSyntaxException`, and HTTP/application errors are surfaced cleanly.
 - **Verification:** `./gradlew testDebugUnitTest --tests vn.edu.usth.flickrimagebrowser.data.remote.dto.*` passes all mapper and JSON parsing tests.
 
 ---
@@ -131,9 +129,9 @@ Own the local SQLite persistence layer using Room (`AppDatabase`, `PhotoDao`, `C
 Own the photo discovery experience (`SearchFragment`, `SearchViewModel`, `PhotoAdapter`, `fragment_search.xml`, `item_photo.xml`), including keyword search, pagination (`loadNextPage`), configuration-change retention, and Loading / Empty / Error / Retry UI states.
 
 #### Concrete TODOs
-- [ ] **TODO 4.1:** Enhance [`SearchViewModel`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/search/SearchViewModel.java) to support multi-page pagination (`currentPage`, `isLoadingNextPage`, accumulating `List<Photo>` across pages) and initial recent-photos loading.
+- [ ] **TODO 4.1:** Enhance [`SearchViewModel`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/search/SearchViewModel.java) to support multi-page pagination (`currentPage`, `isLoadingNextPage`, accumulating `List<Photo>` across pages).
 - [ ] **TODO 4.2:** Add a `RecyclerView.OnScrollListener` in [`SearchFragment`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/search/SearchFragment.java) that triggers `viewModel.loadNextPage()` when the user scrolls near the bottom of the 2-column `GridLayoutManager`.
-- [ ] **TODO 4.3:** Optimize [`PhotoAdapter`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/common/PhotoAdapter.java) using `ListAdapter` + `DiffUtil.ItemCallback` and Glide thumbnail loading (`url_q` / `url_m`, `centerCrop`, placeholder and error drawables) so full-resolution images are never loaded in the grid.
+- [ ] **TODO 4.3:** Optimize [`PhotoAdapter`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/common/PhotoAdapter.java) using `ListAdapter` + `DiffUtil.ItemCallback` and Glide thumbnail loading (`webformatURL` / `previewURL`, `centerCrop`, placeholder and error drawables) so full-resolution images are never loaded in the grid.
 - [ ] **TODO 4.4:** Expand [`SearchViewModelTest`](../app/src/test/java/vn/edu/usth/flickrimagebrowser/ui/search/SearchViewModelTest.java) to verify pagination accumulation, rotation deduplication, empty states, and retry recovery.
 
 #### Methods to Implement / Extend
@@ -154,19 +152,19 @@ Own the photo discovery experience (`SearchFragment`, `SearchViewModel`, `PhotoA
 ### Member 5 — Photo Detail, Metadata & Collection Assignment Engineer
 
 #### Scope & Objective
-Own the photo detail experience (`PhotoDetailActivity`, `DetailViewModel`, `activity_photo_detail.xml`), loading medium/large detail images (`url_z`), displaying photo metadata, toggling favorite state in real time, and assigning a photo to a local collection.
+Own the photo detail experience (`PhotoDetailActivity`, `DetailViewModel`, `activity_photo_detail.xml`), loading large detail images (`largeImageURL`), displaying photo metadata, toggling favorite state in real time, and assigning a photo to a local collection.
 
 #### Concrete TODOs
 - [ ] **TODO 5.1:** Enhance [`DetailViewModel`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/detail/DetailViewModel.java) to expose `LiveData<List<Collection>>` and `addPhotoToCollection(long collectionId)` alongside `getIsFavorite()` and `toggleFavorite()`.
 - [ ] **TODO 5.2:** Add an **"Add to Collection"** button and selection dialog (`AlertDialog` or `BottomSheetDialogFragment`) in [`PhotoDetailActivity`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/detail/PhotoDetailActivity.java) so users can save the current photo into any local collection.
-- [ ] **TODO 5.3:** Configure Glide in `PhotoDetailActivity.renderPhotoDetails(...)` to load `photo.getDetailUrl()` (`url_z`) with `.thumbnail(Glide.with(this).load(photo.getThumbnailUrl()))` so cached grid thumbnails appear instantaneously while the higher-resolution image loads.
+- [ ] **TODO 5.3:** Configure Glide in `PhotoDetailActivity.renderPhotoDetails(...)` to load `photo.getDetailUrl()` (`largeImageURL`) with `.thumbnail(Glide.with(this).load(photo.getThumbnailUrl()))` so cached grid thumbnails appear instantaneously while the higher-resolution image loads.
 - [ ] **TODO 5.4:** Add a Share action on `toolbarDetail` using `Intent.ACTION_SEND` to share the photo title and URL, and write `DetailViewModelTest.java`.
 
 #### Methods to Implement / Extend
 | Class | Method Signature | Description |
 |---|---|---|
 | `PhotoDetailActivity` | `static Intent newIntent(Context context, Photo photo)` | Creates type-safe launch `Intent` carrying the serialized `Photo`. |
-| `PhotoDetailActivity` | `void renderPhotoDetails(Photo photo)` | Populates title, owner, description fallback, and Glide detail image (`url_z`). |
+| `PhotoDetailActivity` | `void renderPhotoDetails(Photo photo)` | Populates title, owner, description fallback, and Glide detail image (`largeImageURL`). |
 | `PhotoDetailActivity` | `void showAddToCollectionDialog(List<Collection> collections)` | Displays a picker dialog allowing the user to add the current photo to a collection. |
 | `DetailViewModel` | `void setPhoto(Photo photo)` & `LiveData<Boolean> getIsFavorite()` | Initializes current photo and reactively observes Room favorite state by ID. |
 | `DetailViewModel` | `void toggleFavorite()` & `void addToCollection(long collectionId)` | Persists favorite toggle or collection membership via `PhotoRepository`. |
@@ -232,9 +230,9 @@ Own the Collections feature UI (`CollectionsFragment`, `CollectionsViewModel`, `
 
 | Week | Milestone | Active Members & Integration Checkpoints |
 |---|---|---|
-| **Week 1** | **M1: Project Bootstrap & Architecture Lock** | **All Members:** Verify Java-only Gradle build (`assembleDebug`), review package boundaries, configure `local.properties` (`FLICKR_API_KEY`), and run baseline tests (`testDebugUnitTest`). |
-| **Week 2** | **M2: Data Layer Contracts (API + Room)** | **M1, M2, M3:** Finalize `FlickrApiService`, `PhotoMapper`, `AppDatabase` entities/DAOs, and `PhotoRepository` interface so UI members can build against stable contracts. |
-| **Week 3** | **M3: Core Search & Thumbnail Grid** | **M2, M4:** Wire `SearchFragment` + `SearchViewModel` + `PhotoAdapter` with live Flickr search, Loading/Empty/Error/Retry states, and unit tests. |
+| **Week 1** | **M1: Project Bootstrap & Architecture Lock** | **All Members:** Verify Java-only Gradle build (`assembleDebug`), review package boundaries, configure `local.properties` (`PIXABAY_API_KEY`), and run baseline tests (`testDebugUnitTest`). |
+| **Week 2** | **M2: Data Layer Contracts (API + Room)** | **M1, M2, M3:** Finalize `PixabayApiService`, `PhotoMapper`, `AppDatabase` entities/DAOs, and `PhotoRepository` interface so UI members can build against stable contracts. |
+| **Week 3** | **M3: Core Search & Thumbnail Grid** | **M2, M4:** Wire `SearchFragment` + `SearchViewModel` + `PhotoAdapter` with live Pixabay search, Loading/Empty/Error/Retry states, and unit tests. |
 | **Week 4** | **M4: Photo Detail & Favorites Persistence** | **M3, M5, M6:** Wire `PhotoDetailActivity` + `DetailViewModel` and `FavoritesFragment` + `FavoritesViewModel` with real-time Room favorite toggling. |
 | **Week 5** | **M5: Pagination & Offline Favorites Polish** | **M1, M4, M6:** Add endless scroll pagination in Search and local filter/sort + `Snackbar` undo in Favorites. |
 | **Week 6** | **M6: Collections End-to-End Flow** | **M1, M3, M5, M7:** Connect "Add to Collection" in `PhotoDetailActivity` with `CollectionsFragment` creation, deletion, and collection photo browsing. |
@@ -247,6 +245,6 @@ Own the Collections feature UI (`CollectionsFragment`, `CollectionsViewModel`, `
 
 Before opening or merging a Pull Request, each of the 7 team members must verify:
 1. **Zero Kotlin Files:** `find app/src -name "*.kt"` outputs nothing; all new classes are pure Java (`.java`) and XML (`.xml`).
-2. **No Hardcoded Secrets:** `FLICKR_API_KEY` is read exclusively via `BuildConfig.FLICKR_API_KEY` from untracked `local.properties`.
+2. **No Hardcoded Secrets:** `PIXABAY_API_KEY` is read exclusively via `BuildConfig.PIXABAY_API_KEY` from untracked `local.properties`.
 3. **Main-Thread Safety:** All Retrofit calls use asynchronous `.enqueue(...)` and all Room mutations run on `AppExecutors.diskIO()`.
 4. **Tests Pass:** `./gradlew assembleDebug testDebugUnitTest assembleDebugAndroidTest` exits with code `0` and the member's assigned test class passes all assertions.

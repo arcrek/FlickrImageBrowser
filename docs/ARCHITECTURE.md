@@ -1,8 +1,8 @@
-# Architecture Overview — FlickrImage Browser
+# Architecture Overview — FlickrImage Browser (Pixabay API Edition)
 
 ## 1. High-Level Design
 
-**FlickrImage Browser** follows a pragmatic **Model–View–ViewModel (MVVM)** architecture with a dedicated **Repository layer**, written 100% in Java using Android Views, Material Design XML layouts, and `ViewBinding`.
+**FlickrImage Browser** follows a pragmatic **Model–View–ViewModel (MVVM)** architecture with a dedicated **Repository layer**, written 100% in Java using Android Views, Material Design XML layouts, and `ViewBinding`. Because Flickr restricts API keys to paid Pro subscribers and Pexels API signup approval is unavailable, the remote data layer queries the **Pixabay REST API** (`https://pixabay.com/api/`) while preserving the project's `vn.edu.usth.flickrimagebrowser` namespace and domain contracts.
 
 ```mermaid
 flowchart TD
@@ -28,7 +28,7 @@ flowchart TD
 
     subgraph Data["Data Layer (Background Thread Execution)"]
         REPO["PhotoRepository / PhotoRepositoryImpl"]
-        API["FlickrApiService + FlickrClient (Retrofit / OkHttp / Gson)"]
+        API["PixabayApiService + PixabayClient (Retrofit / OkHttp / Gson)"]
         MAP["PhotoMapper"]
         DB["AppDatabase (Room)<br/>PhotoDao &amp; CollectionDao"]
     end
@@ -60,18 +60,18 @@ All source code resides under `vn.edu.usth.flickrimagebrowser`:
 | Package | Key Classes | Responsibility |
 |---|---|---|
 | `(root)` | `FlickrApplication`, `MainActivity` | Application-scoped dependency initialization (`AppContainer`) and Single-Activity `BottomNavigationView` host. |
-| `data/remote/` | `FlickrApiService`, `FlickrClient` | Retrofit service definition for `flickr.photos.search` and OkHttp client configuration (15s connect/write, 20s read timeouts). |
-| `data/remote/dto/` | `PhotosSearchResponse`, `PhotosPageDto`, `PhotoDto`, `PhotoMapper` | Gson DTOs matching Flickr's JSON contract (`stat`, `code`, `message`, `photos.photo`) and null-safe conversion into domain `Photo` objects. |
+| `data/remote/` | `PixabayApiService`, `PixabayClient` | Retrofit service definition for `GET https://pixabay.com/api/` (`key`, `q`, `image_type`, `safesearch`, `page`, `per_page`) and OkHttp client configuration (15s connect/write, 20s read timeouts, query-key redaction in debug logs). |
+| `data/remote/dto/` | `PixabaySearchResponse`, `PixabayHitDto`, `PhotoMapper` | Gson DTOs matching Pixabay's JSON contract (`total`, `totalHits`, `hits`, `webformatURL`, `largeImageURL`, `tags`, `user`) and null-safe conversion into domain `Photo` objects. |
 | `data/local/` | `AppDatabase`, `PhotoDao`, `CollectionDao` | Room SQLite persistence, reactive `LiveData` queries, and explicit schema migration definitions (`MIGRATION_1_2`). |
 | `data/local/entity/` | `PhotoEntity`, `CollectionEntity`, `CollectionPhotoCrossRef`, `CollectionWithPhotos` | Database tables for saved photos, collections, and their many-to-many junction table with foreign-key cascade rules. |
-| `data/repository/` | `PhotoRepository`, `PhotoRepositoryImpl` | Single source of truth coordinating Retrofit network callbacks, application-level Flickr error checks, and background Room reads/writes via `AppExecutors`. |
+| `data/repository/` | `PhotoRepository`, `PhotoRepositoryImpl` | Single source of truth coordinating Retrofit network callbacks, parameter clamping (`per_page` 3..200), HTTP/API error checks (400/401/403, 429), and background Room reads/writes via `AppExecutors`. |
 | `domain/model/` | `Photo`, `Collection` | Immutable Java domain models shared across ViewModels and UI adapters. |
 | `ui/` | `AppViewModelFactory` | Constructor-injected `ViewModelProvider.Factory` supplying `PhotoRepository` to ViewModels. |
-| `ui/common/` | `PhotoAdapter` | Shared `ListAdapter` + `DiffUtil` rendering photo thumbnails via Glide (`url_q` / `url_m`). |
+| `ui/common/` | `PhotoAdapter` | Shared `ListAdapter` + `DiffUtil` rendering photo thumbnails via Glide (`webformatURL` / `previewURL`). |
 | `ui/search/` | `SearchFragment`, `SearchViewModel` | Keyword search input, `Resource<List<Photo>>` observation, and Loading / Empty / Error / Retry UI states. |
 | `ui/favorites/` | `FavoritesFragment`, `FavoritesViewModel` | Reactive grid of locally persisted favorite photos from Room. |
 | `ui/collections/` | `CollectionsFragment`, `CollectionsViewModel`, `CollectionAdapter` | Reactive list and creation flow for user photo collections. |
-| `ui/detail/` | `PhotoDetailActivity`, `DetailViewModel` | Full photo detail view loading `url_z` via Glide and observing/toggling favorite state in Room. |
+| `ui/detail/` | `PhotoDetailActivity`, `DetailViewModel` | Full photo detail view loading `largeImageURL` via Glide and observing/toggling favorite state in Room. |
 | `util/` | `Resource`, `AppExecutors`, `AppContainer` | Generic UI state wrapper, background thread pools (`diskIO`, `networkIO`, `mainThread`), and manual dependency container. |
 
 ---
@@ -84,10 +84,10 @@ All source code resides under `vn.edu.usth.flickrimagebrowser`:
    - If `query` matches `lastQuery` (e.g., after a screen rotation), `SearchViewModel` does **not** re-issue the network call; `LiveData` immediately re-emits the cached `Resource<List<Photo>>`.
 3. `SearchViewModel` switches on `searchTrigger` via `Transformations.switchMap`, invoking `PhotoRepositoryImpl.searchPhotos(query, page, perPage)`.
 4. `PhotoRepositoryImpl`:
-   - Checks that `BuildConfig.FLICKR_API_KEY` is non-empty and not the placeholder value; otherwise immediately emits `Resource.error(...)`.
-   - Emits `Resource.loading(null)` and enqueues `FlickrApiService.searchPhotos(...)` asynchronously via Retrofit.
-   - When the HTTP response arrives, validates **both** `response.isSuccessful()` and `body.isOk()` (`"ok".equalsIgnoreCase(stat)`), since Flickr returns HTTP `200 OK` with `stat="fail"` on application-level errors.
-   - Dispatches onto `AppExecutors.diskIO()` to query `PhotoDao.getFavoriteIdsSync()`, maps `PhotoDto` items into `Photo` domain models via `PhotoMapper`, and posts `Resource.success(list)` or `Resource.empty()`.
+   - Checks that `BuildConfig.PIXABAY_API_KEY` is non-empty and not the placeholder value; otherwise immediately emits `Resource.error(...)`.
+   - Clamps `perPage` to Pixabay's required `3..200` range, emits `Resource.loading(null)`, and enqueues `PixabayApiService.searchPhotos(apiKey, query, "photo", true, page, perPage)` asynchronously via Retrofit.
+   - When the HTTP response arrives, validates `response.isSuccessful()` (surfacing clear error messages for HTTP `400`/`401`/`403` invalid keys/parameters and HTTP `429` rate limits).
+   - Dispatches onto `AppExecutors.diskIO()` to query `PhotoDao.getFavoriteIdsSync()`, maps `PixabayHitDto` items into `Photo` domain models via `PhotoMapper`, and posts `Resource.success(list)` or `Resource.empty()`.
 
 ### 3.2 Favorites & Collections Persistence Flow
 1. When the user taps the heart icon on a photo item or inside `PhotoDetailActivity`, the ViewModel calls `PhotoRepository.toggleFavorite(photo)`.
@@ -104,9 +104,9 @@ All source code resides under `vn.edu.usth.flickrimagebrowser`:
 1. **Java `LiveData` + `AppExecutors` instead of RxJava or Coroutines:**
    - Keeps the codebase 100% Java without Kotlin dependencies or complex reactive stream boilerplate.
    - `AppExecutors` allows unit tests (`PhotoRepositoryTest`) to inject synchronous `Runnable::run` executors so asynchronous repository logic can be tested deterministically.
-2. **Flickr `extras` URL Resolution with Static Fallback:**
-   - `FlickrApiService` requests `extras=url_q,url_m,url_z,owner_name,description` so thumbnail (`url_q`, 150×150) and detail (`url_z`, 640px) URLs arrive in the initial search response.
-   - If Flickr omits an `extras` URL on a specific photo, `PhotoMapper` deterministically constructs `https://live.staticflickr.com/{server}/{id}_{secret}_{size}.jpg`.
+2. **Pixabay Responsive Image Size Selection (Avoiding OOM & Blurry Grids):**
+   - `PixabayHitDto` exposes flat image URLs (`previewURL` at 150px, `webformatURL` at 640px, and `largeImageURL` at 1280px).
+   - `PhotoMapper` maps `webformatURL` (falling back to `previewURL`) to `thumbnailUrl` for crisp 2-column grid scrolling and `largeImageURL` (1280px) to `detailUrl`, avoiding multi-megabyte full-resolution bitmaps that could trigger `OutOfMemoryError`.
 3. **Orphan-Safe Shared `photos` Table:**
    - Both Favorites (`is_favorite = 1`) and Collections (`collection_photo_cross_ref`) reference `PhotoEntity` in the `photos` table.
    - Unfavoriting a photo updates `is_favorite = 0` and only deletes the row if no collection references it, preventing accidental foreign-key cascade deletions from user collections.

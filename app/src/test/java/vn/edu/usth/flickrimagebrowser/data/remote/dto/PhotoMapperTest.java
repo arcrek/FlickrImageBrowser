@@ -18,50 +18,42 @@ import vn.edu.usth.flickrimagebrowser.data.local.entity.PhotoEntity;
 import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
 
 /**
- * Unit tests verifying DTO-to-domain and entity-to-domain mapping behavior.
+ * Unit tests verifying Pixabay DTO-to-domain and entity-to-domain mapping behavior.
  */
 public class PhotoMapperTest {
 
     @Test
     public void fromDto_mapsExplicitUrlsAndMetadata() {
-        PhotoDto dto = new PhotoDto(
-                "101",
-                "owner_id",
-                "sec123",
-                "65535",
-                66,
-                "Sunset over West Lake",
+        PixabayHitDto dto = new PixabayHitDto(
+                101L,
+                "sunset, west lake, hanoi",
                 "usth_photographer",
-                new PhotoDto.DescriptionDto("Golden hour reflection"),
-                "https://live.staticflickr.com/65535/101_sec123_q.jpg",
-                "https://live.staticflickr.com/65535/101_sec123_m.jpg",
-                "https://live.staticflickr.com/65535/101_sec123_z.jpg"
+                "https://pixabay.com/photos/sunset-west-lake-101/",
+                "https://cdn.pixabay.com/photo/101_150.jpg",
+                "https://cdn.pixabay.com/photo/101_640.jpg",
+                "https://cdn.pixabay.com/photo/101_1280.jpg"
         );
 
         Photo photo = PhotoMapper.fromDto(dto, true);
 
         assertNotNull(photo);
         assertEquals("101", photo.getId());
-        assertEquals("Sunset over West Lake", photo.getTitle());
+        assertEquals("sunset, west lake, hanoi", photo.getTitle());
         assertEquals("usth_photographer", photo.getOwnerName());
-        assertEquals("Golden hour reflection", photo.getDescription());
-        assertEquals("https://live.staticflickr.com/65535/101_sec123_q.jpg", photo.getThumbnailUrl());
-        assertEquals("https://live.staticflickr.com/65535/101_sec123_z.jpg", photo.getDetailUrl());
+        assertEquals("sunset, west lake, hanoi", photo.getDescription());
+        assertEquals("https://cdn.pixabay.com/photo/101_640.jpg", photo.getThumbnailUrl());
+        assertEquals("https://cdn.pixabay.com/photo/101_1280.jpg", photo.getDetailUrl());
         assertTrue(photo.isFavorite());
     }
 
     @Test
-    public void fromDto_constructsStaticFlickrUrlsWhenExtrasMissing() {
-        PhotoDto dto = new PhotoDto(
-                "202",
-                "owner_fallback",
-                "abc999",
-                "7001",
-                7,
+    public void fromDto_fallsBackWhenPrimarySizesAndMetadataMissing() {
+        PixabayHitDto dto = new PixabayHitDto(
+                202L,
                 "",
                 null,
-                null,
-                null,
+                "https://pixabay.com/photos/202/",
+                "https://cdn.pixabay.com/photo/202_150.jpg",
                 null,
                 null
         );
@@ -69,17 +61,25 @@ public class PhotoMapperTest {
         Photo photo = PhotoMapper.fromDto(dto, false);
 
         assertNotNull(photo);
+        assertEquals("202", photo.getId());
         assertEquals("Untitled Photo", photo.getTitle());
-        assertEquals("owner_fallback", photo.getOwnerName());
-        assertEquals("https://live.staticflickr.com/7001/202_abc999_q.jpg", photo.getThumbnailUrl());
-        assertEquals("https://live.staticflickr.com/7001/202_abc999_z.jpg", photo.getDetailUrl());
+        assertEquals("Unknown Author", photo.getOwnerName());
+        assertEquals("https://pixabay.com/photos/202/", photo.getDescription());
+        assertEquals("https://cdn.pixabay.com/photo/202_150.jpg", photo.getThumbnailUrl());
+        assertEquals("https://cdn.pixabay.com/photo/202_150.jpg", photo.getDetailUrl());
         assertFalse(photo.isFavorite());
     }
 
     @Test
     public void fromDto_returnsNullWhenIdOrUrlsCannotBeResolved() {
-        PhotoDto missingId = new PhotoDto(null, "u", "s", "srv", 1, "Title", "Owner", null, null, null, null);
-        PhotoDto missingUrls = new PhotoDto("303", "u", null, null, 1, "Title", "Owner", null, null, null, null);
+        PixabayHitDto missingId = new PixabayHitDto(
+                null, "tags", "Owner", null,
+                "https://cdn.pixabay.com/photo/1_150.jpg", null, null
+        );
+        PixabayHitDto missingUrls = new PixabayHitDto(
+                303L, "tags", "Owner", null,
+                null, null, null
+        );
 
         assertNull(PhotoMapper.fromDto(missingId, false));
         assertNull(PhotoMapper.fromDto(missingUrls, false));
@@ -87,14 +87,16 @@ public class PhotoMapperTest {
 
     @Test
     public void fromDtoList_marksFavoritesAndFiltersInvalidEntries() {
-        PhotoDto validFav = new PhotoDto(
-                "1", "u1", "s1", "srv1", 1, "First", "Alice", null,
-                "https://example.com/1_q.jpg", null, "https://example.com/1_z.jpg"
+        PixabayHitDto validFav = new PixabayHitDto(
+                1L, "First", "Alice", null,
+                null, "https://cdn.pixabay.com/photo/1_640.jpg", "https://cdn.pixabay.com/photo/1_1280.jpg"
         );
-        PhotoDto invalidDto = new PhotoDto(null, null, null, null, 0, null, null, null, null, null, null);
-        PhotoDto validNonFav = new PhotoDto(
-                "2", "u2", "s2", "srv2", 1, "Second", "Bob", null,
-                "https://example.com/2_q.jpg", null, "https://example.com/2_z.jpg"
+        PixabayHitDto invalidDto = new PixabayHitDto(
+                null, null, null, null, null, null, null
+        );
+        PixabayHitDto validNonFav = new PixabayHitDto(
+                2L, "Second", "Bob", null,
+                null, "https://cdn.pixabay.com/photo/2_640.jpg", "https://cdn.pixabay.com/photo/2_1280.jpg"
         );
 
         Set<String> favoriteIds = new HashSet<>(Collections.singletonList("1"));
