@@ -26,3 +26,13 @@ Run from the repository root on Windows:
 ```
 
 Configure an Android SDK through `ANDROID_HOME` or `sdk.dir` in untracked `local.properties` before rerunning. The second command also requires an Android emulator or connected device. After successful verification, reconcile Member 3's checkboxes against the plan's expected results. UI/repository integration remains with the owning members and later scheduled weeks.
+
+## Follow-up — 2026-10-23: Android verification passed
+
+The user installed Android Studio and the Android SDK, resolving the earlier SDK blocker. With SDK platform 37.0, JDK 25, and Gradle 9.6, `assembleDebug testDebugUnitTest assembleDebugAndroidTest` completed successfully in 1m 44s. All 11 JVM tests passed (mapper 5, repository 4, search ViewModel 2), with zero failures, errors, or skips; see the [local JVM report](../../app/build/reports/tests/testDebugUnitTest/index.html).
+
+`connectedDebugAndroidTest` completed successfully in 21s on Pixel 10 Pro / Android 17. The XML report confirms all 12 Room tests passed (`PhotoDaoTest`: 7; `CollectionDaoTest`: 5), with zero failures, errors, or skips; see the [local instrumentation report](../../app/build/reports/androidTests/connected/debug/index.html). Room-generated upsert code was also inspected to confirm existing rows are updated rather than replaced. No production-code change was required after the earlier review.
+
+The debug app was installed and launched, and Search/Favorites/Collections navigation passed a Mobile MCP emulator smoke check. Live API searching was not exercised. Mobile MCP 1.0.12's stdio handshake and device listing were verified; exposing its native tools in Codex requires a restart.
+
+Reconciled TODO 3.1–3.5 as complete in the Member 3 section of the team plan. Existing entities, exported schema v1, and the future `MIGRATION_1_2` placeholder remain unchanged. This completes Member 3's current data contracts and their verification; other members and later integration milestones were not marked complete. The reports above are generated local artifacts and are not committed.
