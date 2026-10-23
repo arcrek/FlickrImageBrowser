@@ -30,8 +30,8 @@ import vn.edu.usth.flickrimagebrowser.ui.detail.PhotoDetailActivity;
 import vn.edu.usth.flickrimagebrowser.util.Resource;
 
 /**
- * Fragment allowing users to search public Flickr photos, scroll endlessly with pagination,
- * and view photos in a Pinterest-style staggered masonry grid with a bottom search dock.
+ * Fragment presenting search input, a Pinterest-style 2-column staggered photo grid,
+ * Loading/Empty/Error states, and endless-scroll pagination.
  */
 public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActionListener {
 
@@ -59,6 +59,8 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
     private SearchViewModel viewModel;
     private PhotoAdapter photoAdapter;
     private String currentRecommendation = "Mùa thu Hà Nội";
+
+    private final int[] lastPositionsReuse = new int[GRID_SPAN_COUNT];
 
     @Nullable
     @Override
@@ -94,15 +96,18 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
                     if (dy <= 0) {
                         return;
                     }
-                    int visibleItemCount = layoutManager.getChildCount();
                     int totalItemCount = layoutManager.getItemCount();
-                    int[] firstVisibleItemPositions = layoutManager.findFirstVisibleItemPositions(null);
-                    int firstVisibleItemPosition = (firstVisibleItemPositions != null && firstVisibleItemPositions.length > 0)
-                            ? firstVisibleItemPositions[0]
-                            : 0;
+                    int[] lastPositions = layoutManager.findLastVisibleItemPositions(lastPositionsReuse);
+                    int maxLastVisible = 0;
+                    if (lastPositions != null) {
+                        for (int pos : lastPositions) {
+                            if (pos > maxLastVisible) {
+                                maxLastVisible = pos;
+                            }
+                        }
+                    }
 
-                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - PAGINATION_THRESHOLD
-                            && totalItemCount > 0) {
+                    if (maxLastVisible >= totalItemCount - PAGINATION_THRESHOLD && totalItemCount > 0) {
                         viewModel.loadNextPage();
                     }
                 }

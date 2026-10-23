@@ -8,6 +8,8 @@
     <string name="nav_search">Search</string>
     <string name="nav_favorites">Favorites</string>
     <string name="nav_collections">Collections</string>
+    <string name="tab_saved">Saved</string>
+    <string name="tab_boards">Boards</string>
 
     <!-- Search Screen -->
     <string name="search_hint">Search photos, topics, creators…</string>
@@ -15,8 +17,8 @@
     <string name="action_retry">Retry</string>
     <string name="search_prompt_state">Enter a keyword below or choose a suggested topic.</string>
     <string name="search_empty_state">No photos matched your query.</string>
-    <string name="recommend_format">Gợi ý: \"%1$s\"</string>
-    <string name="recommend_action">Thử ngay →</string>
+    <string name="recommend_format">Explore: \"%1$s\"</string>
+    <string name="recommend_action">Try now →</string>
 
     <!-- Favorites Screen -->
     <string name="favorites_empty_state">No favorite photos saved yet. Tap the heart icon on any photo to save it offline.</string>

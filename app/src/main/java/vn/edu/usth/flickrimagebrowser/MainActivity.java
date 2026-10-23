@@ -36,9 +36,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Apply system window insets so the bottom navigation bar is never obscured by gesture/system bars
+        int initialPaddingBottom = binding.bottomNavigation.getPaddingBottom();
         ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNavigation, (view, insets) -> {
             Insets navInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            view.setPadding(0, 0, 0, navInsets.bottom);
+            view.setPadding(
+                    view.getPaddingLeft(),
+                    view.getPaddingTop(),
+                    view.getPaddingRight(),
+                    initialPaddingBottom + navInsets.bottom
+            );
             return insets;
         });
 
@@ -94,10 +100,10 @@ public class MainActivity extends AppCompatActivity {
     private void updateToolbarForTab(int itemId) {
         if (itemId == R.id.nav_favorites) {
             binding.toolbarTitle.setText(R.string.nav_favorites);
-            binding.toolbarTagline.setText("Saved");
+            binding.toolbarTagline.setText(R.string.tab_saved);
         } else if (itemId == R.id.nav_collections) {
             binding.toolbarTitle.setText(R.string.nav_collections);
-            binding.toolbarTagline.setText("Boards");
+            binding.toolbarTagline.setText(R.string.tab_boards);
         } else {
             binding.toolbarTitle.setText(R.string.brand_name_display);
             binding.toolbarTagline.setText(R.string.brand_tagline);

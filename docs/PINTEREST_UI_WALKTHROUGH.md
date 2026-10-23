@@ -7,7 +7,7 @@ Chúng tôi đã hoàn thành việc nâng cấp giao diện và hoạt ảnh ch
    - Đã thay thế `GridLayoutManager` bằng `StaggeredGridLayoutManager` 2 cột trên cả `SearchFragment.java` và `FavoritesFragment.java`.
    - Thiết lập chiến lược bù khoảng trống `GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS` để các ảnh tự sắp xếp liền mạch, không bị hổng lỗ trống khi cuộn.
 2. **Thẻ ảnh phẳng bo góc 16dp (Rounded Flat Card):**
-   - `item_photo.xml` được nâng cấp với bán kính bo góc tròn lớn `16dp`, thiết kế phẳng (`cardElevation="0dp"`), viền mỏng phẳng hiện đại.
+   - `item_photo.xml` được nâng cấp với bán kính bo góc tròn lớn `16dp`, thiết kế phẳng (`cardElevation="2dp"`), viền mỏng phẳng hiện đại.
    - Bổ sung hiệu ứng phản hồi xúc giác sóng nước (`Ripple`) với `foreground="?attr/selectableItemBackground"`.
    - `ImageView` sử dụng `adjustViewBounds="true"` và `minHeight="140dp"` cho phép chiều cao ảnh tự co giãn theo tỉ lệ thực, tạo nên hiệu ứng so le cao thấp đặc trưng của Pinterest.
 3. **Nút thả tim tròn nổi (Floating Action Pill):**

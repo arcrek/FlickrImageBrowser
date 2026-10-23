@@ -8,8 +8,10 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import vn.edu.usth.flickrimagebrowser.data.repository.PhotoRepository;
 import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
@@ -33,14 +35,53 @@ public class SearchViewModel extends ViewModel {
     private LiveData<Resource<List<Photo>>> activePageSource;
 
     @Nullable
+    private LiveData<List<Photo>> favoritesSource;
+
+    @Nullable
     private String lastQuery;
 
     private int currentPage = DEFAULT_PAGE;
     private boolean isLoadingNextPage = false;
     private boolean hasMorePages = true;
+    private boolean lastFailedOnNextPage = false;
 
     public SearchViewModel(@NonNull PhotoRepository repository) {
         this.repository = Objects.requireNonNull(repository, "repository must not be null");
+        favoritesSource = repository.observeFavorites();
+        if (favoritesSource != null) {
+            searchResults.addSource(favoritesSource, this::onFavoritesChanged);
+        }
+    }
+
+    private void onFavoritesChanged(@Nullable List<Photo> favoritePhotos) {
+        if (accumulatedPhotos.isEmpty()) {
+            return;
+        }
+        Set<String> favIds = new HashSet<>();
+        if (favoritePhotos != null) {
+            for (Photo p : favoritePhotos) {
+                favIds.add(p.getId());
+            }
+        }
+        boolean changed = false;
+        List<Photo> updated = new ArrayList<>(accumulatedPhotos.size());
+        for (Photo p : accumulatedPhotos) {
+            boolean isFav = favIds.contains(p.getId());
+            if (p.isFavorite() != isFav) {
+                changed = true;
+                updated.add(p.withFavorite(isFav, isFav ? System.currentTimeMillis() : 0));
+            } else {
+                updated.add(p);
+            }
+        }
+        if (changed) {
+            accumulatedPhotos.clear();
+            accumulatedPhotos.addAll(updated);
+            Resource<List<Photo>> current = searchResults.getValue();
+            if (current != null && current.getStatus() == Resource.Status.SUCCESS) {
+                searchResults.setValue(Resource.success(new ArrayList<>(accumulatedPhotos)));
+            }
+        }
     }
 
     @NonNull
@@ -87,6 +128,7 @@ public class SearchViewModel extends ViewModel {
         currentPage = DEFAULT_PAGE;
         hasMorePages = true;
         isLoadingNextPage = false;
+        lastFailedOnNextPage = false;
         isLoadingMore.setValue(false);
         accumulatedPhotos.clear();
 
@@ -185,6 +227,7 @@ public class SearchViewModel extends ViewModel {
                         activePageSource = null;
                     }
                     isLoadingNextPage = false;
+                    lastFailedOnNextPage = false;
                     isLoadingMore.setValue(false);
 
                     List<Photo> newPhotos = resource.getData();
@@ -206,6 +249,7 @@ public class SearchViewModel extends ViewModel {
                         activePageSource = null;
                     }
                     isLoadingNextPage = false;
+                    lastFailedOnNextPage = false;
                     isLoadingMore.setValue(false);
                     hasMorePages = false;
                     searchResults.setValue(Resource.success(new ArrayList<>(accumulatedPhotos)));
@@ -217,6 +261,7 @@ public class SearchViewModel extends ViewModel {
                         activePageSource = null;
                     }
                     isLoadingNextPage = false;
+                    lastFailedOnNextPage = true;
                     isLoadingMore.setValue(false);
                     String message = resource.getMessage() != null
                             ? resource.getMessage()
@@ -228,7 +273,12 @@ public class SearchViewModel extends ViewModel {
     }
 
     public void retryLastQuery() {
-        if (lastQuery != null && !lastQuery.isEmpty()) {
+        if (lastQuery == null || lastQuery.isEmpty()) {
+            return;
+        }
+        if (lastFailedOnNextPage && !accumulatedPhotos.isEmpty()) {
+            loadNextPage();
+        } else {
             submitQuery(lastQuery, true);
         }
     }
@@ -243,6 +293,10 @@ public class SearchViewModel extends ViewModel {
         if (activePageSource != null) {
             searchResults.removeSource(activePageSource);
             activePageSource = null;
+        }
+        if (favoritesSource != null) {
+            searchResults.removeSource(favoritesSource);
+            favoritesSource = null;
         }
     }
 }

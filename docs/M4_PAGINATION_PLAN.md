@@ -1,7 +1,7 @@
 # Kế hoạch Triển khai: Member 4 (M4) — Phân trang & Cuộn vô tận cho Tìm kiếm Flickr
 
 ## Mô tả mục tiêu (Goal Description)
-Hoàn thiện toàn bộ các hạng mục công việc (TODO 4.1 – TODO 4.4) được giao cho **Member 4 (Kỹ sư Giao diện Tìm kiếm, Phân trang & Lưới ảnh)** theo tài liệu [`docs/TEAM_WORKLOAD_PLAN.md`](file:///C:/Users/PC/Documents/Android%20App/docs/TEAM_WORKLOAD_PLAN.md).
+Hoàn thiện toàn bộ các hạng mục công việc (TODO 4.1 – TODO 4.4) được giao cho **Member 4 (Kỹ sư Giao diện Tìm kiếm, Phân trang & Lưới ảnh)** theo tài liệu [`docs/TEAM_WORKLOAD_PLAN.md`](TEAM_WORKLOAD_PLAN.md).
 
 Mục tiêu chính:
 1. **Phân trang đa trang (Multi-page Pagination):** Cho phép người dùng cuộn vô tận trong lưới ảnh tìm kiếm mà không bị mất danh sách ảnh đã tải trước đó.

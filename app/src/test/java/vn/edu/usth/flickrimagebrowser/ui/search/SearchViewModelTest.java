@@ -29,7 +29,8 @@ import vn.edu.usth.flickrimagebrowser.util.Resource;
 
 /**
  * Unit tests for SearchViewModel verifying search triggering, deduplication across
- * configuration changes, multi-page pagination accumulation, and failure recovery.
+ * configuration changes, multi-page pagination accumulation, failure recovery,
+ * and reactive favorite state synchronization.
  */
 public class SearchViewModelTest {
 
@@ -228,5 +229,73 @@ public class SearchViewModelTest {
         assertNotNull(result);
         assertEquals(1, result.getData().size());
         assertEquals("99", result.getData().get(0).getId());
+    }
+
+    @Test
+    public void favoritesObserver_updatesAccumulatedPhotosWhenFavoriteStateChanges() {
+        MutableLiveData<List<Photo>> favoritesLive = new MutableLiveData<>(Collections.emptyList());
+        when(repository.observeFavorites()).thenReturn(favoritesLive);
+
+        SearchViewModel vm = new SearchViewModel(repository);
+        vm.getSearchResults().observeForever(observer);
+
+        Photo sample = new Photo(
+                "42", "Lake", "Author", "",
+                "https://example.com/42_q.jpg", "https://example.com/42_z.jpg",
+                false, 0L
+        );
+        MutableLiveData<Resource<List<Photo>>> repoLive = new MutableLiveData<>(
+                Resource.success(Collections.singletonList(sample))
+        );
+        when(repository.searchPhotos("lake", SearchViewModel.DEFAULT_PAGE, SearchViewModel.DEFAULT_PER_PAGE))
+                .thenReturn(repoLive);
+
+        vm.submitQuery("lake", false);
+        assertFalse(vm.getSearchResults().getValue().getData().get(0).isFavorite());
+
+        // Simulate user toggling favorite on photo 42 in DB
+        Photo favoritedSample = sample.withFavorite(true, System.currentTimeMillis());
+        favoritesLive.setValue(Collections.singletonList(favoritedSample));
+
+        // Search results should reactively update favorite status without refetching network
+        assertTrue(vm.getSearchResults().getValue().getData().get(0).isFavorite());
+    }
+
+    @Test
+    public void retryLastQuery_afterNextPageFailure_retriesNextPage() {
+        List<Photo> page1List = new ArrayList<>();
+        for (int i = 1; i <= 30; i++) {
+            page1List.add(new Photo(
+                    String.valueOf(i), "Title " + i, "Author", "",
+                    "https://example.com/" + i + "_q.jpg", "https://example.com/" + i + "_z.jpg",
+                    false, 0L
+            ));
+        }
+        MutableLiveData<Resource<List<Photo>>> page1Live = new MutableLiveData<>(Resource.success(page1List));
+        when(repository.searchPhotos("city", 1, 30)).thenReturn(page1Live);
+
+        viewModel.getSearchResults().observeForever(observer);
+        viewModel.submitQuery("city", false);
+
+        MutableLiveData<Resource<List<Photo>>> errorLive = new MutableLiveData<>(
+                Resource.error("Timeout", null)
+        );
+        when(repository.searchPhotos("city", 2, 30)).thenReturn(errorLive);
+
+        viewModel.loadNextPage();
+        assertEquals(Resource.Status.ERROR, viewModel.getSearchResults().getValue().getStatus());
+
+        MutableLiveData<Resource<List<Photo>>> retryPage2Live = new MutableLiveData<>(
+                Resource.success(Collections.singletonList(new Photo(
+                        "31", "Title 31", "Author", "",
+                        "https://example.com/31_q.jpg", "https://example.com/31_z.jpg",
+                        false, 0L
+                )))
+        );
+        when(repository.searchPhotos("city", 2, 30)).thenReturn(retryPage2Live);
+
+        viewModel.retryLastQuery();
+        verify(repository, times(2)).searchPhotos("city", 2, 30);
+        verify(repository, times(1)).searchPhotos("city", 1, 30);
     }
 }

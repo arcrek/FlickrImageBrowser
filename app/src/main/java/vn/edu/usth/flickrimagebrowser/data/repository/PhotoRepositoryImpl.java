@@ -157,7 +157,9 @@ public class PhotoRepositoryImpl implements PhotoRepository {
             try {
                 // Simulate realistic network latency (300ms)
                 Thread.sleep(300);
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
             }
 
             executors.diskIO().execute(() -> {

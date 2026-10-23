@@ -2,6 +2,7 @@ package vn.edu.usth.flickrimagebrowser.ui.detail;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -65,9 +66,13 @@ public class PhotoDetailActivity extends AppCompatActivity {
         viewModel.getPhoto().observe(this, this::renderPhotoDetails);
         viewModel.getIsFavorite().observe(this, isFav -> {
             boolean favorite = Boolean.TRUE.equals(isFav);
-            binding.buttonFavorite.setImageResource(
-                    favorite ? R.drawable.ic_favorite_filled : R.drawable.ic_favorite_border
-            );
+            if (favorite) {
+                binding.buttonFavorite.setImageResource(R.drawable.ic_favorite_filled);
+                binding.buttonFavorite.clearColorFilter();
+            } else {
+                binding.buttonFavorite.setImageResource(R.drawable.ic_favorite_border);
+                binding.buttonFavorite.setColorFilter(Color.WHITE);
+            }
         });
 
         binding.buttonFavorite.setOnClickListener(v -> viewModel.toggleFavorite());

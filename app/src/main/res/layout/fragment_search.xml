@@ -142,7 +142,7 @@
                 android:ellipsize="end"
                 android:fontFamily="@font/plus_jakarta_sans"
                 android:maxLines="1"
-                android:text="Khám phá: 'Mùa thu Hà Nội'"
+                android:text="@string/search_prompt_state"
                 android:textColor="@color/mint_pill_text"
                 android:textSize="12sp" />
 
@@ -150,7 +150,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/plus_jakarta_sans"
-                android:text="Thử ngay →"
+                android:text="@string/recommend_action"
                 android:textColor="@color/primary"
                 android:textSize="11sp"
                 android:textStyle="bold" />

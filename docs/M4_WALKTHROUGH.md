@@ -1,7 +1,7 @@
 # Báo cáo Triển khai Hoàn thành: Member 4 (M4) — Phân trang & Cuộn vô tận cho Tìm kiếm Flickr
 
 ## 1. Tóm tắt kết quả triển khai
-Chúng tôi đã triển khai hoàn tất 100% nhiệm vụ của **Member 4 (Search Discovery, Pagination & Grid UI Engineer)** theo đúng hợp đồng thiết kế và tài liệu [`docs/TEAM_WORKLOAD_PLAN.md`](file:///C:/Users/PC/Documents/Android%20App/docs/TEAM_WORKLOAD_PLAN.md):
+Chúng tôi đã triển khai hoàn tất 100% nhiệm vụ của **Member 4 (Search Discovery, Pagination & Grid UI Engineer)** theo đúng hợp đồng thiết kế và tài liệu [`docs/TEAM_WORKLOAD_PLAN.md`](TEAM_WORKLOAD_PLAN.md):
 - **Phân trang đa trang (Multi-page Pagination):** Người dùng có thể cuộn liên tục trong lưới ảnh 2 cột; khi cuộn gần cuối danh sách, ứng dụng tự động tải trang tiếp theo và nối vào danh sách hiện tại.
 - **Giữ nguyên trạng thái khi xoay màn hình:** ViewModel quản lý danh sách tích lũy `accumulatedPhotos` và trạng thái trang hiện tại, tránh gọi lại API trang 1 khi xoay máy.
 - **Phục hồi lỗi thông minh:** Khi tải trang tiếp theo bị lỗi mạng, danh sách ảnh đã tải trước đó không bị biến mất, ứng dụng hiển thị `Snackbar` kèm nút "Thử lại" gọi lại đúng trang vừa thất bại.
@@ -13,10 +13,10 @@ Chúng tôi đã triển khai hoàn tất 100% nhiệm vụ của **Member 4 (Se
 
 | Tệp tin | Loại thay đổi | Nội dung chi tiết |
 | :--- | :---: | :--- |
-| [`fragment_search.xml`](file:///C:/Users/PC/Documents/Android%20App/app/src/main/res/layout/fragment_search.xml) | **Chỉnh sửa** | Thêm thanh tiến trình nhỏ ở đáy màn hình (`@+id/progress_pagination`) để báo hiệu khi đang tải trang tiếp theo. |
-| [`SearchViewModel.java`](file:///C:/Users/PC/Documents/Android%20App/app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/search/SearchViewModel.java) | **Chỉnh sửa** | Quản lý `currentPage`, `hasMorePages`, `isLoadingNextPage`, danh sách `accumulatedPhotos` với `MediatorLiveData`, hỗ trợ phương thức `loadNextPage()` và dọn dẹp nguồn trong `onCleared()`. |
-| [`SearchFragment.java`](file:///C:/Users/PC/Documents/Android%20App/app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/search/SearchFragment.java) | **Chỉnh sửa** | Thêm `RecyclerView.OnScrollListener` với ngưỡng tải trước `PAGINATION_THRESHOLD = 4`, lắng nghe `isLoadingMore` để bật/tắt progress đáy, và hiển thị `Snackbar` khi lỗi phân trang. |
-| [`SearchViewModelTest.java`](file:///C:/Users/PC/Documents/Android%20App/app/src/test/java/vn/edu/usth/flickrimagebrowser/ui/search/SearchViewModelTest.java) | **Chỉnh sửa** | Mở rộng bộ unit test từ 2 lên 6 bài kiểm thử bao phủ toàn bộ luồng phân trang, dồn danh sách, giới hạn hết ảnh, lưu giữ ảnh khi lỗi và reset trạng thái. |
+| [`fragment_search.xml`](../app/src/main/res/layout/fragment_search.xml) | **Chỉnh sửa** | Thêm thanh tiến trình nhỏ ở đáy màn hình (`@+id/progress_pagination`) để báo hiệu khi đang tải trang tiếp theo. |
+| [`SearchViewModel.java`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/search/SearchViewModel.java) | **Chỉnh sửa** | Quản lý `currentPage`, `hasMorePages`, `isLoadingNextPage`, danh sách `accumulatedPhotos` với `MediatorLiveData`, hỗ trợ phương thức `loadNextPage()` và dọn dẹp nguồn trong `onCleared()`. |
+| [`SearchFragment.java`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/search/SearchFragment.java) | **Chỉnh sửa** | Thêm `RecyclerView.OnScrollListener` với ngưỡng tải trước `PAGINATION_THRESHOLD = 4`, lắng nghe `isLoadingMore` để bật/tắt progress đáy, và hiển thị `Snackbar` khi lỗi phân trang. |
+| [`SearchViewModelTest.java`](../app/src/test/java/vn/edu/usth/flickrimagebrowser/ui/search/SearchViewModelTest.java) | **Chỉnh sửa** | Mở rộng bộ unit test từ 2 lên 6 bài kiểm thử bao phủ toàn bộ luồng phân trang, dồn danh sách, giới hạn hết ảnh, lưu giữ ảnh khi lỗi và reset trạng thái. |
 
 ---
 
