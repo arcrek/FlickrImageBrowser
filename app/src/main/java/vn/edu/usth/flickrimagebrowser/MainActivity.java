@@ -5,6 +5,9 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import vn.edu.usth.flickrimagebrowser.databinding.ActivityMainBinding;
@@ -28,20 +31,40 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+
+        // Apply system window insets so the bottom navigation bar is never obscured by gesture/system bars
+        int initialPaddingBottom = binding.bottomNavigation.getPaddingBottom();
+        ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNavigation, (view, insets) -> {
+            Insets navInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            view.setPadding(
+                    view.getPaddingLeft(),
+                    view.getPaddingTop(),
+                    view.getPaddingRight(),
+                    initialPaddingBottom + navInsets.bottom
+            );
+            return insets;
+        });
+
+        binding.btnActionSparkle.setOnClickListener(v -> {
+            binding.bottomNavigation.setSelectedItemId(R.id.nav_search);
+        });
 
         binding.bottomNavigation.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_search) {
                 switchFragment(new SearchFragment(), "search");
-                binding.toolbar.setTitle(R.string.app_name);
+                updateToolbarForTab(itemId);
                 return true;
             } else if (itemId == R.id.nav_favorites) {
                 switchFragment(new FavoritesFragment(), "favorites");
-                binding.toolbar.setTitle(R.string.nav_favorites);
+                updateToolbarForTab(itemId);
                 return true;
             } else if (itemId == R.id.nav_collections) {
                 switchFragment(new CollectionsFragment(), "collections");
-                binding.toolbar.setTitle(R.string.nav_collections);
+                updateToolbarForTab(itemId);
                 return true;
             }
             return false;
@@ -76,11 +99,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateToolbarForTab(int itemId) {
         if (itemId == R.id.nav_favorites) {
-            binding.toolbar.setTitle(R.string.nav_favorites);
+            binding.toolbarTitle.setText(R.string.nav_favorites);
+            binding.toolbarTagline.setText(R.string.tab_saved);
         } else if (itemId == R.id.nav_collections) {
-            binding.toolbar.setTitle(R.string.nav_collections);
+            binding.toolbarTitle.setText(R.string.nav_collections);
+            binding.toolbarTagline.setText(R.string.tab_boards);
         } else {
-            binding.toolbar.setTitle(R.string.app_name);
+            binding.toolbarTitle.setText(R.string.brand_name_display);
+            binding.toolbarTagline.setText(R.string.brand_tagline);
         }
     }
 }

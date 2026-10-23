@@ -1,5 +1,6 @@
 package vn.edu.usth.flickrimagebrowser.ui.common;
 
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -10,14 +11,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 
 import vn.edu.usth.flickrimagebrowser.R;
 import vn.edu.usth.flickrimagebrowser.databinding.ItemPhotoBinding;
 import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
 
 /**
- * Shared RecyclerView adapter for rendering photo grids in Search and Favorites screens.
- * Uses Glide to load square/small thumbnails rather than full-resolution originals.
+ * Shared RecyclerView adapter for rendering Pinterest-style masonry photo grids.
+ * Uses Glide with cross-fade animation to smoothly load image thumbnails.
  */
 public class PhotoAdapter extends ListAdapter<Photo, PhotoAdapter.PhotoViewHolder> {
 
@@ -62,18 +64,21 @@ public class PhotoAdapter extends ListAdapter<Photo, PhotoAdapter.PhotoViewHolde
         void bind(@NonNull Photo photo, @NonNull OnPhotoActionListener listener) {
             binding.textPhotoTitle.setText(photo.getTitle());
             binding.textPhotoOwner.setText(photo.getOwnerName());
-            binding.buttonItemFavorite.setImageResource(
-                    photo.isFavorite()
-                            ? R.drawable.ic_favorite_filled
-                            : R.drawable.ic_favorite_border
-            );
+
+            if (photo.isFavorite()) {
+                binding.buttonItemFavorite.setImageResource(R.drawable.ic_favorite_filled);
+                binding.buttonItemFavorite.clearColorFilter();
+            } else {
+                binding.buttonItemFavorite.setImageResource(R.drawable.ic_favorite_border);
+                binding.buttonItemFavorite.setColorFilter(Color.WHITE);
+            }
 
             Glide.with(binding.imageThumbnail.getContext())
                     .load(photo.getThumbnailUrl())
                     .placeholder(R.drawable.ic_photo_placeholder)
                     .error(R.drawable.ic_broken_image)
+                    .transition(DrawableTransitionOptions.withCrossFade(250))
                     .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
-                    .centerCrop()
                     .into(binding.imageThumbnail);
 
             binding.getRoot().setOnClickListener(v -> listener.onPhotoClicked(photo));

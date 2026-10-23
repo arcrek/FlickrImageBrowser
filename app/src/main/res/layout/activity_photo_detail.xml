@@ -6,16 +6,30 @@
     android:layout_height="match_parent"
     android:background="@color/background_light">
 
+    <!-- Top Bar: Clean White & Mint Accent -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar_detail"
         android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
+        android:background="@color/surface_light"
+        app:elevation="1dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:navigationIconTint="@color/text_primary"
         app:title="@string/detail_title"
-        app:titleTextColor="@color/on_primary" />
+        app:titleCentered="true"
+        app:titleTextAppearance="@style/TextAppearance.Flickr.ToolbarTitle"
+        app:titleTextColor="@color/text_primary" />
+
+    <View
+        android:id="@+id/detail_toolbar_divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="@color/dock_stroke"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_detail" />
 
     <ScrollView
         android:layout_width="0dp"
@@ -23,7 +37,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar_detail">
+        app:layout_constraintTop_toBottomOf="@id/detail_toolbar_divider">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -31,18 +45,31 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <ImageView
-                android:id="@+id/image_detail_photo"
+            <!-- Rounded Photo Container -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
-                android:background="#FFEEEEEE"
-                android:contentDescription="@string/content_desc_photo"
-                android:scaleType="fitCenter" />
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="3dp"
+                app:strokeColor="@color/dock_stroke"
+                app:strokeWidth="1dp">
 
+                <ImageView
+                    android:id="@+id/image_detail_photo"
+                    android:layout_width="match_parent"
+                    android:layout_height="320dp"
+                    android:adjustViewBounds="true"
+                    android:background="#FFF3F4F6"
+                    android:contentDescription="@string/content_desc_photo"
+                    android:scaleType="centerCrop" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Metadata Header: Title + Favorite Pill Button -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="20dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -51,35 +78,44 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:fontFamily="@font/plus_jakarta_sans"
+                    android:letterSpacing="0.01"
                     android:textColor="@color/text_primary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
                 <ImageButton
                     android:id="@+id/button_favorite"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_favorite_pill"
                     android:contentDescription="@string/action_toggle_favorite"
+                    android:padding="9dp"
+                    android:scaleType="fitCenter"
                     android:src="@drawable/ic_favorite_border" />
 
             </LinearLayout>
 
+            <!-- Owner Name with Mint Accent -->
             <TextView
                 android:id="@+id/text_detail_owner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
+                android:layout_marginTop="6dp"
+                android:fontFamily="@font/plus_jakarta_sans"
+                android:textColor="@color/primary"
+                android:textSize="13sp" />
 
+            <!-- Description -->
             <TextView
                 android:id="@+id/text_detail_description"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp" />
+                android:layout_marginTop="16dp"
+                android:fontFamily="@font/plus_jakarta_sans"
+                android:lineSpacingExtra="4dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
 
         </LinearLayout>
 

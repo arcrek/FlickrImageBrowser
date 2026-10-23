@@ -76,10 +76,10 @@ Own the `PhotoRepository` contract and implementation (`PhotoRepositoryImpl`), b
 Own the Pixabay REST API integration (`PixabayApiService`, `PixabayClient`), OkHttp timeout/logging/interceptor configuration, Gson DTO models (`PixabaySearchResponse`, `PixabayHitDto`), and null-safe DTO-to-Domain conversion (`PhotoMapper`).
 
 #### Concrete TODOs
-- [ ] **TODO 2.1:** Maintain [`PixabayApiService`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/remote/PixabayApiService.java) for `GET https://pixabay.com/api/` and optionally extend with `id` or `category`/`order` parameters for advanced filtering.
-- [ ] **TODO 2.2:** Configure [`PixabayClient`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/remote/PixabayClient.java) with timeouts and sanitized logging interceptors (redacting `key=` from logged URLs), plus optional fallback/mock response mode when `PIXABAY_API_KEY` is unconfigured for classroom demos.
-- [ ] **TODO 2.3:** Harden [`PhotoMapper`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/remote/dto/PhotoMapper.java) to map `webformatURL` / `previewURL` to `thumbnailUrl`, `largeImageURL` / `webformatURL` to `detailUrl`, and fallback metadata cleanly when `tags` or `user` are blank.
-- [ ] **TODO 2.4:** Write unit tests in [`PhotoMapperTest`](../app/src/test/java/vn/edu/usth/flickrimagebrowser/data/remote/dto/PhotoMapperTest.java) verifying Pixabay JSON mapping and fallback behavior.
+- [x] **TODO 2.1:** Maintain [`PixabayApiService`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/remote/PixabayApiService.java) for `GET https://pixabay.com/api/` and optionally extend with `id` or `category`/`order` parameters for advanced filtering.
+- [x] **TODO 2.2:** Configure [`PixabayClient`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/remote/PixabayClient.java) with timeouts and sanitized logging interceptors (redacting `key=` from logged URLs), plus optional fallback/mock response mode when `PIXABAY_API_KEY` is unconfigured for classroom demos.
+- [x] **TODO 2.3:** Harden [`PhotoMapper`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/remote/dto/PhotoMapper.java) to map `webformatURL` / `previewURL` to `thumbnailUrl`, `largeImageURL` / `webformatURL` to `detailUrl`, and fallback metadata cleanly when `tags` or `user` are blank.
+- [x] **TODO 2.4:** Write unit tests in [`PhotoMapperTest`](../app/src/test/java/vn/edu/usth/flickrimagebrowser/data/remote/dto/PhotoMapperTest.java) verifying Pixabay JSON mapping and fallback behavior.
 
 #### Methods to Implement / Extend
 | Class | Method Signature | Description |
@@ -129,10 +129,10 @@ Own the local SQLite persistence layer using Room (`AppDatabase`, `PhotoDao`, `C
 Own the photo discovery experience (`SearchFragment`, `SearchViewModel`, `PhotoAdapter`, `fragment_search.xml`, `item_photo.xml`), including keyword search, pagination (`loadNextPage`), configuration-change retention, and Loading / Empty / Error / Retry UI states.
 
 #### Concrete TODOs
-- [ ] **TODO 4.1:** Enhance [`SearchViewModel`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/search/SearchViewModel.java) to support multi-page pagination (`currentPage`, `isLoadingNextPage`, accumulating `List<Photo>` across pages).
-- [ ] **TODO 4.2:** Add a `RecyclerView.OnScrollListener` in [`SearchFragment`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/search/SearchFragment.java) that triggers `viewModel.loadNextPage()` when the user scrolls near the bottom of the 2-column `GridLayoutManager`.
-- [ ] **TODO 4.3:** Optimize [`PhotoAdapter`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/common/PhotoAdapter.java) using `ListAdapter` + `DiffUtil.ItemCallback` and Glide thumbnail loading (`webformatURL` / `previewURL`, `centerCrop`, placeholder and error drawables) so full-resolution images are never loaded in the grid.
-- [ ] **TODO 4.4:** Expand [`SearchViewModelTest`](../app/src/test/java/vn/edu/usth/flickrimagebrowser/ui/search/SearchViewModelTest.java) to verify pagination accumulation, rotation deduplication, empty states, and retry recovery.
+- [x] **TODO 4.1:** Enhance [`SearchViewModel`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/search/SearchViewModel.java) to support multi-page pagination (`currentPage`, `isLoadingNextPage`, accumulating `List<Photo>` across pages).
+- [x] **TODO 4.2:** Add a `RecyclerView.OnScrollListener` in [`SearchFragment`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/search/SearchFragment.java) that triggers `viewModel.loadNextPage()` when the user scrolls near the bottom of the 2-column `GridLayoutManager`.
+- [x] **TODO 4.3:** Optimize [`PhotoAdapter`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/common/PhotoAdapter.java) using `ListAdapter` + `DiffUtil.ItemCallback` and Glide thumbnail loading (`webformatURL` / `previewURL`, `centerCrop`, placeholder and error drawables) so full-resolution images are never loaded in the grid.
+- [x] **TODO 4.4:** Expand [`SearchViewModelTest`](../app/src/test/java/vn/edu/usth/flickrimagebrowser/ui/search/SearchViewModelTest.java) to verify pagination accumulation, rotation deduplication, empty states, and retry recovery.
 
 #### Methods to Implement / Extend
 | Class | Method Signature | Description |
