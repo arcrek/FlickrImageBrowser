@@ -30,11 +30,8 @@ public final class FlickrClient {
     @NonNull
     public static FlickrApiService createService(@NonNull String baseUrl) {
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-        loggingInterceptor.setLevel(
-                BuildConfig.DEBUG
-                        ? HttpLoggingInterceptor.Level.BASIC
-                        : HttpLoggingInterceptor.Level.NONE
-        );
+        // Flickr credentials are query parameters; logging request lines would expose api_key in Logcat.
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.NONE);
 
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .connectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)

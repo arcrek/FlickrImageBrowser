@@ -106,4 +106,37 @@ public class PhotoDaoTest {
         assertNotNull(retained);
         assertFalse(retained.isFavorite());
     }
+
+    @Test
+    public void deleteCollection_cascadesCrossRefs_andRetainsFavoritePhotos() {
+        PhotoEntity favoritePhoto = new PhotoEntity(
+                "p300",
+                "Ha Long Bay",
+                "vietnam_traveler",
+                "Karst cliffs at sunset",
+                "https://example.com/p300_q.jpg",
+                "https://example.com/p300_z.jpg",
+                true,
+                2000L
+        );
+        photoDao.upsertPhoto(favoritePhoto);
+
+        long collectionId = collectionDao.insertCollection(
+                new CollectionEntity(0L, "Landscapes", "Vietnam nature", 2100L)
+        );
+        collectionDao.addPhotoToCollection(new CollectionPhotoCrossRef(collectionId, "p300", 2200L));
+
+        // Delete the collection
+        collectionDao.deleteCollectionById(collectionId);
+
+        // Verify collection is deleted
+        List<CollectionEntity> collections = collectionDao.getCollectionsSync();
+        assertTrue(collections.isEmpty());
+
+        // Verify favorite photo remains in Room
+        PhotoEntity photoInDb = photoDao.getPhotoByIdSync("p300");
+        assertNotNull(photoInDb);
+        assertTrue(photoInDb.isFavorite());
+        assertEquals("Ha Long Bay", photoInDb.getTitle());
+    }
 }

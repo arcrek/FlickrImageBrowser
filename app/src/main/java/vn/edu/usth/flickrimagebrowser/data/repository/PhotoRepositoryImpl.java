@@ -191,6 +191,14 @@ public class PhotoRepositoryImpl implements PhotoRepository {
         }
         String cleanDescription = description != null ? description.trim() : "";
         executors.diskIO().execute(() -> {
+            List<CollectionEntity> existingCollections = collectionDao.getCollectionsSync();
+            if (existingCollections != null) {
+                for (CollectionEntity existing : existingCollections) {
+                    if (existing.getName().equalsIgnoreCase(trimmedName)) {
+                        return;
+                    }
+                }
+            }
             CollectionEntity entity = new CollectionEntity(
                     0L,
                     trimmedName,
@@ -206,6 +214,35 @@ public class PhotoRepositoryImpl implements PhotoRepository {
     }
 
     @Override
+    public void deleteCollection(long collectionId) {
+        executors.diskIO().execute(() -> collectionDao.deleteCollectionById(collectionId));
+    }
+
+    @Override
+    public void renameCollection(long collectionId, @NonNull String newName) {
+        String trimmedName = newName.trim();
+        if (trimmedName.isEmpty()) {
+            return;
+        }
+        executors.diskIO().execute(() -> {
+            List<CollectionEntity> existingCollections = collectionDao.getCollectionsSync();
+            if (existingCollections != null) {
+                for (CollectionEntity existing : existingCollections) {
+                    if (existing.getId() != collectionId
+                            && existing.getName().equalsIgnoreCase(trimmedName)) {
+                        return;
+                    }
+                }
+            }
+            try {
+                collectionDao.renameCollection(collectionId, trimmedName);
+            } catch (RuntimeException ignored) {
+                // Ignore duplicate constraint violations
+            }
+        });
+    }
+
+    @Override
     public void addPhotoToCollection(long collectionId, @NonNull Photo photo) {
         executors.diskIO().execute(() -> {
             PhotoEntity existing = photoDao.getPhotoByIdSync(photo.getId());
@@ -216,5 +253,28 @@ public class PhotoRepositoryImpl implements PhotoRepository {
                     new CollectionPhotoCrossRef(collectionId, photo.getId(), System.currentTimeMillis())
             );
         });
+    }
+
+    @Override
+    public void removePhotoFromCollection(long collectionId, @NonNull String photoId) {
+        executors.diskIO().execute(() -> {
+            collectionDao.removePhotoFromCollection(collectionId, photoId);
+            // Dọn dẹp hàng orphan nếu ảnh không còn được yêu thích và không thuộc collection nào
+            photoDao.deleteOrphanIfUnreferenced(photoId);
+        });
+    }
+
+    @NonNull
+    @Override
+    public LiveData<List<Photo>> observePhotosInCollection(long collectionId) {
+        return Transformations.map(
+                collectionDao.observeCollectionWithPhotosById(collectionId),
+                relation -> {
+                    if (relation == null || relation.photos == null) {
+                        return java.util.Collections.emptyList();
+                    }
+                    return PhotoMapper.fromEntityList(relation.photos);
+                }
+        );
     }
 }

@@ -12,6 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.Collections;
 import java.util.List;
@@ -60,6 +61,20 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
         if (binding != null) {
             binding.recyclerPhotos.setLayoutManager(new GridLayoutManager(requireContext(), GRID_SPAN_COUNT));
             binding.recyclerPhotos.setAdapter(photoAdapter);
+            binding.recyclerPhotos.addOnScrollListener(new androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrolled(@NonNull androidx.recyclerview.widget.RecyclerView recyclerView,
+                                       int dx, int dy) {
+                    super.onScrolled(recyclerView, dx, dy);
+                    if (dy > 0 && recyclerView.getLayoutManager() instanceof GridLayoutManager) {
+                        GridLayoutManager manager = (GridLayoutManager) recyclerView.getLayoutManager();
+                        int total = photoAdapter.getItemCount();
+                        if (total > 0 && manager.findLastVisibleItemPosition() >= total - 6) {
+                            viewModel.loadNextPage();
+                        }
+                    }
+                }
+            });
 
             binding.buttonSearch.setOnClickListener(v -> triggerSearch());
             binding.buttonRetry.setOnClickListener(v -> viewModel.retryLastQuery());
@@ -73,6 +88,11 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
         }
 
         viewModel.getSearchResults().observe(getViewLifecycleOwner(), this::renderState);
+        viewModel.isLoadingMore().observe(getViewLifecycleOwner(), loading -> {
+            if (binding != null) {
+                binding.progressLoadMore.setVisibility(Boolean.TRUE.equals(loading) ? View.VISIBLE : View.GONE);
+            }
+        });
     }
 
     private void triggerSearch() {
@@ -115,15 +135,26 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
 
             case ERROR:
                 binding.progressLoading.setVisibility(View.GONE);
-                binding.recyclerPhotos.setVisibility(View.GONE);
-                binding.layoutState.setVisibility(View.VISIBLE);
-                binding.textStateMessage.setText(
-                        resource.getMessage() != null
-                                ? resource.getMessage()
-                                : getString(R.string.search_empty_state)
-                );
-                binding.buttonRetry.setVisibility(View.VISIBLE);
-                photoAdapter.submitList(Collections.emptyList());
+                if (resource.getData() != null && !resource.getData().isEmpty()) {
+                    binding.recyclerPhotos.setVisibility(View.VISIBLE);
+                    binding.layoutState.setVisibility(View.GONE);
+                    photoAdapter.submitList(resource.getData());
+                    Snackbar.make(binding.getRoot(),
+                                    resource.getMessage() != null ? resource.getMessage() : getString(R.string.action_retry),
+                                    Snackbar.LENGTH_LONG)
+                            .setAction(R.string.action_retry, v -> viewModel.loadNextPage())
+                            .show();
+                } else {
+                    binding.recyclerPhotos.setVisibility(View.GONE);
+                    binding.layoutState.setVisibility(View.VISIBLE);
+                    binding.textStateMessage.setText(
+                            resource.getMessage() != null
+                                    ? resource.getMessage()
+                                    : getString(R.string.search_empty_state)
+                    );
+                    binding.buttonRetry.setVisibility(View.VISIBLE);
+                    photoAdapter.submitList(Collections.emptyList());
+                }
                 break;
         }
     }

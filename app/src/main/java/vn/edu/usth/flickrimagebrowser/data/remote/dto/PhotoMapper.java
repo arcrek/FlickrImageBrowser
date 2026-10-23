@@ -46,7 +46,7 @@ public final class PhotoMapper {
         }
 
         String descriptionText = dto.getDescription() != null && dto.getDescription().getContent() != null
-                ? dto.getDescription().getContent()
+                ? stripHtml(dto.getDescription().getContent())
                 : "";
         String owner = firstNonBlank(dto.getOwnerName(), dto.getOwner(), "Unknown Author");
 
@@ -175,5 +175,20 @@ public final class PhotoMapper {
 
     private static boolean isBlank(@Nullable String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    @NonNull
+    private static String stripHtml(@NonNull String value) {
+        return value.replaceAll("(?i)<br\\s*/?>", "\n")
+                .replaceAll("(?i)</p\\s*>", "\n")
+                .replaceAll("<[^>]*>", "")
+                .replace("&nbsp;", " ")
+                .replace("&amp;", "&")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&quot;", "\"")
+                .replace("&#39;", "'")
+                .replaceAll("\\n{2,}", "\n")
+                .trim();
     }
 }

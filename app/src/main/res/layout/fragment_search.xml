@@ -4,18 +4,64 @@
     android:id="@+id/search_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="12dp">
+    android:background="@color/background_light"
+    android:paddingStart="16dp"
+    android:paddingTop="18dp"
+    android:paddingEnd="16dp">
+
+    <TextView
+        android:id="@+id/text_search_eyebrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:letterSpacing="0.12"
+        android:text="@string/search_eyebrow"
+        android:textColor="@color/secondary"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/text_search_heading"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="@string/search_heading"
+        android:textColor="@color/text_primary"
+        android:textSize="25sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_search_eyebrow" />
+
+    <TextView
+        android:id="@+id/text_search_subtitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:text="@string/search_subtitle"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_search_heading" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/input_layout_query"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
+        android:layout_marginTop="18dp"
+        android:layout_marginEnd="10dp"
         android:hint="@string/search_hint"
+        app:boxBackgroundColor="@color/surface_light"
+        app:boxCornerRadiusBottomEnd="18dp"
+        app:boxCornerRadiusBottomStart="18dp"
+        app:boxCornerRadiusTopEnd="18dp"
+        app:boxCornerRadiusTopStart="18dp"
         app:layout_constraintEnd_toStartOf="@id/button_search"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/text_search_subtitle">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/edit_query"
@@ -30,8 +76,13 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_search"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="56dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
         android:text="@string/action_search"
+        android:textAllCaps="false"
+        android:textStyle="bold"
+        app:cornerRadius="16dp"
         app:layout_constraintBottom_toBottomOf="@id/input_layout_query"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/input_layout_query" />
@@ -40,8 +91,9 @@
         android:id="@+id/recycler_photos"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="18dp"
         android:clipToPadding="false"
+        android:paddingBottom="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -56,6 +108,17 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/input_layout_query" />
+
+    <ProgressBar
+        android:id="@+id/progress_load_more"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <LinearLayout
         android:id="@+id/layout_state"
@@ -76,7 +139,8 @@
             android:gravity="center"
             android:text="@string/search_prompt_state"
             android:textColor="@color/text_secondary"
-            android:textSize="15sp" />
+            android:textSize="15sp"
+            android:lineSpacingExtra="4dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_retry"

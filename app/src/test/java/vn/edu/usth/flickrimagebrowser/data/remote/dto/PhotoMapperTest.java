@@ -77,6 +77,18 @@ public class PhotoMapperTest {
     }
 
     @Test
+    public void fromDto_stripsHtmlFromDescription() {
+        PhotoDto dto = new PhotoDto("203", "owner", "secret", "server", 1,
+                "Caption", "Author", new PhotoDto.DescriptionDto("<p>Hello&nbsp;<b>Flickr</b></p><br>World &amp; friends"),
+                "https://example.com/thumb.jpg", null, null);
+
+        Photo photo = PhotoMapper.fromDto(dto, false);
+
+        assertNotNull(photo);
+        assertEquals("Hello Flickr\nWorld & friends", photo.getDescription());
+    }
+
+    @Test
     public void fromDto_returnsNullWhenIdOrUrlsCannotBeResolved() {
         PhotoDto missingId = new PhotoDto(null, "u", "s", "srv", 1, "Title", "Owner", null, null, null, null);
         PhotoDto missingUrls = new PhotoDto("303", "u", null, null, 1, "Title", "Owner", null, null, null, null);

@@ -34,9 +34,23 @@ public interface CollectionDao {
     @Delete
     void deleteCollection(@NonNull CollectionEntity collectionEntity);
 
+    @Query("DELETE FROM collections WHERE id = :collectionId")
+    void deleteCollectionById(long collectionId);
+
+    @Query("UPDATE collections SET name = :newName WHERE id = :collectionId")
+    void renameCollection(long collectionId, @NonNull String newName);
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void addPhotoToCollection(@NonNull CollectionPhotoCrossRef crossRef);
 
     @Query("DELETE FROM collection_photo_cross_ref WHERE collection_id = :collectionId AND photo_id = :photoId")
     void removePhotoFromCollection(long collectionId, @NonNull String photoId);
+
+    @Transaction
+    @Query("SELECT * FROM collections WHERE id = :collectionId LIMIT 1")
+    CollectionWithPhotos getCollectionWithPhotosSync(long collectionId);
+
+    @Transaction
+    @Query("SELECT * FROM collections WHERE id = :collectionId LIMIT 1")
+    LiveData<CollectionWithPhotos> observeCollectionWithPhotosById(long collectionId);
 }

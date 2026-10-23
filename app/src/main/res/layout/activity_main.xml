@@ -9,12 +9,14 @@
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="0dp"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
+        android:layout_height="64dp"
+        android:background="@drawable/bg_toolbar_gradient"
+        android:elevation="4dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:title="@string/app_name"
+        app:titleTextAppearance="@style/TextAppearance.Flickr.ToolbarTitle"
         app:titleTextColor="@color/on_primary" />
 
     <androidx.fragment.app.FragmentContainerView
@@ -31,6 +33,11 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@color/surface_light"
+        android:elevation="12dp"
+        app:itemIconTint="@color/bottom_nav_item_tint"
+        app:itemTextColor="@color/bottom_nav_item_tint"
+        app:itemRippleColor="@color/nav_ripple"
+        app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

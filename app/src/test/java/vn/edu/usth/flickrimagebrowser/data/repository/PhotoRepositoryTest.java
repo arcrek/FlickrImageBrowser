@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import retrofit2.Call;
@@ -30,6 +31,7 @@ import retrofit2.Response;
 import vn.edu.usth.flickrimagebrowser.data.local.CollectionDao;
 import vn.edu.usth.flickrimagebrowser.data.local.PhotoDao;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.PhotoEntity;
+import vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionEntity;
 import vn.edu.usth.flickrimagebrowser.data.remote.FlickrApiService;
 import vn.edu.usth.flickrimagebrowser.data.remote.dto.PhotoDto;
 import vn.edu.usth.flickrimagebrowser.data.remote.dto.PhotosPageDto;
@@ -174,5 +176,27 @@ public class PhotoRepositoryTest {
         assertEquals("900", saved.getId());
         assertTrue(saved.isFavorite());
         verify(photoDao, never()).deleteOrphanIfUnreferenced("900");
+    }
+
+    @Test
+    public void createCollection_rejectsCaseInsensitiveDuplicateFromDatabase() {
+        when(collectionDao.getCollectionsSync()).thenReturn(Collections.singletonList(
+                new CollectionEntity(1L, "Nature", "", 100L)));
+
+        repository.createCollection("nature", "duplicate");
+
+        verify(collectionDao, never()).insertCollection(
+                org.mockito.ArgumentMatchers.any(CollectionEntity.class));
+    }
+
+    @Test
+    public void renameCollection_rejectsCaseInsensitiveDuplicateFromDatabase() {
+        when(collectionDao.getCollectionsSync()).thenReturn(Arrays.asList(
+                new CollectionEntity(1L, "Nature", "", 100L),
+                new CollectionEntity(2L, "Travel", "", 200L)));
+
+        repository.renameCollection(1L, "TRAVEL");
+
+        verify(collectionDao, never()).renameCollection(org.mockito.ArgumentMatchers.anyLong(), anyString());
     }
 }

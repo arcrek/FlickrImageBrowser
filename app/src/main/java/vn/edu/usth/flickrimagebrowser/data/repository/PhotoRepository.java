@@ -33,5 +33,14 @@ public interface PhotoRepository {
 
     void createCollection(@NonNull String name, @Nullable String description);
 
+    void deleteCollection(long collectionId);
+
+    void renameCollection(long collectionId, @NonNull String newName);
+
     void addPhotoToCollection(long collectionId, @NonNull Photo photo);
+
+    void removePhotoFromCollection(long collectionId, @NonNull String photoId);
+
+    @NonNull
+    LiveData<List<Photo>> observePhotosInCollection(long collectionId);
 }
