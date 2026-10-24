@@ -115,6 +115,13 @@ Own the local SQLite persistence layer using Room (`AppDatabase`, `PhotoDao`, `C
 - **Schema decision (TODO 3.1 / 3.4):** Existing entity keys, foreign keys, and indices were retained. DAO-only changes do not change the database layout; database version 1, exported `app/schemas/.../1.json`, and the existing future `MIGRATION_1_2` placeholder remain unchanged. No destructive migration was introduced.
 - **Verification:** After Android SDK setup, `assembleDebug testDebugUnitTest assembleDebugAndroidTest` and `connectedDebugAndroidTest` passed with Gradle 9.6 / JDK 25. All 11 JVM tests passed with zero failures, errors, or skips; [JVM report](../app/build/reports/tests/testDebugUnitTest/index.html) and [instrumentation report](../app/build/reports/androidTests/connected/debug/index.html) are local generated artifacts. Independent source review found no actionable findings; `git diff --check` and 18 static SQLite checks also passed. Debug app launch and Search/Favorites/Collections navigation passed an emulator smoke check. Member 3's Week 2 data contracts are verified; later integration milestones retain their scheduled ownership.
 
+#### Member 3 Latest-Main Integration — 2026-10-24
+
+- Replayed Member 3's work onto latest `origin/main` (`e595d0c`) in `FlickrImageBrowser-latest`, retaining the completed Member 2 and Member 4 work. Independent review found no actionable findings; no additional production changes were required.
+- **Fresh verification:** `assembleDebug testDebugUnitTest assembleDebugAndroidTest` passed in 21s; all 21 JVM tests passed. `connectedDebugAndroidTest` passed in 14s on Pixel 10 Pro / Android 17; all 12 Room tests passed. Both suites reported zero failures, errors, or skips. The local reports linked above now contain this latest run; the October 23 counts remain historical.
+- **Persistence smoke:** Using public demo data, searched `river`, favorited `River #1`, and confirmed it in Favorites after terminating and relaunching the app. Live Pixabay API behavior was not exercised. Exported schema v1 remains unchanged (`e03c076ebdc25836b08d0014d2fd174a`), with no Room schema warnings.
+- TODO 3.1–3.5 remain verified on `feat/database-schema`. Later scheduled weeks are not due under the confirmed Week 2 schedule; no later milestone or other member's checklist was changed. See the [integration journal](../plans/journals/2026-10-24-member-3-latest-integration.md).
+
 #### Methods to Implement / Extend
 | Class | Method Signature | Description |
 |---|---|---|
