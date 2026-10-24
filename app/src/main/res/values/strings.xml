@@ -22,6 +22,12 @@
 
     <!-- Favorites Screen -->
     <string name="favorites_empty_state">No favorite photos saved yet. Tap the heart icon on any photo to save it offline.</string>
+    <string name="favorites_search_hint">Filter favorites by title or author…</string>
+    <string name="favorites_sort_newest">Newest</string>
+    <string name="favorites_sort_az">A–Z</string>
+    <string name="favorites_removed_snackbar">Removed from favorites</string>
+    <string name="action_undo">Undo</string>
+    <string name="favorites_filter_empty_state">No favorite photos matched your filter.</string>
 
     <!-- Collections Screen -->
     <string name="collections_empty_state">No collections yet. Create a collection to organize saved photos.</string>

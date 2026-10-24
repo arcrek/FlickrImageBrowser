@@ -31,13 +31,13 @@ flowchart TD
 
 | Member | Role Title | Primary Package / File Ownership | Test Ownership |
 |---|---|---|---|
-| **Member 1** | Architecture, Repository & Concurrency Lead | `data/repository/*`, `domain/model/*`, `util/*`, `ui/AppViewModelFactory.java`, `FlickrApplication.java` | `PhotoRepositoryTest.java` |
-| **Member 2** | Remote API, Networking & DTO Mapper Engineer | `data/remote/*`, `data/remote/dto/*`, `local.properties.example` | `PhotoMapperTest.java`, `PixabayApiServiceTest.java` |
-| **Member 3** | Room Database, Schema & Migration Engineer | `data/local/*`, `data/local/entity/*`, `app/schemas/*` | `PhotoDaoTest.java`, `CollectionDaoTest.java` |
-| **Member 4** | Search Discovery, Pagination & Grid UI Engineer | `ui/search/*`, `ui/common/PhotoAdapter.java`, `res/layout/fragment_search.xml`, `res/layout/item_photo.xml` | `SearchViewModelTest.java` |
-| **Member 5** | Photo Detail, Metadata & Collection Assignment Engineer | `ui/detail/*`, `res/layout/activity_photo_detail.xml` | `DetailViewModelTest.java` |
-| **Member 6** | Offline Favorites, Local Search & Undo UX Engineer | `ui/favorites/*`, `res/layout/fragment_favorites.xml` | `FavoritesViewModelTest.java` |
-| **Member 7** | Collections UI, Navigation Host & Espresso QA Engineer | `ui/collections/*`, `MainActivity.java`, `res/layout/fragment_collections.xml`, `res/layout/item_collection.xml`, `res/layout/activity_main.xml` | `CollectionsViewModelTest.java`, `MainActivityNavigationTest.java` |
+| **Member 1 (Đặng Đạt)** | Architecture, Repository & Concurrency Lead | `data/repository/*`, `domain/model/*`, `util/*`, `ui/AppViewModelFactory.java`, `FlickrApplication.java` | `PhotoRepositoryTest.java` |
+| **Member 2 (Phú Vinh)** | Remote API, Networking & DTO Mapper Engineer | `data/remote/*`, `data/remote/dto/*`, `local.properties.example` | `PhotoMapperTest.java`, `PixabayApiServiceTest.java` |
+| **Member 3 (Đức)** | Room Database, Schema & Migration Engineer | `data/local/*`, `data/local/entity/*`, `app/schemas/*` | `PhotoDaoTest.java`, `CollectionDaoTest.java` |
+| **Member 4 (Tấn)** | Search Discovery, Pagination & Grid UI Engineer | `ui/search/*`, `ui/common/PhotoAdapter.java`, `res/layout/fragment_search.xml`, `res/layout/item_photo.xml` | `SearchViewModelTest.java` |
+| **Member 5 (Hải Minh)** | Photo Detail, Metadata & Collection Assignment Engineer | `ui/detail/*`, `res/layout/activity_photo_detail.xml` | `DetailViewModelTest.java` |
+| **Member 6 (TVinh)** | Offline Favorites, Local Search & Undo UX Engineer | `ui/favorites/*`, `res/layout/fragment_favorites.xml` | `FavoritesViewModelTest.java` |
+| **Member 7 (Phương)** | Collections UI, Navigation Host & Espresso QA Engineer | `ui/collections/*`, `MainActivity.java`, `res/layout/fragment_collections.xml`, `res/layout/item_collection.xml`, `res/layout/activity_main.xml` | `CollectionsViewModelTest.java`, `MainActivityNavigationTest.java` |
 
 ---
 
@@ -45,7 +45,7 @@ flowchart TD
 
 ---
 
-### Member 1 — Architecture, Repository & Concurrency Lead
+### Member 1 (Đặng Đạt) — Architecture, Repository & Concurrency Lead
 
 #### Scope & Objective
 Own the `PhotoRepository` contract and implementation (`PhotoRepositoryImpl`), background thread orchestration (`AppExecutors`), generic UI state modeling (`Resource<T>`), and dependency wiring (`AppContainer`, `AppViewModelFactory`).
@@ -70,7 +70,7 @@ Own the `PhotoRepository` contract and implementation (`PhotoRepositoryImpl`), b
 
 ---
 
-### Member 2 — Remote API, Networking & DTO Mapper Engineer
+### Member 2 (Phú Vinh) — Remote API, Networking & DTO Mapper Engineer
 
 #### Scope & Objective
 Own the Pixabay REST API integration (`PixabayApiService`, `PixabayClient`), OkHttp timeout/logging/interceptor configuration, Gson DTO models (`PixabaySearchResponse`, `PixabayHitDto`), and null-safe DTO-to-Domain conversion (`PhotoMapper`).
@@ -95,7 +95,7 @@ Own the Pixabay REST API integration (`PixabayApiService`, `PixabayClient`), OkH
 
 ---
 
-### Member 3 — Room Database, Schema & Migration Engineer
+### Member 3 (Đức) — Room Database, Schema & Migration Engineer
 
 #### Scope & Objective
 Own the local SQLite persistence layer using Room (`AppDatabase`, `PhotoDao`, `CollectionDao`, `PhotoEntity`, `CollectionEntity`, `CollectionPhotoCrossRef`, `CollectionWithPhotos`), database indices/foreign keys, and non-destructive schema migrations.
@@ -123,7 +123,7 @@ Own the local SQLite persistence layer using Room (`AppDatabase`, `PhotoDao`, `C
 
 ---
 
-### Member 4 — Search Discovery, Pagination & Grid UI Engineer
+### Member 4 (Tấn) — Search Discovery, Pagination & Grid UI Engineer
 
 #### Scope & Objective
 Own the photo discovery experience (`SearchFragment`, `SearchViewModel`, `PhotoAdapter`, `fragment_search.xml`, `item_photo.xml`), including keyword search, pagination (`loadNextPage`), configuration-change retention, and Loading / Empty / Error / Retry UI states.
@@ -149,7 +149,7 @@ Own the photo discovery experience (`SearchFragment`, `SearchViewModel`, `PhotoA
 
 ---
 
-### Member 5 — Photo Detail, Metadata & Collection Assignment Engineer
+### Member 5 (Hải Minh) — Photo Detail, Metadata & Collection Assignment Engineer
 
 #### Scope & Objective
 Own the photo detail experience (`PhotoDetailActivity`, `DetailViewModel`, `activity_photo_detail.xml`), loading large detail images (`largeImageURL`), displaying photo metadata, toggling favorite state in real time, and assigning a photo to a local collection.
@@ -175,7 +175,7 @@ Own the photo detail experience (`PhotoDetailActivity`, `DetailViewModel`, `acti
 
 ---
 
-### Member 6 — Offline Favorites, Local Search & Undo UX Engineer
+### Member 6 (TVinh) — Offline Favorites, Local Search & Undo UX Engineer
 
 #### Scope & Objective
 Own the Favorites screen (`FavoritesFragment`, `FavoritesViewModel`, `fragment_favorites.xml`), offline access to saved photos, local filtering/sorting of favorites, and swipe-to-unfavorite with `Snackbar` undo.
@@ -200,7 +200,7 @@ Own the Favorites screen (`FavoritesFragment`, `FavoritesViewModel`, `fragment_f
 
 ---
 
-### Member 7 — Collections UI, Navigation Host & Espresso QA Engineer
+### Member 7 (Phương) — Collections UI, Navigation Host & Espresso QA Engineer
 
 #### Scope & Objective
 Own the Collections feature UI (`CollectionsFragment`, `CollectionsViewModel`, `CollectionAdapter`, `fragment_collections.xml`, `item_collection.xml`), the Single-Activity navigation host (`MainActivity`, `activity_main.xml`, `bottom_nav_menu.xml`), and end-to-end Espresso UI tests.
