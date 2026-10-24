@@ -101,11 +101,11 @@ Own the Pixabay REST API integration (`PixabayApiService`, `PixabayClient`), OkH
 Own the local SQLite persistence layer using Room (`AppDatabase`, `PhotoDao`, `CollectionDao`, `PhotoEntity`, `CollectionEntity`, `CollectionPhotoCrossRef`, `CollectionWithPhotos`), database indices/foreign keys, and non-destructive schema migrations.
 
 #### Concrete TODOs
-- [ ] **TODO 3.1:** Maintain and extend [`PhotoEntity`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/local/entity/PhotoEntity.java), [`CollectionEntity`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/local/entity/CollectionEntity.java), and [`CollectionPhotoCrossRef`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/local/entity/CollectionPhotoCrossRef.java) with composite primary keys, `ForeignKey.CASCADE` constraints, and query indices.
-- [ ] **TODO 3.2:** Extend [`PhotoDao`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/local/PhotoDao.java) with local search/filter queries (`searchFavoritePhotos(String query)`) and sorting queries.
-- [ ] **TODO 3.3:** Extend [`CollectionDao`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/local/CollectionDao.java) with `@Transaction` queries to observe a single collection with all its photos (`observeCollectionWithPhotosById(long collectionId)`), rename a collection, and count photos per collection.
-- [ ] **TODO 3.4:** Maintain [`AppDatabase.MIGRATION_1_2`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/local/AppDatabase.java) and exported schema files under `app/schemas/` without using `fallbackToDestructiveMigration()`.
-- [ ] **TODO 3.5:** Expand [`PhotoDaoTest`](../app/src/androidTest/java/vn/edu/usth/flickrimagebrowser/data/local/PhotoDaoTest.java) and add `CollectionDaoTest.java` verifying foreign-key cascades and orphan retention.
+- [x] **TODO 3.1:** Maintain and extend [`PhotoEntity`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/local/entity/PhotoEntity.java), [`CollectionEntity`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/local/entity/CollectionEntity.java), and [`CollectionPhotoCrossRef`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/local/entity/CollectionPhotoCrossRef.java) with composite primary keys, `ForeignKey.CASCADE` constraints, and query indices.
+- [x] **TODO 3.2:** Extend [`PhotoDao`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/local/PhotoDao.java) with local search/filter queries (`searchFavoritePhotos(String query)`) and sorting queries.
+- [x] **TODO 3.3:** Extend [`CollectionDao`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/local/CollectionDao.java) with `@Transaction` queries to observe a single collection with all its photos (`observeCollectionWithPhotosById(long collectionId)`), rename a collection, and count photos per collection.
+- [x] **TODO 3.4:** Maintain [`AppDatabase.MIGRATION_1_2`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/data/local/AppDatabase.java) and exported schema files under `app/schemas/` without using `fallbackToDestructiveMigration()`.
+- [x] **TODO 3.5:** Expand [`PhotoDaoTest`](../app/src/androidTest/java/vn/edu/usth/flickrimagebrowser/data/local/PhotoDaoTest.java) and add `CollectionDaoTest.java` verifying foreign-key cascades and orphan retention.
 
 #### Methods to Implement / Extend
 | Class | Method Signature | Description |
