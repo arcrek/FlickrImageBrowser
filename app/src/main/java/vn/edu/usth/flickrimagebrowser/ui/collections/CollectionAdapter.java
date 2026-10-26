@@ -4,6 +4,8 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
@@ -13,12 +15,29 @@ import vn.edu.usth.flickrimagebrowser.databinding.ItemCollectionBinding;
 import vn.edu.usth.flickrimagebrowser.domain.model.Collection;
 
 /**
- * RecyclerView adapter displaying user-created photo collections.
+ * RecyclerView adapter displaying user-created photo collections with options to rename and delete.
  */
 public class CollectionAdapter extends ListAdapter<Collection, CollectionAdapter.CollectionViewHolder> {
 
-    public CollectionAdapter() {
+    /**
+     * Listener callback for collection item actions.
+     */
+    public interface OnCollectionActionListener {
+        void onCollectionClick(@NonNull Collection collection);
+        void onRenameCollection(@NonNull Collection collection);
+        void onDeleteCollection(@NonNull Collection collection);
+    }
+
+    @Nullable
+    private final OnCollectionActionListener actionListener;
+
+    public CollectionAdapter(@Nullable OnCollectionActionListener actionListener) {
         super(DIFF_CALLBACK);
+        this.actionListener = actionListener;
+    }
+
+    public CollectionAdapter() {
+        this(null);
     }
 
     @NonNull
@@ -29,7 +48,7 @@ public class CollectionAdapter extends ListAdapter<Collection, CollectionAdapter
                 parent,
                 false
         );
-        return new CollectionViewHolder(binding);
+        return new CollectionViewHolder(binding, actionListener);
     }
 
     @Override
@@ -40,10 +59,14 @@ public class CollectionAdapter extends ListAdapter<Collection, CollectionAdapter
     static class CollectionViewHolder extends RecyclerView.ViewHolder {
 
         private final ItemCollectionBinding binding;
+        @Nullable
+        private final OnCollectionActionListener actionListener;
 
-        CollectionViewHolder(@NonNull ItemCollectionBinding binding) {
+        CollectionViewHolder(@NonNull ItemCollectionBinding binding,
+                             @Nullable OnCollectionActionListener actionListener) {
             super(binding.getRoot());
             this.binding = binding;
+            this.actionListener = actionListener;
         }
 
         void bind(@NonNull Collection collection) {
@@ -54,6 +77,32 @@ public class CollectionAdapter extends ListAdapter<Collection, CollectionAdapter
                             collection.getPhotoCount()
                     )
             );
+
+            binding.getRoot().setOnClickListener(v -> {
+                if (actionListener != null) {
+                    actionListener.onCollectionClick(collection);
+                }
+            });
+
+            binding.buttonCollectionMenu.setOnClickListener(v -> {
+                PopupMenu popup = new PopupMenu(v.getContext(), v);
+                popup.getMenu().add(0, 1, 0, R.string.action_rename);
+                popup.getMenu().add(0, 2, 1, R.string.action_delete);
+                popup.setOnMenuItemClickListener(item -> {
+                    if (actionListener == null) {
+                        return false;
+                    }
+                    if (item.getItemId() == 1) {
+                        actionListener.onRenameCollection(collection);
+                        return true;
+                    } else if (item.getItemId() == 2) {
+                        actionListener.onDeleteCollection(collection);
+                        return true;
+                    }
+                    return false;
+                });
+                popup.show();
+            });
         }
     }
 

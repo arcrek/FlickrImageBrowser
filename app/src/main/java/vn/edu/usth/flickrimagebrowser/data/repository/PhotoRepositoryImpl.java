@@ -293,4 +293,54 @@ public class PhotoRepositoryImpl implements PhotoRepository {
             );
         });
     }
+    @Override
+    public void deleteCollection(long collectionId) {
+        executors.diskIO().execute(() -> collectionDao.deleteCollectionById(collectionId));
+    }
+
+    @Override
+    public void renameCollection(long collectionId, @NonNull String newName) {
+        String trimmedName = newName.trim();
+        if (trimmedName.isEmpty()) {
+            return;
+        }
+        executors.diskIO().execute(() -> {
+            List<CollectionEntity> existingCollections = collectionDao.getCollectionsSync();
+            if (existingCollections != null) {
+                for (CollectionEntity existing : existingCollections) {
+                    if (existing.getId() != collectionId
+                            && existing.getName().equalsIgnoreCase(trimmedName)) {
+                        return;
+                    }
+                }
+            }
+            try {
+                collectionDao.renameCollection(collectionId, trimmedName);
+            } catch (RuntimeException ignored) {
+                // Ignore duplicate constraint violations
+            }
+        });
+    }
+
+    @Override
+    public void removePhotoFromCollection(long collectionId, @NonNull String photoId) {
+        executors.diskIO().execute(() -> {
+            collectionDao.removePhotoFromCollection(collectionId, photoId);
+            photoDao.deleteOrphanIfUnreferenced(photoId);
+        });
+    }
+
+    @NonNull
+    @Override
+    public LiveData<List<Photo>> observePhotosInCollection(long collectionId) {
+        return Transformations.map(
+                collectionDao.observeCollectionWithPhotosById(collectionId),
+                relation -> {
+                    if (relation == null || relation.photos == null) {
+                        return java.util.Collections.emptyList();
+                    }
+                    return PhotoMapper.fromEntityList(relation.photos);
+                }
+        );
+    }
 }

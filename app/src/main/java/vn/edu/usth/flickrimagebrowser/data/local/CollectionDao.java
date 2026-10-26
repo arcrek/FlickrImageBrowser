@@ -49,6 +49,9 @@ public interface CollectionDao {
     @Delete
     void deleteCollection(@NonNull CollectionEntity collectionEntity);
 
+    @Query("DELETE FROM collections WHERE id = :collectionId")
+    void deleteCollectionById(long collectionId);
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void addPhotoToCollection(@NonNull CollectionPhotoCrossRef crossRef);
 

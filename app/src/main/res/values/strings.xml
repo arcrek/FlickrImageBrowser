@@ -30,10 +30,31 @@
     <string name="favorites_filter_empty_state">No favorite photos matched your filter.</string>
 
     <!-- Collections Screen -->
+    <string name="collections_eyebrow">MAKE IT YOURS</string>
+    <string name="collections_heading">Your collections</string>
+    <string name="collections_subtitle">Group photos into little stories.</string>
     <string name="collections_empty_state">No collections yet. Create a collection to organize saved photos.</string>
     <string name="action_new_collection">New Collection</string>
     <string name="collection_name_hint">Collection name</string>
     <string name="collection_photo_count">%1$d photos</string>
+    <string name="action_collection_menu">Collection options</string>
+    <string name="action_rename">Rename</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_save">Save</string>
+    <string name="error_empty_collection_name">Collection name cannot be empty.</string>
+    <string name="error_duplicate_collection_name">A collection with this name already exists.</string>
+    <string name="dialog_create_collection_title">New Collection</string>
+    <string name="collection_description_hint">Description (optional)</string>
+    <string name="action_create">Create</string>
+    <string name="dialog_delete_collection_title">Delete Collection</string>
+    <string name="dialog_delete_collection_message">Are you sure you want to delete \"%1$s\"? Photos in this collection will remain in your favorites.</string>
+    <string name="dialog_rename_collection_title">Rename Collection</string>
+    <string name="collection_detail_title">%1$s</string>
+    <string name="collection_detail_empty">No photos in this collection yet.\nAdd photos from the photo detail screen.</string>
+    <string name="action_remove_from_collection">Remove from collection</string>
+    <string name="dialog_remove_photo_title">Remove Photo</string>
+    <string name="dialog_remove_photo_message">Remove \"%1$s\" from this collection? The photo will remain in your Favorites if saved.</string>
 
     <!-- Detail Screen -->
     <string name="detail_title">Photo Details</string>
