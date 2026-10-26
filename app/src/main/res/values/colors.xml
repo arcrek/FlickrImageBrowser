@@ -26,6 +26,7 @@
     <color name="nav_inactive">#FF9CA3AF</color>
     <color name="dock_background">#EEFFFFFF</color>
     <color name="dock_stroke">#FFE5E7EB</color>
+    <color name="card_stroke">#FFE5E7EB</color>
     <color name="mint_pill_bg">#1A00BFA5</color>
     <color name="mint_pill_text">#FF007A69</color>
 </resources>

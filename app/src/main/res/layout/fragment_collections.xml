@@ -5,75 +5,90 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_light"
-    android:padding="12dp">
+    android:paddingStart="16dp"
+    android:paddingTop="18dp"
+    android:paddingEnd="16dp">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/input_layout_collection_name"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+    <TextView
+        android:id="@+id/text_collections_eyebrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:letterSpacing="0.12"
+        android:text="@string/collections_eyebrow"
+        android:textColor="@color/secondary"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/text_collections_heading"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:hint="@string/collection_name_hint"
-        app:boxCornerRadiusBottomEnd="20dp"
-        app:boxCornerRadiusBottomStart="20dp"
-        app:boxCornerRadiusTopEnd="20dp"
-        app:boxCornerRadiusTopStart="20dp"
-        app:boxStrokeColor="@color/primary"
-        app:hintTextColor="@color/primary"
-        app:layout_constraintEnd_toStartOf="@id/button_create_collection"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/edit_collection_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textCapWords"
-            android:maxLines="1"
-            android:paddingTop="11dp"
-            android:paddingBottom="11dp"
-            android:textColor="@color/text_primary" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_create_collection"
-        android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:backgroundTint="@color/primary"
-        android:fontFamily="@font/plus_jakarta_sans"
-        android:text="@string/action_new_collection"
-        android:textColor="@color/on_primary"
-        app:cornerRadius="24dp"
-        app:elevation="0dp"
-        app:layout_constraintBottom_toBottomOf="@id/input_layout_collection_name"
+        android:layout_marginTop="4dp"
+        android:text="@string/collections_heading"
+        android:textColor="@color/text_primary"
+        android:textSize="25sp"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/input_layout_collection_name" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_collections_eyebrow" />
+
+    <TextView
+        android:id="@+id/text_collections_subtitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:text="@string/collections_subtitle"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_collections_heading" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_collections"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="18dp"
         android:clipToPadding="false"
+        android:paddingBottom="96dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input_layout_collection_name" />
+        app:layout_constraintTop_toBottomOf="@id/text_collections_subtitle" />
 
     <TextView
         android:id="@+id/text_empty_collections"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:lineSpacingExtra="4dp"
-        android:padding="24dp"
+        android:padding="32dp"
         android:text="@string/collections_empty_state"
         android:textColor="@color/text_secondary"
-        android:textSize="14sp"
+        android:textSize="15sp"
+        android:lineSpacingExtra="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input_layout_collection_name" />
+        app:layout_constraintTop_toBottomOf="@id/text_collections_subtitle" />
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fab_create_collection"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/action_new_collection"
+        android:text="@string/action_new_collection"
+        android:textAllCaps="false"
+        android:textStyle="bold"
+        android:textColor="@color/on_primary"
+        app:cornerRadius="20dp"
+        app:elevation="6dp"
+        app:backgroundTint="@color/primary"
+        app:icon="@drawable/ic_collections"
+        app:iconTint="@color/on_primary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

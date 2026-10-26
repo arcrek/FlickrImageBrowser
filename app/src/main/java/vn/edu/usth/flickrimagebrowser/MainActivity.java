@@ -11,6 +11,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import vn.edu.usth.flickrimagebrowser.databinding.ActivityMainBinding;
+import vn.edu.usth.flickrimagebrowser.ui.collections.CollectionDetailFragment;
 import vn.edu.usth.flickrimagebrowser.ui.collections.CollectionsFragment;
 import vn.edu.usth.flickrimagebrowser.ui.favorites.FavoritesFragment;
 import vn.edu.usth.flickrimagebrowser.ui.search.SearchFragment;
@@ -30,10 +31,15 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        getSupportFragmentManager().addOnBackStackChangedListener(
+                () -> updateNavigationChrome(getSupportFragmentManager().getBackStackEntryCount() == 0));
+        updateNavigationChrome(getSupportFragmentManager().getBackStackEntryCount() == 0);
+
         setSupportActionBar(binding.toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
+        binding.toolbar.setTitle(R.string.app_name);
 
         // Apply system window insets so the bottom navigation bar is never obscured by gesture/system bars
         int initialPaddingBottom = binding.bottomNavigation.getPaddingBottom();
@@ -53,6 +59,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
         binding.bottomNavigation.setOnItemSelectedListener(item -> {
+            if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                return true;
+            }
             int itemId = item.getItemId();
             if (itemId == R.id.nav_search) {
                 switchFragment(new SearchFragment(), "search");
@@ -74,6 +83,11 @@ public class MainActivity extends AppCompatActivity {
             binding.bottomNavigation.setSelectedItemId(R.id.nav_search);
         } else {
             int restoredId = savedInstanceState.getInt(KEY_SELECTED_TAB, R.id.nav_search);
+            if (getSupportFragmentManager().getBackStackEntryCount() == 0) {
+                if (binding.bottomNavigation.getSelectedItemId() != restoredId) {
+                    binding.bottomNavigation.setSelectedItemId(restoredId);
+                }
+            }
             updateToolbarForTab(restoredId);
         }
     }
@@ -97,16 +111,40 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
     }
 
+    /** Opens a collection's photo list inside the single-activity navigation host. */
+    public void openCollectionDetail(long collectionId, @NonNull String collectionName) {
+        Fragment detail = CollectionDetailFragment.newInstance(collectionId, collectionName);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, detail, "collection_detail")
+                .addToBackStack("collection_detail")
+                .commit();
+        updateNavigationChrome(false);
+    }
+
+    private void updateNavigationChrome(boolean showNavigation) {
+        if (binding == null) {
+            return;
+        }
+        int visibility = showNavigation ? android.view.View.VISIBLE : android.view.View.GONE;
+        binding.toolbar.setVisibility(visibility);
+        binding.toolbarDivider.setVisibility(visibility);
+        binding.bottomDivider.setVisibility(visibility);
+        binding.bottomNavigation.setVisibility(visibility);
+    }
+
     private void updateToolbarForTab(int itemId) {
         if (itemId == R.id.nav_favorites) {
             binding.toolbarTitle.setText(R.string.nav_favorites);
             binding.toolbarTagline.setText(R.string.tab_saved);
+            binding.toolbar.setTitle(R.string.nav_favorites);
         } else if (itemId == R.id.nav_collections) {
             binding.toolbarTitle.setText(R.string.nav_collections);
             binding.toolbarTagline.setText(R.string.tab_boards);
+            binding.toolbar.setTitle(R.string.nav_collections);
         } else {
             binding.toolbarTitle.setText(R.string.brand_name_display);
             binding.toolbarTagline.setText(R.string.brand_tagline);
+            binding.toolbar.setTitle(R.string.app_name);
         }
     }
 }

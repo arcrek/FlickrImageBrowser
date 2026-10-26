@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider;
 import java.util.Objects;
 
 import vn.edu.usth.flickrimagebrowser.data.repository.PhotoRepository;
+import vn.edu.usth.flickrimagebrowser.ui.collections.CollectionDetailViewModel;
 import vn.edu.usth.flickrimagebrowser.ui.collections.CollectionsViewModel;
 import vn.edu.usth.flickrimagebrowser.ui.detail.DetailViewModel;
 import vn.edu.usth.flickrimagebrowser.ui.favorites.FavoritesViewModel;
@@ -35,6 +36,9 @@ public class AppViewModelFactory implements ViewModelProvider.Factory {
         }
         if (modelClass.isAssignableFrom(CollectionsViewModel.class)) {
             return (T) new CollectionsViewModel(repository);
+        }
+        if (modelClass.isAssignableFrom(CollectionDetailViewModel.class)) {
+            return (T) new CollectionDetailViewModel(repository);
         }
         if (modelClass.isAssignableFrom(DetailViewModel.class)) {
             return (T) new DetailViewModel(repository);

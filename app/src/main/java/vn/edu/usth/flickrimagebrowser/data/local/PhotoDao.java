@@ -57,4 +57,8 @@ public interface PhotoDao {
     @Query("DELETE FROM photos WHERE id = :photoId AND is_favorite = 0 " +
             "AND NOT EXISTS (SELECT 1 FROM collection_photo_cross_ref WHERE photo_id = :photoId)")
     void deleteOrphanIfUnreferenced(@NonNull String photoId);
+
+    @Query("DELETE FROM photos WHERE is_favorite = 0 " +
+            "AND NOT EXISTS (SELECT 1 FROM collection_photo_cross_ref WHERE photo_id = photos.id)")
+    void deleteAllOrphanPhotos();
 }

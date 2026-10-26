@@ -185,4 +185,54 @@ public class PhotoRepositoryTest {
         assertTrue(saved.isFavorite());
         verify(photoDao, never()).deleteOrphanIfUnreferenced("900");
     }
+
+    @Test
+    public void deleteCollection_deletesFromCollectionDaoAndCleansUpAllOrphans() {
+        repository.deleteCollection(10L);
+        verify(collectionDao).deleteCollectionById(10L);
+        verify(photoDao).deleteAllOrphanPhotos();
+    }
+
+    @Test
+    public void renameCollection_whenUnique_updatesNameInDao() {
+        when(collectionDao.getCollectionsSync()).thenReturn(Collections.emptyList());
+        repository.renameCollection(5L, "New Name");
+        verify(collectionDao).renameCollection(5L, "New Name");
+    }
+
+    @Test
+    public void renameCollection_whenDuplicateCaseInsensitive_doesNotCallDao() {
+        vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionEntity existing =
+                new vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionEntity(10L, "Nature", "desc", 100L);
+        when(collectionDao.getCollectionsSync()).thenReturn(Collections.singletonList(existing));
+        repository.renameCollection(5L, "  nature  ");
+        verify(collectionDao, never()).renameCollection(org.mockito.ArgumentMatchers.anyLong(), anyString());
+    }
+
+    @Test
+    public void removePhotoFromCollection_removesFromCollectionDaoAndCleansUpOrphan() {
+        repository.removePhotoFromCollection(10L, "photo_123");
+        verify(collectionDao).removePhotoFromCollection(10L, "photo_123");
+        verify(photoDao).deleteOrphanIfUnreferenced("photo_123");
+    }
+
+    @Test
+    public void observePhotosInCollection_mapsEntitiesFromRelation() {
+        vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionWithPhotos relation =
+                new vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionWithPhotos();
+        relation.collection = new vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionEntity(1L, "Travel", "", 0L);
+        relation.photos = Collections.singletonList(
+                new PhotoEntity("p1", "Beach", "Author", "Desc", "q", "z", false, 100L)
+        );
+        androidx.lifecycle.MutableLiveData<vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionWithPhotos> liveData =
+                new androidx.lifecycle.MutableLiveData<>(relation);
+        when(collectionDao.observeCollectionWithPhotosById(1L)).thenReturn(liveData);
+
+        LiveData<List<Photo>> resultLive = repository.observePhotosInCollection(1L);
+        resultLive.observeForever(photos -> {});
+        List<Photo> result = resultLive.getValue();
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("p1", result.get(0).getId());
+    }
 }
