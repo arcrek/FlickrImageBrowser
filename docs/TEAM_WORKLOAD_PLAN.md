@@ -155,10 +155,10 @@ Own the photo discovery experience (`SearchFragment`, `SearchViewModel`, `PhotoA
 Own the photo detail experience (`PhotoDetailActivity`, `DetailViewModel`, `activity_photo_detail.xml`), loading large detail images (`largeImageURL`), displaying photo metadata, toggling favorite state in real time, and assigning a photo to a local collection.
 
 #### Concrete TODOs
-- [ ] **TODO 5.1:** Enhance [`DetailViewModel`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/detail/DetailViewModel.java) to expose `LiveData<List<Collection>>` and `addPhotoToCollection(long collectionId)` alongside `getIsFavorite()` and `toggleFavorite()`.
-- [ ] **TODO 5.2:** Add an **"Add to Collection"** button and selection dialog (`AlertDialog` or `BottomSheetDialogFragment`) in [`PhotoDetailActivity`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/detail/PhotoDetailActivity.java) so users can save the current photo into any local collection.
-- [ ] **TODO 5.3:** Configure Glide in `PhotoDetailActivity.renderPhotoDetails(...)` to load `photo.getDetailUrl()` (`largeImageURL`) with `.thumbnail(Glide.with(this).load(photo.getThumbnailUrl()))` so cached grid thumbnails appear instantaneously while the higher-resolution image loads.
-- [ ] **TODO 5.4:** Add a Share action on `toolbarDetail` using `Intent.ACTION_SEND` to share the photo title and URL, and write `DetailViewModelTest.java`.
+- [x] **TODO 5.1:** Enhance [`DetailViewModel`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/detail/DetailViewModel.java) to expose `LiveData<List<Collection>>` and `addPhotoToCollection(long collectionId)` alongside `getIsFavorite()` and `toggleFavorite()`.
+- [x] **TODO 5.2:** Add an **"Add to Collection"** button and selection dialog (`AlertDialog` or `BottomSheetDialogFragment`) in [`PhotoDetailActivity`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/detail/PhotoDetailActivity.java) so users can save the current photo into any local collection.
+- [x] **TODO 5.3:** Configure Glide in `PhotoDetailActivity.renderPhotoDetails(...)` to load `photo.getDetailUrl()` (`largeImageURL`) with `.thumbnail(Glide.with(this).load(photo.getThumbnailUrl()))` so cached grid thumbnails appear instantaneously while the higher-resolution image loads.
+- [x] **TODO 5.4:** Add a Share action on `toolbarDetail` using `Intent.ACTION_SEND` to share the photo title and URL, and write `DetailViewModelTest.java`.
 
 #### Methods to Implement / Extend
 | Class | Method Signature | Description |

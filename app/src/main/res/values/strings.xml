@@ -40,5 +40,11 @@
     <string name="detail_by_owner">By %1$s</string>
     <string name="detail_no_description">No description provided.</string>
     <string name="action_toggle_favorite">Toggle Favorite</string>
+    <string name="action_add_to_collection">Add to Collection</string>
+    <string name="action_share">Share</string>
+    <string name="dialog_select_collection_title">Select Collection</string>
+    <string name="dialog_no_collections_message">No collections available. Please create a collection in the Collections tab first.</string>
+    <string name="dialog_photo_added_to_collection">Added photo to %1$s</string>
+    <string name="share_photo_title">Share Photo</string>
     <string name="content_desc_photo">Photo</string>
 </resources>
