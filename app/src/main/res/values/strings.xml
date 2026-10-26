@@ -42,6 +42,7 @@
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_save">Save</string>
+    <string name="action_back">Navigate back</string>
     <string name="error_empty_collection_name">Collection name cannot be empty.</string>
     <string name="error_duplicate_collection_name">A collection with this name already exists.</string>
     <string name="dialog_create_collection_title">New Collection</string>
@@ -50,7 +51,6 @@
     <string name="dialog_delete_collection_title">Delete Collection</string>
     <string name="dialog_delete_collection_message">Are you sure you want to delete \"%1$s\"? Photos in this collection will remain in your favorites.</string>
     <string name="dialog_rename_collection_title">Rename Collection</string>
-    <string name="collection_detail_title">%1$s</string>
     <string name="collection_detail_empty">No photos in this collection yet.\nAdd photos from the photo detail screen.</string>
     <string name="action_remove_from_collection">Remove from collection</string>
     <string name="dialog_remove_photo_title">Remove Photo</string>

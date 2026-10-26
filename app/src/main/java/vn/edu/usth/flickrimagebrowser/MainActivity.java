@@ -9,8 +9,6 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 
 import vn.edu.usth.flickrimagebrowser.databinding.ActivityMainBinding;
 import vn.edu.usth.flickrimagebrowser.ui.collections.CollectionDetailFragment;
@@ -85,7 +83,11 @@ public class MainActivity extends AppCompatActivity {
             binding.bottomNavigation.setSelectedItemId(R.id.nav_search);
         } else {
             int restoredId = savedInstanceState.getInt(KEY_SELECTED_TAB, R.id.nav_search);
-            binding.bottomNavigation.setSelectedItemId(restoredId);
+            if (getSupportFragmentManager().getBackStackEntryCount() == 0) {
+                if (binding.bottomNavigation.getSelectedItemId() != restoredId) {
+                    binding.bottomNavigation.setSelectedItemId(restoredId);
+                }
+            }
             updateToolbarForTab(restoredId);
         }
     }
@@ -99,23 +101,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void switchFragment(@NonNull Fragment fragment, @NonNull String tag) {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        Fragment existing = fragmentManager.findFragmentByTag(tag);
+        Fragment existing = getSupportFragmentManager().findFragmentByTag(tag);
         if (existing != null && existing.isVisible()) {
             return;
         }
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        for (Fragment current : fragmentManager.getFragments()) {
-            if (current.getId() == R.id.fragment_container && !current.isHidden()) {
-                transaction.hide(current);
-            }
-        }
-        if (existing == null) {
-            transaction.add(R.id.fragment_container, fragment, tag);
-        } else {
-            transaction.show(existing);
-        }
-        transaction.setReorderingAllowed(true).commit();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment, tag)
+                .commit();
     }
 
     /** Opens a collection's photo list inside the single-activity navigation host. */
@@ -134,6 +127,8 @@ public class MainActivity extends AppCompatActivity {
         }
         int visibility = showNavigation ? android.view.View.VISIBLE : android.view.View.GONE;
         binding.toolbar.setVisibility(visibility);
+        binding.toolbarDivider.setVisibility(visibility);
+        binding.bottomDivider.setVisibility(visibility);
         binding.bottomNavigation.setVisibility(visibility);
     }
 

@@ -21,7 +21,7 @@ import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
 public class CollectionDetailViewModel extends ViewModel {
 
     private final PhotoRepository repository;
-    private final MutableLiveData<Long> collectionIdLiveData = new MutableLiveData<>();
+    private final MutableLiveData<Long> collectionIdLiveData = new MutableLiveData<>(-1L);
     private final LiveData<List<Photo>> photos;
 
     public CollectionDetailViewModel(@NonNull PhotoRepository repository) {

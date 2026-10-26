@@ -267,13 +267,25 @@ public class PhotoRepositoryImpl implements PhotoRepository {
         }
         String cleanDesc = description != null ? description.trim() : "";
         executors.diskIO().execute(() -> {
+            List<CollectionEntity> existingCollections = collectionDao.getCollectionsSync();
+            if (existingCollections != null) {
+                for (CollectionEntity existing : existingCollections) {
+                    if (existing.getName().equalsIgnoreCase(trimmedName)) {
+                        return;
+                    }
+                }
+            }
             CollectionEntity entity = new CollectionEntity(
                     0L,
                     trimmedName,
                     cleanDesc,
                     System.currentTimeMillis()
             );
-            collectionDao.insertCollection(entity);
+            try {
+                collectionDao.insertCollection(entity);
+            } catch (RuntimeException ignored) {
+                // Ignore duplicate constraint violations
+            }
         });
     }
 
@@ -295,7 +307,10 @@ public class PhotoRepositoryImpl implements PhotoRepository {
     }
     @Override
     public void deleteCollection(long collectionId) {
-        executors.diskIO().execute(() -> collectionDao.deleteCollectionById(collectionId));
+        executors.diskIO().execute(() -> {
+            collectionDao.deleteCollectionById(collectionId);
+            photoDao.deleteAllOrphanPhotos();
+        });
     }
 
     @Override
