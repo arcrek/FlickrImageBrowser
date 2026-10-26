@@ -206,10 +206,10 @@ Own the Favorites screen (`FavoritesFragment`, `FavoritesViewModel`, `fragment_f
 Own the Collections feature UI (`CollectionsFragment`, `CollectionsViewModel`, `CollectionAdapter`, `fragment_collections.xml`, `item_collection.xml`), the Single-Activity navigation host (`MainActivity`, `activity_main.xml`, `bottom_nav_menu.xml`), and end-to-end Espresso UI tests.
 
 #### Concrete TODOs
-- [ ] **TODO 7.1:** Enhance [`CollectionsFragment`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/collections/CollectionsFragment.java) and [`CollectionsViewModel`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/collections/CollectionsViewModel.java) to support creating, renaming, and deleting collections with validation (non-empty unique names).
-- [ ] **TODO 7.2:** Implement collection click handling (opening a dialog or detail view displaying the `List<Photo>` inside the selected collection and allowing photo removal from that collection).
-- [ ] **TODO 7.3:** Maintain [`MainActivity`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/MainActivity.java) bottom navigation state across configuration changes (`KEY_SELECTED_TAB` in `onSaveInstanceState`).
-- [ ] **TODO 7.4:** Write `CollectionsViewModelTest.java` (JVM unit test) and `MainActivityNavigationTest.java` (Espresso instrumentation test verifying bottom navigation switching between Search, Favorites, and Collections tabs).
+- [x] **TODO 7.1:** Enhance [`CollectionsFragment`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/collections/CollectionsFragment.java) and [`CollectionsViewModel`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/ui/collections/CollectionsViewModel.java) to support creating, renaming, and deleting collections with validation (non-empty unique names).
+- [x] **TODO 7.2:** Implement collection click handling (opening a dialog or detail view displaying the `List<Photo>` inside the selected collection and allowing photo removal from that collection).
+- [x] **TODO 7.3:** Maintain [`MainActivity`](../app/src/main/java/vn/edu/usth/flickrimagebrowser/MainActivity.java) bottom navigation state across configuration changes (`KEY_SELECTED_TAB` in `onSaveInstanceState`).
+- [x] **TODO 7.4:** Write `CollectionsViewModelTest.java` (JVM unit test) and `MainActivityNavigationTest.java` (Espresso instrumentation test verifying bottom navigation switching between Search, Favorites, and Collections tabs).
 
 #### Methods to Implement / Extend
 | Class | Method Signature | Description |
