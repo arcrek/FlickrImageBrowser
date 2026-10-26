@@ -1,6 +1,7 @@
 package vn.edu.usth.flickrimagebrowser.data.local;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Query;
@@ -11,7 +12,7 @@ import java.util.List;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.PhotoEntity;
 
 /**
- * Room DAO for caching photos, managing favorites, and resolving orphan entities.
+ * Room DAO for querying and mutating persisted photo metadata and favorites.
  */
 @Dao
 public interface PhotoDao {
@@ -19,24 +20,27 @@ public interface PhotoDao {
     @Query("SELECT * FROM photos WHERE is_favorite = 1 ORDER BY saved_at DESC")
     LiveData<List<PhotoEntity>> observeFavoritePhotos();
 
-    @Query("SELECT * FROM photos WHERE is_favorite = 1 ORDER BY title COLLATE NOCASE ASC")
+    @Query("SELECT * FROM photos WHERE is_favorite = 1 " +
+            "ORDER BY title COLLATE NOCASE ASC, id ASC")
     LiveData<List<PhotoEntity>> observeFavoritePhotosByTitle();
 
-    @Query("SELECT * FROM photos WHERE is_favorite = 1 AND (title LIKE '%' || :query || '%' OR owner_name LIKE '%' || :query || '%') ORDER BY saved_at DESC")
+    @Query("SELECT * FROM photos WHERE is_favorite = 1 " +
+            "AND (title LIKE '%' || :query || '%' OR owner_name LIKE '%' || :query || '%') " +
+            "ORDER BY saved_at DESC, id ASC")
     LiveData<List<PhotoEntity>> searchFavoritePhotos(@NonNull String query);
 
-    @Query("SELECT * FROM photos WHERE is_favorite = 1 AND (title LIKE '%' || :query || '%' OR owner_name LIKE '%' || :query || '%') ORDER BY title COLLATE NOCASE ASC")
+    @Query("SELECT * FROM photos WHERE is_favorite = 1 " +
+            "AND (title LIKE '%' || :query || '%' OR owner_name LIKE '%' || :query || '%') " +
+            "ORDER BY title COLLATE NOCASE ASC, id ASC")
     LiveData<List<PhotoEntity>> searchFavoritePhotosByTitle(@NonNull String query);
-
-    @Query("SELECT id FROM photos WHERE is_favorite = 1")
-    LiveData<List<String>> observeFavoriteIds();
-
-    @Query("SELECT id FROM photos WHERE is_favorite = 1")
-    List<String> getFavoriteIdsSync();
 
     @Query("SELECT * FROM photos WHERE is_favorite = 1 ORDER BY saved_at DESC")
     List<PhotoEntity> getFavoritePhotosSync();
 
+    @Query("SELECT id FROM photos WHERE is_favorite = 1")
+    List<String> getFavoriteIdsSync();
+
+    @Nullable
     @Query("SELECT * FROM photos WHERE id = :photoId LIMIT 1")
     PhotoEntity getPhotoByIdSync(@NonNull String photoId);
 
