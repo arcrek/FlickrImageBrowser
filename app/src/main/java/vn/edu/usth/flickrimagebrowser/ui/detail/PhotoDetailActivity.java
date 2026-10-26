@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -57,19 +59,6 @@ public class PhotoDetailActivity extends AppCompatActivity {
         }
         binding.toolbarDetail.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
 
-        binding.toolbarDetail.inflateMenu(R.menu.menu_photo_detail);
-        binding.toolbarDetail.setOnMenuItemClickListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.action_add_to_collection) {
-                showAddToCollectionDialog(availableCollections);
-                return true;
-            } else if (itemId == R.id.action_share) {
-                sharePhoto();
-                return true;
-            }
-            return false;
-        });
-
         AppViewModelFactory factory = ((FlickrApplication) getApplication())
                 .getAppContainer()
                 .getViewModelFactory();
@@ -104,6 +93,25 @@ public class PhotoDetailActivity extends AppCompatActivity {
 
         binding.buttonFavorite.setOnClickListener(v -> viewModel.toggleFavorite());
         binding.buttonAddToCollection.setOnClickListener(v -> showAddToCollectionDialog(availableCollections));
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_photo_detail, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_add_to_collection) {
+            showAddToCollectionDialog(availableCollections);
+            return true;
+        } else if (itemId == R.id.action_share) {
+            sharePhoto();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void renderPhotoDetails(@Nullable Photo photo) {

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">FlickrImage Browser</string>
-
     <string name="brand_name_display">Lumina •</string>
     <string name="brand_tagline">Visual Gallery</string>
 
@@ -13,10 +12,10 @@
     <string name="tab_boards">Boards</string>
 
     <!-- Search Screen -->
-    <string name="search_hint">Search public Flickr photos…</string>
+    <string name="search_hint">Search photos, topics, creators…</string>
     <string name="action_search">Search</string>
     <string name="action_retry">Retry</string>
-    <string name="search_prompt_state">Enter a keyword above to search public Flickr photos.</string>
+    <string name="search_prompt_state">Enter a keyword below or choose a suggested topic.</string>
     <string name="search_empty_state">No photos matched your query.</string>
     <string name="recommend_format">Explore: \"%1$s\"</string>
     <string name="recommend_action">Try now →</string>
@@ -47,5 +46,5 @@
     <string name="dialog_no_collections_message">No collections available. Please create a collection in the Collections tab first.</string>
     <string name="dialog_photo_added_to_collection">Added photo to %1$s</string>
     <string name="share_photo_title">Share Photo</string>
-    <string name="content_desc_photo">Flickr photo</string>
+    <string name="content_desc_photo">Photo</string>
 </resources>

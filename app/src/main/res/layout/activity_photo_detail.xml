@@ -88,6 +88,7 @@
                     android:id="@+id/button_add_to_collection"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
+                    android:layout_marginEnd="8dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/action_add_to_collection"
                     android:src="@drawable/ic_collections" />
