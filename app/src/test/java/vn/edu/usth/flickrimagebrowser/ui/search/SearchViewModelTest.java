@@ -298,4 +298,89 @@ public class SearchViewModelTest {
         verify(repository, times(2)).searchPhotos("city", 2, 30);
         verify(repository, times(1)).searchPhotos("city", 1, 30);
     }
+
+    @Test
+    public void loadInitialFeaturedIfNeeded_loadsFeaturedWhenIdleAndDoesNotRepeatOnceLoaded() {
+        Photo featured = new Photo(
+                "10", "Featured Peak", "Author", "",
+                "https://example.com/10_q.jpg", "https://example.com/10_z.jpg",
+                false, 0L
+        );
+        MutableLiveData<Resource<List<Photo>>> featuredLive = new MutableLiveData<>(
+                Resource.success(Collections.singletonList(featured))
+        );
+        when(repository.searchPhotos("", SearchViewModel.DEFAULT_PAGE, SearchViewModel.DEFAULT_PER_PAGE))
+                .thenReturn(featuredLive);
+
+        viewModel.getSearchResults().observeForever(observer);
+        viewModel.loadInitialFeaturedIfNeeded();
+
+        assertEquals("", viewModel.getLastQuery());
+        Resource<List<Photo>> current = viewModel.getSearchResults().getValue();
+        assertNotNull(current);
+        assertEquals(Resource.Status.SUCCESS, current.getStatus());
+        assertNotNull(current.getData());
+        assertEquals(1, current.getData().size());
+        assertEquals("10", current.getData().get(0).getId());
+
+        // Calling again on configuration change must not trigger a duplicate network request
+        viewModel.loadInitialFeaturedIfNeeded();
+        verify(repository, times(1)).searchPhotos(
+                "", SearchViewModel.DEFAULT_PAGE, SearchViewModel.DEFAULT_PER_PAGE
+        );
+    }
+
+    @Test
+    public void submitQuery_emptyAfterKeywordSearch_returnsToFeaturedFeedAndSupportsPagination() {
+        MutableLiveData<Resource<List<Photo>>> keywordLive = new MutableLiveData<>(
+                Resource.success(Collections.singletonList(new Photo(
+                        "1", "Hanoi", "Author", "",
+                        "https://example.com/1_q.jpg", "https://example.com/1_z.jpg",
+                        false, 0L
+                )))
+        );
+        when(repository.searchPhotos("hanoi", 1, 30)).thenReturn(keywordLive);
+
+        List<Photo> featuredPage1 = new ArrayList<>();
+        for (int i = 1; i <= 30; i++) {
+            featuredPage1.add(new Photo(
+                    "f" + i, "Featured " + i, "Author", "",
+                    "https://example.com/f" + i + "_q.jpg", "https://example.com/f" + i + "_z.jpg",
+                    false, 0L
+            ));
+        }
+        MutableLiveData<Resource<List<Photo>>> featuredPage1Live = new MutableLiveData<>(
+                Resource.success(featuredPage1)
+        );
+        when(repository.searchPhotos("", 1, 30)).thenReturn(featuredPage1Live);
+
+        List<Photo> featuredPage2 = Collections.singletonList(new Photo(
+                "f31", "Featured 31", "Author", "",
+                "https://example.com/f31_q.jpg", "https://example.com/f31_z.jpg",
+                false, 0L
+        ));
+        MutableLiveData<Resource<List<Photo>>> featuredPage2Live = new MutableLiveData<>(
+                Resource.success(featuredPage2)
+        );
+        when(repository.searchPhotos("", 2, 30)).thenReturn(featuredPage2Live);
+
+        viewModel.getSearchResults().observeForever(observer);
+
+        // 1. User searches a keyword
+        viewModel.submitQuery("hanoi", false);
+        assertEquals("hanoi", viewModel.getLastQuery());
+        assertEquals("1", viewModel.getSearchResults().getValue().getData().get(0).getId());
+
+        // 2. User clears search bar -> submits empty query -> returns to Featured feed
+        viewModel.submitQuery("   ", false);
+        assertEquals("", viewModel.getLastQuery());
+        assertEquals(30, viewModel.getSearchResults().getValue().getData().size());
+        assertEquals("f1", viewModel.getSearchResults().getValue().getData().get(0).getId());
+
+        // 3. User scrolls to bottom of Featured feed -> loads page 2 of Featured
+        viewModel.loadNextPage();
+        assertEquals(2, viewModel.getCurrentPage());
+        assertEquals(31, viewModel.getSearchResults().getValue().getData().size());
+        assertEquals("f31", viewModel.getSearchResults().getValue().getData().get(30).getId());
+    }
 }

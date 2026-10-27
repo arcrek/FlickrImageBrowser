@@ -143,6 +143,61 @@ public class PhotoRepositoryTest {
 
     @Test
     @SuppressWarnings("unchecked")
+    public void searchPhotos_withEmptyQuery_callsGetFeaturedPhotosWithEditorsChoiceAndPopularOrder() {
+        PixabayHitDto dto = new PixabayHitDto(
+                108L,
+                "featured, mountain, landscape",
+                "featured_author",
+                "https://pixabay.com/photos/108/",
+                "https://cdn.pixabay.com/photo/108_150.jpg",
+                "https://cdn.pixabay.com/photo/108_640.jpg",
+                "https://cdn.pixabay.com/photo/108_1280.jpg"
+        );
+        PixabaySearchResponse apiResponse = new PixabaySearchResponse(
+                50, 50, Collections.singletonList(dto)
+        );
+
+        when(photoDao.getFavoriteIdsSync()).thenReturn(Collections.emptyList());
+        when(apiService.getFeaturedPhotos(
+                eq("test_valid_pixabay_key"),
+                eq(true),
+                eq(PhotoRepositoryImpl.DEFAULT_FEATURED_ORDER),
+                eq(PhotoRepositoryImpl.DEFAULT_IMAGE_TYPE),
+                eq(PhotoRepositoryImpl.DEFAULT_SAFE_SEARCH),
+                eq(1),
+                eq(30)
+        )).thenReturn(mockCall);
+
+        doAnswer(invocation -> {
+            Callback<PixabaySearchResponse> callback = invocation.getArgument(0);
+            callback.onResponse(mockCall, Response.success(apiResponse));
+            return null;
+        }).when(mockCall).enqueue(org.mockito.ArgumentMatchers.any(Callback.class));
+
+        LiveData<Resource<List<Photo>>> resultLive = repository.searchPhotos("   ", 1, 30);
+        Resource<List<Photo>> resource = resultLive.getValue();
+
+        assertNotNull(resource);
+        assertEquals(Resource.Status.SUCCESS, resource.getStatus());
+        assertNotNull(resource.getData());
+        assertEquals(1, resource.getData().size());
+        assertEquals("108", resource.getData().get(0).getId());
+        verify(apiService).getFeaturedPhotos(
+                "test_valid_pixabay_key",
+                true,
+                PhotoRepositoryImpl.DEFAULT_FEATURED_ORDER,
+                PhotoRepositoryImpl.DEFAULT_IMAGE_TYPE,
+                PhotoRepositoryImpl.DEFAULT_SAFE_SEARCH,
+                1,
+                30
+        );
+        verify(apiService, never()).searchPhotos(
+                anyString(), anyString(), anyString(), anyBoolean(), anyInt(), anyInt()
+        );
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
     public void searchPhotos_whenHttp400Or401InvalidKey_emitsApiKeyError() {
         when(apiService.searchPhotos(
                 anyString(), anyString(), anyString(), anyBoolean(), anyInt(), anyInt()

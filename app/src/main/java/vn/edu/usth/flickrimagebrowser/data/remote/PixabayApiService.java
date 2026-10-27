@@ -21,6 +21,17 @@ public interface PixabayApiService {
     );
 
     @GET(".")
+    Call<PixabaySearchResponse> getFeaturedPhotos(
+            @Query("key") String apiKey,
+            @Query("editors_choice") boolean editorsChoice,
+            @Query("order") String order,
+            @Query("image_type") String imageType,
+            @Query("safesearch") boolean safeSearch,
+            @Query("page") int page,
+            @Query("per_page") int perPage
+    );
+
+    @GET(".")
     Call<PixabaySearchResponse> getPhotoById(
             @Query("key") String apiKey,
             @Query("id") String photoId
