@@ -64,6 +64,7 @@
                 android:maxLines="1"
                 android:ellipsize="end"
                 app:layout_constrainedWidth="true"
+                app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintBaseline_toBaselineOf="@id/toolbar_title"
                 app:layout_constraintEnd_toStartOf="@id/btn_action_sparkle"
                 app:layout_constraintStart_toEndOf="@id/toolbar_title" />
@@ -74,7 +75,7 @@
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="38dp"
                 android:layout_height="38dp"
-                android:contentDescription="@string/search_hint"
+                android:contentDescription="@string/nav_search"
                 android:insetLeft="0dp"
                 android:insetTop="0dp"
                 android:insetRight="0dp"

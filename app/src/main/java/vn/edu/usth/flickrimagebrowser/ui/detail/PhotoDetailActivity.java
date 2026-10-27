@@ -71,7 +71,7 @@ public class PhotoDetailActivity extends AppCompatActivity {
                     WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
             );
             binding.toolbarDetail.setPadding(insets.left, insets.top, insets.right, 0);
-            view.setPadding(insets.left, 0, insets.right, insets.bottom);
+            binding.detailScrollView.setPadding(insets.left, 0, insets.right, insets.bottom);
             return windowInsets;
         });
 
