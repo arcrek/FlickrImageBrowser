@@ -8,10 +8,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.IntentCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
@@ -49,6 +53,7 @@ public class PhotoDetailActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         binding = ActivityPhotoDetailBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -58,6 +63,16 @@ public class PhotoDetailActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
         binding.toolbarDetail.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
+
+        // Apply system window insets so toolbar and content fit all types of devices
+        ViewCompat.setOnApplyWindowInsetsListener(binding.detailRoot, (view, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(
+                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
+            );
+            binding.toolbarDetail.setPadding(insets.left, insets.top, insets.right, 0);
+            view.setPadding(insets.left, 0, insets.right, insets.bottom);
+            return windowInsets;
+        });
 
         AppViewModelFactory factory = ((FlickrApplication) getApplication())
                 .getAppContainer()

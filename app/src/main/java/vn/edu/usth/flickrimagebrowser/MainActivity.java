@@ -2,6 +2,7 @@ package vn.edu.usth.flickrimagebrowser;
 
 import android.os.Bundle;
 
+import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -41,17 +43,16 @@ public class MainActivity extends AppCompatActivity {
         }
         binding.toolbar.setTitle(R.string.app_name);
 
-        // Apply system window insets so the bottom navigation bar is never obscured by gesture/system bars
-        int initialPaddingBottom = binding.bottomNavigation.getPaddingBottom();
-        ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNavigation, (view, insets) -> {
-            Insets navInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            view.setPadding(
-                    view.getPaddingLeft(),
-                    view.getPaddingTop(),
-                    view.getPaddingRight(),
-                    initialPaddingBottom + navInsets.bottom
+        // Apply system window insets so top header and bottom nav fit all types of devices,
+        // accounting for status bar, display cutouts (notches / camera punch-holes), and navigation bars.
+        ViewCompat.setOnApplyWindowInsetsListener(binding.rootMain, (view, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(
+                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
             );
-            return insets;
+            binding.toolbar.setPadding(insets.left, insets.top, insets.right, 0);
+            binding.bottomNavigation.setPadding(insets.left, 0, insets.right, insets.bottom);
+            binding.fragmentContainer.setPadding(insets.left, 0, insets.right, 0);
+            return windowInsets;
         });
 
         binding.btnActionSparkle.setOnClickListener(v -> {

@@ -6,11 +6,12 @@
     android:layout_height="match_parent"
     android:background="@color/background_light">
 
-    <!-- Top Bar: Clean White & Mint Accent -->
+    <!-- Top Bar: Clean White & Mint Accent (Fits all machine screen types, cutouts, status bars) -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar_detail"
         android:layout_width="0dp"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/actionBarSize"
         android:background="@color/surface_light"
         app:elevation="1dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -54,14 +55,14 @@
                 app:strokeColor="@color/dock_stroke"
                 app:strokeWidth="1dp">
 
-                <ImageView
-                    android:id="@+id/image_detail_photo"
-                    android:layout_width="match_parent"
-                    android:layout_height="320dp"
-                    android:adjustViewBounds="true"
-                    android:background="#FFF3F4F6"
-                    android:contentDescription="@string/content_desc_photo"
-                    android:scaleType="centerCrop" />
+            <ImageView
+                android:id="@+id/image_detail_photo"
+                android:layout_width="match_parent"
+                android:layout_height="320dp"
+                android:adjustViewBounds="true"
+                android:background="#FFF3F4F6"
+                android:contentDescription="@string/content_desc_photo"
+                android:scaleType="centerCrop" />
 
             </com.google.android.material.card.MaterialCardView>
 
