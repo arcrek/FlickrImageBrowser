@@ -49,9 +49,15 @@ public class MainActivity extends AppCompatActivity {
             Insets insets = windowInsets.getInsets(
                     WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
             );
+            boolean showingMainChrome = binding.toolbar.getVisibility() == android.view.View.VISIBLE;
             binding.toolbar.setPadding(insets.left, insets.top, insets.right, 0);
             binding.bottomNavigation.setPadding(insets.left, 0, insets.right, insets.bottom);
-            binding.fragmentContainer.setPadding(insets.left, 0, insets.right, 0);
+            binding.fragmentContainer.setPadding(
+                    insets.left,
+                    showingMainChrome ? 0 : insets.top,
+                    insets.right,
+                    showingMainChrome ? 0 : insets.bottom
+            );
             return windowInsets;
         });
 
@@ -131,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
         binding.toolbarDivider.setVisibility(visibility);
         binding.bottomDivider.setVisibility(visibility);
         binding.bottomNavigation.setVisibility(visibility);
+        ViewCompat.requestApplyInsets(binding.rootMain);
     }
 
     private void updateToolbarForTab(int itemId) {

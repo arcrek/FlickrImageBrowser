@@ -66,6 +66,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.activity)
     implementation(libs.androidx.appcompat)
     implementation(libs.google.material)
     implementation(libs.androidx.constraintlayout)
