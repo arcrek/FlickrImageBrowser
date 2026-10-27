@@ -6,22 +6,26 @@
     android:layout_height="match_parent"
     android:background="@color/background_light">
 
-    <!-- Top Bar: Elegant Brand Header with Mint Dot -->
+    <!-- Top Bar: Elegant Brand Header with Mint Dot (Fits all machine screen types, cutouts, status bars) -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="0dp"
-        android:layout_height="56dp"
+        android:layout_height="wrap_content"
+        android:minHeight="56dp"
         android:background="@color/surface_light"
         app:contentInsetEnd="16dp"
         app:contentInsetStart="20dp"
+        app:contentInsetLeft="20dp"
+        app:contentInsetRight="16dp"
         app:elevation="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/toolbar_content_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="56dp">
 
             <!-- Brand Logo Text with Mint Dot -->
             <TextView
@@ -34,7 +38,14 @@
                 android:textColor="@color/text_primary"
                 android:textSize="21sp"
                 android:textStyle="bold"
+                android:singleLine="true"
+                android:maxLines="1"
+                android:ellipsize="end"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/toolbar_tagline"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -44,11 +55,18 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
                 android:fontFamily="@font/plus_jakarta_sans"
                 android:text="@string/brand_tagline"
                 android:textColor="@color/text_secondary"
                 android:textSize="11sp"
+                android:singleLine="true"
+                android:maxLines="1"
+                android:ellipsize="end"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintBaseline_toBaselineOf="@id/toolbar_title"
+                app:layout_constraintEnd_toStartOf="@id/btn_action_sparkle"
                 app:layout_constraintStart_toEndOf="@id/toolbar_title" />
 
             <!-- Discover Sparkle Action Button -->
@@ -57,6 +75,7 @@
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="38dp"
                 android:layout_height="38dp"
+                android:contentDescription="@string/nav_search"
                 android:insetLeft="0dp"
                 android:insetTop="0dp"
                 android:insetRight="0dp"
