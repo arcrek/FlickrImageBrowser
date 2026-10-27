@@ -125,6 +125,10 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
 
             binding.buttonSearch.setOnClickListener(v -> triggerSearch());
             binding.buttonRetry.setOnClickListener(v -> viewModel.retryLastQuery());
+            binding.inputLayoutQuery.setEndIconOnClickListener(v -> {
+                binding.editQuery.setText("");
+                viewModel.submitQuery("", false);
+            });
             binding.editQuery.setOnEditorActionListener((textView, actionId, event) -> {
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                     triggerSearch();
@@ -142,6 +146,7 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
                 );
             }
         });
+        viewModel.loadInitialFeaturedIfNeeded();
     }
 
     private void triggerSearch() {

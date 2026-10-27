@@ -112,14 +112,21 @@ public class SearchViewModel extends ViewModel {
     }
 
     /**
-     * Submits a keyword search query. Avoids repeating identical requests on configuration changes
-     * unless forceRefresh is true. Resets pagination to page 1.
+     * Loads the initial featured photos feed when no query or featured feed has been loaded yet.
+     */
+    public void loadInitialFeaturedIfNeeded() {
+        if (lastQuery == null && searchResults.getValue() == null) {
+            submitQuery("", false);
+        }
+    }
+
+    /**
+     * Submits a keyword search query (or empty string for the featured photos feed).
+     * Avoids repeating identical requests on configuration changes unless forceRefresh is true.
+     * Resets pagination to page 1.
      */
     public void submitQuery(@NonNull String query, boolean forceRefresh) {
         String normalized = query.trim();
-        if (normalized.isEmpty()) {
-            return;
-        }
         if (!forceRefresh && normalized.equals(lastQuery) && searchResults.getValue() != null) {
             return;
         }
@@ -197,7 +204,7 @@ public class SearchViewModel extends ViewModel {
      * existing accumulated list.
      */
     public void loadNextPage() {
-        if (isLoadingNextPage || !hasMorePages || lastQuery == null || lastQuery.isEmpty() || accumulatedPhotos.isEmpty()) {
+        if (isLoadingNextPage || !hasMorePages || lastQuery == null || accumulatedPhotos.isEmpty()) {
             return;
         }
 
@@ -273,7 +280,7 @@ public class SearchViewModel extends ViewModel {
     }
 
     public void retryLastQuery() {
-        if (lastQuery == null || lastQuery.isEmpty()) {
+        if (lastQuery == null) {
             return;
         }
         if (lastFailedOnNextPage && !accumulatedPhotos.isEmpty()) {

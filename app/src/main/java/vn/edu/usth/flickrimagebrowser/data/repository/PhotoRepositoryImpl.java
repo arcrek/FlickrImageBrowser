@@ -38,6 +38,7 @@ public class PhotoRepositoryImpl implements PhotoRepository {
     public static final String PLACEHOLDER_API_KEY = "your_pixabay_api_key_here";
     public static final String DEMO_API_KEY = "demo";
     public static final String DEFAULT_IMAGE_TYPE = "photo";
+    public static final String DEFAULT_FEATURED_ORDER = "popular";
     public static final boolean DEFAULT_SAFE_SEARCH = true;
     public static final int MIN_PER_PAGE = 3;
     public static final int MAX_PER_PAGE = 200;
@@ -65,10 +66,6 @@ public class PhotoRepositoryImpl implements PhotoRepository {
     public LiveData<Resource<List<Photo>>> searchPhotos(@NonNull String query, int page, int perPage) {
         MutableLiveData<Resource<List<Photo>>> result = new MutableLiveData<>();
         String trimmedQuery = query.trim();
-        if (trimmedQuery.isEmpty()) {
-            result.setValue(Resource.empty());
-            return result;
-        }
 
         if (apiKey.isEmpty()) {
             result.setValue(Resource.error(
@@ -89,14 +86,24 @@ public class PhotoRepositoryImpl implements PhotoRepository {
         int clampedPage = Math.max(1, page);
         int clampedPerPage = Math.max(MIN_PER_PAGE, Math.min(MAX_PER_PAGE, perPage));
 
-        Call<PixabaySearchResponse> call = apiService.searchPhotos(
-                apiKey,
-                trimmedQuery,
-                DEFAULT_IMAGE_TYPE,
-                DEFAULT_SAFE_SEARCH,
-                clampedPage,
-                clampedPerPage
-        );
+        Call<PixabaySearchResponse> call = trimmedQuery.isEmpty()
+                ? apiService.getFeaturedPhotos(
+                        apiKey,
+                        true,
+                        DEFAULT_FEATURED_ORDER,
+                        DEFAULT_IMAGE_TYPE,
+                        DEFAULT_SAFE_SEARCH,
+                        clampedPage,
+                        clampedPerPage
+                )
+                : apiService.searchPhotos(
+                        apiKey,
+                        trimmedQuery,
+                        DEFAULT_IMAGE_TYPE,
+                        DEFAULT_SAFE_SEARCH,
+                        clampedPage,
+                        clampedPerPage
+                );
 
         call.enqueue(new Callback<PixabaySearchResponse>() {
             @Override
@@ -152,6 +159,7 @@ public class PhotoRepositoryImpl implements PhotoRepository {
     private void loadDemoPhotos(@NonNull String query, int page, int perPage,
                                 @NonNull MutableLiveData<Resource<List<Photo>>> result) {
         result.setValue(Resource.loading(null));
+        final String effectiveQuery = query.isEmpty() ? "Featured" : query;
 
         executors.networkIO().execute(() -> {
             try {
@@ -174,7 +182,7 @@ public class PhotoRepositoryImpl implements PhotoRepository {
 
                     for (int i = 0; i < count; i++) {
                         int index = startOffset + i;
-                        String photoId = "demo_" + query.toLowerCase().replaceAll("[^a-zA-Z0-9]", "_") + "_" + index;
+                        String photoId = "demo_" + effectiveQuery.toLowerCase().replaceAll("[^a-zA-Z0-9]", "_") + "_" + index;
                         boolean isFav = favoriteIds.contains(photoId);
 
                         // High-quality CDN images with realistic varying aspect ratios for Pinterest masonry effect
@@ -185,9 +193,9 @@ public class PhotoRepositoryImpl implements PhotoRepository {
 
                         demoList.add(new Photo(
                                 photoId,
-                                capitalize(query) + " #" + index,
+                                capitalize(effectiveQuery) + " #" + index,
                                 "Photographer " + ((index % 10) + 1),
-                                "High resolution photo of " + query + " (Demo Mode for testing without external API key).",
+                                "High resolution photo of " + effectiveQuery + " (Demo Mode for testing without external API key).",
                                 thumbUrl,
                                 detailUrl,
                                 isFav,

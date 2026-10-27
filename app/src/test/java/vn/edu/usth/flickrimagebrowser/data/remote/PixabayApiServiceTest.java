@@ -36,6 +36,11 @@ public class PixabayApiServiceTest {
         );
         assertNotNull(searchCall);
 
+        Call<PixabaySearchResponse> featuredCall = service.getFeaturedPhotos(
+                "test_key", true, "popular", "photo", true, 1, 30
+        );
+        assertNotNull(featuredCall);
+
         Call<PixabaySearchResponse> idCall = service.getPhotoById("test_key", "12345");
         assertNotNull(idCall);
     }

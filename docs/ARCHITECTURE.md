@@ -60,7 +60,7 @@ All source code resides under `vn.edu.usth.flickrimagebrowser`:
 | Package | Key Classes | Responsibility |
 |---|---|---|
 | `(root)` | `FlickrApplication`, `MainActivity` | Application-scoped dependency initialization (`AppContainer`) and Single-Activity `BottomNavigationView` host. |
-| `data/remote/` | `PixabayApiService`, `PixabayClient` | Retrofit service definition for `GET https://pixabay.com/api/` (`key`, `q`, `image_type`, `safesearch`, `page`, `per_page`) and OkHttp client configuration (15s connect/write, 20s read timeouts, query-key redaction in debug logs). |
+| `data/remote/` | `PixabayApiService`, `PixabayClient` | Retrofit service definition for `GET https://pixabay.com/api/` (`key`, `q`, `editors_choice`, `order`, `image_type`, `safesearch`, `page`, `per_page`) and OkHttp client configuration (15s connect/write, 20s read timeouts, query-key redaction in debug logs). |
 | `data/remote/dto/` | `PixabaySearchResponse`, `PixabayHitDto`, `PhotoMapper` | Gson DTOs matching Pixabay's JSON contract (`total`, `totalHits`, `hits`, `webformatURL`, `largeImageURL`, `tags`, `user`) and null-safe conversion into domain `Photo` objects. |
 | `data/local/` | `AppDatabase`, `PhotoDao`, `CollectionDao` | Room SQLite persistence, reactive `LiveData` queries, and explicit schema migration definitions (`MIGRATION_1_2`). |
 | `data/local/entity/` | `PhotoEntity`, `CollectionEntity`, `CollectionPhotoCrossRef`, `CollectionWithPhotos` | Database tables for saved photos, collections, and their many-to-many junction table with foreign-key cascade rules. |
@@ -68,7 +68,7 @@ All source code resides under `vn.edu.usth.flickrimagebrowser`:
 | `domain/model/` | `Photo`, `Collection` | Immutable Java domain models shared across ViewModels and UI adapters. |
 | `ui/` | `AppViewModelFactory` | Constructor-injected `ViewModelProvider.Factory` supplying `PhotoRepository` to ViewModels. |
 | `ui/common/` | `PhotoAdapter` | Shared `ListAdapter` + `DiffUtil` rendering photo thumbnails via Glide (`webformatURL` / `previewURL`). |
-| `ui/search/` | `SearchFragment`, `SearchViewModel` | Keyword search input, `Resource<List<Photo>>` observation, and Loading / Empty / Error / Retry UI states. |
+| `ui/search/` | `SearchFragment`, `SearchViewModel` | Initial/cleared Featured Photos (Editor's Choice) feed, keyword search input, `Resource<List<Photo>>` pagination observation, and Loading / Empty / Error / Retry UI states. |
 | `ui/favorites/` | `FavoritesFragment`, `FavoritesViewModel` | Reactive grid of locally persisted favorite photos from Room. |
 | `ui/collections/` | `CollectionsFragment`, `CollectionsViewModel`, `CollectionAdapter` | Reactive list and creation flow for user photo collections. |
 | `ui/detail/` | `PhotoDetailActivity`, `DetailViewModel` | Full photo detail view loading `largeImageURL` via Glide and observing/toggling favorite state in Room. |
