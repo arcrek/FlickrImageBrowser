@@ -55,8 +55,8 @@
 
         <ImageButton
             android:id="@+id/button_remove_from_collection"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/action_remove_from_collection"
             android:src="@drawable/ic_remove_from_collection"

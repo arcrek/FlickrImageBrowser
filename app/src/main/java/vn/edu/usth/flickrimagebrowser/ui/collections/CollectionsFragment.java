@@ -13,6 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -29,6 +31,7 @@ import vn.edu.usth.flickrimagebrowser.R;
 import vn.edu.usth.flickrimagebrowser.databinding.FragmentCollectionsBinding;
 import vn.edu.usth.flickrimagebrowser.domain.model.Collection;
 import vn.edu.usth.flickrimagebrowser.ui.AppViewModelFactory;
+import vn.edu.usth.flickrimagebrowser.util.Resource;
 
 /**
  * Fragment displaying, creating, renaming, and deleting local photo collections stored in Room.
@@ -107,8 +110,8 @@ public class CollectionsFragment extends Fragment implements CollectionAdapter.O
                 Editable descText = descEditText.getText();
                 String description = descText != null ? descText.toString().trim() : "";
 
-                viewModel.createCollection(name, description);
-                dialog.dismiss();
+                observeSave(dialog, nameInputLayout,
+                        viewModel.createCollectionResult(name, description));
             });
         });
 
@@ -130,6 +133,30 @@ public class CollectionsFragment extends Fragment implements CollectionAdapter.O
         });
 
         dialog.show();
+    }
+
+    private void observeSave(AlertDialog dialog, TextInputLayout inputLayout,
+                             LiveData<Resource<Boolean>> result) {
+        Button saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+        saveButton.setEnabled(false);
+        Observer<Resource<Boolean>> observer = new Observer<Resource<Boolean>>() {
+            @Override
+            public void onChanged(Resource<Boolean> state) {
+                if (!dialog.isShowing() || state == null) {
+                    return;
+                }
+                if (state.getStatus() == Resource.Status.SUCCESS) {
+                    result.removeObserver(this);
+                    dialog.dismiss();
+                } else if (state.getStatus() == Resource.Status.ERROR) {
+                    result.removeObserver(this);
+                    saveButton.setEnabled(true);
+                    inputLayout.setError(state.getMessage());
+                }
+            }
+        };
+        dialog.setOnDismissListener(ignored -> result.removeObserver(observer));
+        result.observe(getViewLifecycleOwner(), observer);
     }
 
     private void renderCollections(@Nullable List<Collection> collections) {
@@ -192,8 +219,8 @@ public class CollectionsFragment extends Fragment implements CollectionAdapter.O
                     return;
                 }
 
-                viewModel.renameCollection(collection.getId(), newName);
-                dialog.dismiss();
+                observeSave(dialog, inputLayout,
+                        viewModel.renameCollectionResult(collection.getId(), newName));
             });
         });
 

@@ -23,6 +23,23 @@ import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
 public class PhotoMapperTest {
 
     @Test
+    public void fromEntity_removesQueryFromLegacyDemoUrlsWithoutChangingSavedIdentity() {
+        PhotoEntity entity = new PhotoEntity("demo_medical_condition_31", "Title", "Author", "Description",
+                "https://picsum.photos/seed/demo_medical_condition_31/300/260",
+                "https://picsum.photos/seed/demo_medical_condition_31/800/600", true, 100L);
+        Photo photo = PhotoMapper.fromEntity(entity);
+        assertEquals("demo_medical_condition_31", photo.getId());
+        assertEquals("https://picsum.photos/seed/demo_31/300/260", photo.getThumbnailUrl());
+        assertEquals("https://picsum.photos/seed/demo_31/800/600", photo.getDetailUrl());
+        assertTrue(photo.isFavorite());
+        assertEquals(100L, photo.getSavedAt());
+        assertEquals("https://picsum.photos/seed/demo_medical_condition_31/300/260", entity.getThumbnailUrl());
+        Photo roundTrip = PhotoMapper.fromEntity(PhotoMapper.toEntity(photo, true, 100L));
+        assertEquals(photo.getThumbnailUrl(), roundTrip.getThumbnailUrl());
+        assertEquals(photo.getDetailUrl(), roundTrip.getDetailUrl());
+    }
+
+    @Test
     public void fromDto_mapsExplicitUrlsAndMetadata() {
         PixabayHitDto dto = new PixabayHitDto(
                 101L,

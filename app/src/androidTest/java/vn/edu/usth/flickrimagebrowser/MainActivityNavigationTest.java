@@ -5,10 +5,17 @@ import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static org.junit.Assert.assertEquals;
 
-import androidx.test.core.app.ActivityScenario;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.view.View;
+
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.test.core.app.ActivityScenario;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -17,6 +24,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.List;
+
+import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
+import vn.edu.usth.flickrimagebrowser.ui.search.SearchViewModel;
+import vn.edu.usth.flickrimagebrowser.util.Resource;
 
 /** Instrumented coverage for tab navigation, toolbar titles, and tab restoration. */
 @RunWith(AndroidJUnit4.class)
@@ -96,6 +111,76 @@ public class MainActivityNavigationTest {
         onView(withId(R.id.bottom_navigation)).check((view, noViewFoundException) ->
                 assertEquals(R.id.nav_collections,
                         ((BottomNavigationView) view).getSelectedItemId()));
+    }
+
+    @Test
+    public void searchRetainedRows_surviveRecreationDuringLoading() {
+        assertSearchRowsAfterRecreation(false);
+    }
+
+    @Test
+    public void searchRetainedRows_surviveRecreationAfterPaginationError() {
+        assertSearchRowsAfterRecreation(true);
+    }
+
+    private void assertSearchRowsAfterRecreation(boolean error) {
+        scenario.onActivity(activity -> {
+            Fragment fragment = activity.getSupportFragmentManager().findFragmentByTag("search");
+            SearchViewModel model = new ViewModelProvider(fragment).get(SearchViewModel.class);
+            try {
+                // Detach the initial request so the retained state is deterministic without a live API.
+                Field resultsField = model.getClass().getDeclaredField("searchResults");
+                resultsField.setAccessible(true);
+                @SuppressWarnings("unchecked")
+                MediatorLiveData<Resource<List<Photo>>> results =
+                        (MediatorLiveData<Resource<List<Photo>>>) resultsField.get(model);
+                Field sourceField = model.getClass().getDeclaredField("activePageSource");
+                sourceField.setAccessible(true);
+                LiveData<?> source = (LiveData<?>) sourceField.get(model);
+                if (source != null) {
+                    results.removeSource(source);
+                    sourceField.set(model, null);
+                }
+                String url = "android.resource://" + activity.getPackageName() + "/" + R.drawable.ic_photo_placeholder;
+                List<Photo> photos = Collections.singletonList(
+                        new Photo(
+                                "retained", "Retained", "Author", "", url, url, false, 0L));
+                results.setValue(error
+                        ? Resource.error("Timeout", photos)
+                        : Resource.loading(photos));
+            } catch (ReflectiveOperationException exception) {
+                throw new AssertionError(exception);
+            }
+        });
+        scenario.recreate();
+        onView(withId(R.id.recycler_photos)).check((view, exception) -> {
+            org.junit.Assert.assertNotNull(view);
+            assertEquals(View.VISIBLE, view.getVisibility());
+            assertEquals(1, ((RecyclerView) view).getAdapter().getItemCount());
+        });
+    }
+
+    @Test
+    public void imageActions_haveAtLeast48dpBounds() {
+        scenario.onActivity(activity -> {
+            int[][] targets = {
+                    {R.layout.item_photo, R.id.button_item_favorite},
+                    {R.layout.item_collection, R.id.button_collection_menu},
+                    {R.layout.item_collection_photo, R.id.button_remove_from_collection},
+                    {R.layout.activity_photo_detail, R.id.button_favorite}
+            };
+            float density = activity.getResources().getDisplayMetrics().density;
+            for (int[] target : targets) {
+                View root = activity.getLayoutInflater().inflate(target[0], null, false);
+                root.measure(View.MeasureSpec.makeMeasureSpec(Math.round(360 * density),
+                                View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+                root.layout(0, 0, root.getMeasuredWidth(), root.getMeasuredHeight());
+                View button = root.findViewById(target[1]);
+                org.junit.Assert.assertTrue(button.getWidth() >= Math.round(48 * density));
+                org.junit.Assert.assertTrue(button.getHeight() >= Math.round(48 * density));
+            }
+        });
     }
 
     private void assertToolbarTitle(int titleResId) {

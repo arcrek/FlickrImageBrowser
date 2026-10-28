@@ -78,8 +78,22 @@ public class SearchViewModel extends ViewModel {
             accumulatedPhotos.clear();
             accumulatedPhotos.addAll(updated);
             Resource<List<Photo>> current = searchResults.getValue();
-            if (current != null && current.getStatus() == Resource.Status.SUCCESS) {
-                searchResults.setValue(Resource.success(new ArrayList<>(accumulatedPhotos)));
+            if (current != null) {
+                List<Photo> snapshot = new ArrayList<>(accumulatedPhotos);
+                switch (current.getStatus()) {
+                    case SUCCESS:
+                        searchResults.setValue(Resource.success(snapshot));
+                        break;
+                    case LOADING:
+                        searchResults.setValue(Resource.loading(snapshot));
+                        break;
+                    case ERROR:
+                        searchResults.setValue(Resource.error(
+                                Objects.requireNonNull(current.getMessage()), snapshot));
+                        break;
+                    case EMPTY:
+                        break;
+                }
             }
         }
     }

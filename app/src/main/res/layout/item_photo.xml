@@ -46,12 +46,12 @@
         <!-- Top Right Frosted Favorite Pill -->
         <ImageButton
             android:id="@+id/button_item_favorite"
-            android:layout_width="34dp"
-            android:layout_height="34dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_margin="8dp"
             android:background="@drawable/bg_favorite_pill"
             android:contentDescription="@string/action_toggle_favorite"
-            android:padding="6dp"
+            android:padding="13dp"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_favorite_border"
             app:layout_constraintEnd_toEndOf="parent"

@@ -1,5 +1,7 @@
 package vn.edu.usth.flickrimagebrowser.data.repository;
 
+import android.database.sqlite.SQLiteConstraintException;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
@@ -188,8 +190,8 @@ public class PhotoRepositoryImpl implements PhotoRepository {
                         // High-quality CDN images with realistic varying aspect ratios for Pinterest masonry effect
                         int[] sampleHeights = new int[]{380, 260, 430, 310, 350, 280};
                         int thumbHeight = sampleHeights[index % sampleHeights.length];
-                        String thumbUrl = "https://picsum.photos/seed/" + photoId + "/300/" + thumbHeight;
-                        String detailUrl = "https://picsum.photos/seed/" + photoId + "/800/600";
+                        String thumbUrl = "https://picsum.photos/seed/demo_" + index + "/300/" + thumbHeight;
+                        String detailUrl = "https://picsum.photos/seed/demo_" + index + "/800/600";
 
                         demoList.add(new Photo(
                                 photoId,
@@ -269,32 +271,49 @@ public class PhotoRepositoryImpl implements PhotoRepository {
 
     @Override
     public void createCollection(@NonNull String name, @Nullable String description) {
+        createCollectionResult(name, description);
+    }
+
+    @NonNull
+    @Override
+    public LiveData<Resource<Boolean>> createCollectionResult(@NonNull String name, @Nullable String description) {
         String trimmedName = name.trim();
-        if (trimmedName.isEmpty()) {
-            return;
-        }
         String cleanDesc = description != null ? description.trim() : "";
+        return writeCollection(trimmedName, -1L, () -> collectionDao.insertCollection(
+                new CollectionEntity(0L, trimmedName, cleanDesc, System.currentTimeMillis())));
+    }
+
+    private LiveData<Resource<Boolean>> writeCollection(String name, long excludedId, Runnable write) {
+        MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>(Resource.loading(null));
+        if (name.isEmpty()) {
+            result.setValue(Resource.error("Collection name cannot be empty.", null));
+            return result;
+        }
         executors.diskIO().execute(() -> {
-            List<CollectionEntity> existingCollections = collectionDao.getCollectionsSync();
-            if (existingCollections != null) {
-                for (CollectionEntity existing : existingCollections) {
-                    if (existing.getName().equalsIgnoreCase(trimmedName)) {
-                        return;
+            try {
+                List<CollectionEntity> existingCollections = collectionDao.getCollectionsSync();
+                if (existingCollections != null) {
+                    for (CollectionEntity existing : existingCollections) {
+                        if (existing.getId() != excludedId && existing.getName().equalsIgnoreCase(name)) {
+                            result.postValue(Resource.error("A collection with this name already exists.", null));
+                            return;
+                        }
                     }
                 }
-            }
-            CollectionEntity entity = new CollectionEntity(
-                    0L,
-                    trimmedName,
-                    cleanDesc,
-                    System.currentTimeMillis()
-            );
-            try {
-                collectionDao.insertCollection(entity);
-            } catch (RuntimeException ignored) {
-                // Ignore duplicate constraint violations
+                write.run();
+                result.postValue(Resource.success(true));
+            } catch (SQLiteConstraintException error) {
+                String message = error.getMessage();
+                boolean duplicateName = message != null
+                        && message.contains("UNIQUE constraint failed: collections.name");
+                result.postValue(Resource.error(duplicateName
+                        ? "A collection with this name already exists."
+                        : "Unable to save collection. Please try again.", null));
+            } catch (RuntimeException error) {
+                result.postValue(Resource.error("Unable to save collection. Please try again.", null));
             }
         });
+        return result;
     }
 
     @Override
@@ -323,24 +342,16 @@ public class PhotoRepositoryImpl implements PhotoRepository {
 
     @Override
     public void renameCollection(long collectionId, @NonNull String newName) {
+        renameCollectionResult(collectionId, newName);
+    }
+
+    @NonNull
+    @Override
+    public LiveData<Resource<Boolean>> renameCollectionResult(long collectionId, @NonNull String newName) {
         String trimmedName = newName.trim();
-        if (trimmedName.isEmpty()) {
-            return;
-        }
-        executors.diskIO().execute(() -> {
-            List<CollectionEntity> existingCollections = collectionDao.getCollectionsSync();
-            if (existingCollections != null) {
-                for (CollectionEntity existing : existingCollections) {
-                    if (existing.getId() != collectionId
-                            && existing.getName().equalsIgnoreCase(trimmedName)) {
-                        return;
-                    }
-                }
-            }
-            try {
-                collectionDao.renameCollection(collectionId, trimmedName);
-            } catch (RuntimeException ignored) {
-                // Ignore duplicate constraint violations
+        return writeCollection(trimmedName, collectionId, () -> {
+            if (collectionDao.renameCollection(collectionId, trimmedName) == 0) {
+                throw new IllegalStateException("Collection no longer exists");
             }
         });
     }

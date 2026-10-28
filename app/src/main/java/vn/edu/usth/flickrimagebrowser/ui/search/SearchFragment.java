@@ -165,6 +165,9 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
             return;
         }
         dismissPaginationError();
+        if (resource.getData() != null) {
+            photoAdapter.submitList(resource.getData());
+        }
 
         boolean hasExistingData = resource.getData() != null && !resource.getData().isEmpty();
 
@@ -185,9 +188,6 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
                 binding.progressLoading.setVisibility(View.GONE);
                 binding.layoutState.setVisibility(View.GONE);
                 binding.recyclerPhotos.setVisibility(View.VISIBLE);
-                photoAdapter.submitList(
-                        resource.getData() != null ? resource.getData() : Collections.emptyList()
-                );
                 break;
 
             case EMPTY:

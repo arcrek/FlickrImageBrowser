@@ -83,11 +83,17 @@ public final class PhotoMapper {
                 entity.getTitle(),
                 entity.getOwnerName(),
                 entity.getDescription(),
-                entity.getThumbnailUrl(),
-                entity.getDetailUrl(),
+                withoutDemoQuery(entity.getThumbnailUrl()),
+                withoutDemoQuery(entity.getDetailUrl()),
                 entity.isFavorite(),
                 entity.getSavedAt()
         );
+    }
+
+    private static String withoutDemoQuery(String url) {
+        // Saved demo URLs predate query-independent image seeds; keep their dimensions and local IDs.
+        return url.replaceFirst("^https://picsum\\.photos/seed/demo_[^/]*_([0-9]+)(/.*)$",
+                "https://picsum.photos/seed/demo_$1$2");
     }
 
     @NonNull
