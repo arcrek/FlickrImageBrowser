@@ -115,6 +115,19 @@ public class PixabayRateLimitInterceptorTest {
     }
 
     @Test
+    public void server429KeepsOneMinuteMinimumWithShortReset() throws IOException {
+        when(chain.proceed(any())).thenReturn(response(429)
+                .header("X-RateLimit-Reset", "5").build());
+        limiter.intercept(chain);
+        now.set(TimeUnit.SECONDS.toNanos(59));
+        assertThrows(IOException.class, () -> limiter.intercept(chain));
+        verify(chain, times(1)).proceed(any());
+        when(chain.proceed(any())).thenReturn(response(200).build());
+        now.set(TimeUnit.SECONDS.toNanos(60));
+        assertEquals(200, limiter.intercept(chain).code());
+    }
+
+    @Test
     public void serverCooldownHonorsLongerRetryAndResetHeaders() throws IOException {
         when(chain.proceed(any())).thenReturn(response(429)
                 .header("Retry-After", "90").header("X-RateLimit-Reset", "120").build());
@@ -124,6 +137,38 @@ public class PixabayRateLimitInterceptorTest {
         verify(chain, times(1)).proceed(any());
         when(chain.proceed(any())).thenReturn(response(200).build());
         now.set(TimeUnit.SECONDS.toNanos(120));
+        assertEquals(200, limiter.intercept(chain).code());
+    }
+
+    @Test
+    public void exhaustedServerQuotaBlocksNextRequestUntilReset() throws IOException {
+        when(chain.proceed(any())).thenReturn(response(200)
+                .header("X-RateLimit-Remaining", "0")
+                .header("X-RateLimit-Reset", "5").build());
+        assertEquals(200, limiter.intercept(chain).code());
+        now.set(TimeUnit.SECONDS.toNanos(5) - 1);
+        IOException error = assertThrows(IOException.class, () -> limiter.intercept(chain));
+        assertTrue(error.getMessage().contains("wait 1 seconds"));
+        verify(chain, times(1)).proceed(any());
+
+        when(chain.proceed(any())).thenReturn(response(200).build());
+        now.incrementAndGet();
+        assertEquals(200, limiter.intercept(chain).code());
+        verify(chain, times(2)).proceed(any());
+    }
+
+    @Test
+    public void exhaustedServerQuotaFallsBackToOneMinuteWithoutValidReset() throws IOException {
+        when(chain.proceed(any())).thenReturn(response(200)
+                .header("X-RateLimit-Remaining", "0")
+                .header("X-RateLimit-Reset", "invalid").build());
+        limiter.intercept(chain);
+        now.set(TimeUnit.SECONDS.toNanos(59));
+        assertThrows(IOException.class, () -> limiter.intercept(chain));
+        verify(chain, times(1)).proceed(any());
+
+        when(chain.proceed(any())).thenReturn(response(200).build());
+        now.set(TimeUnit.SECONDS.toNanos(60));
         assertEquals(200, limiter.intercept(chain).code());
     }
 

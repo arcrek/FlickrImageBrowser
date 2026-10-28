@@ -31,7 +31,8 @@ final class PixabayRateLimitInterceptor implements Interceptor {
     public Response intercept(Chain chain) throws IOException {
         acquire();
         Response response = chain.proceed(chain.request());
-        if (response.code() == 429) {
+        String remaining = response.header("X-RateLimit-Remaining");
+        if (response.code() == 429 || (remaining != null && "0".equals(remaining.trim()))) {
             startCooldown(response);
         }
         return response;
@@ -60,11 +61,15 @@ final class PixabayRateLimitInterceptor implements Interceptor {
     private synchronized void startCooldown(Response response) {
         long now = clock.getAsLong();
         long remaining = cooldownNanos > 0 ? cooldownNanos - (now - cooldownStarted) : 0;
+        long resetNanos = headerDelayNanos(response.header("X-RateLimit-Reset"));
+        if (response.code() == 429 || resetNanos == 0) {
+            resetNanos = Math.max(WINDOW_NANOS, resetNanos);
+        }
         cooldownStarted = now;
-        cooldownNanos = Math.max(remaining, Math.max(WINDOW_NANOS, Math.max(
+        cooldownNanos = Math.max(remaining, Math.max(
                 headerDelayNanos(response.header("Retry-After")),
-                headerDelayNanos(response.header("X-RateLimit-Reset"))
-        )));
+                resetNanos
+        ));
     }
 
     private static long headerDelayNanos(String value) {
