@@ -88,11 +88,19 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
             StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(
                     GRID_SPAN_COUNT, StaggeredGridLayoutManager.VERTICAL
             );
-            layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS);
+            layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
             binding.recyclerPhotos.setLayoutManager(layoutManager);
             binding.recyclerPhotos.setAdapter(photoAdapter);
 
             binding.recyclerPhotos.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                    super.onScrollStateChanged(recyclerView, newState);
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                        layoutManager.invalidateSpanAssignments();
+                    }
+                }
+
                 @Override
                 public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                     super.onScrolled(recyclerView, dx, dy);

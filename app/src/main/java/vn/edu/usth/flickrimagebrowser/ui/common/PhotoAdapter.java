@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
@@ -20,7 +21,8 @@ import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
 
 /**
  * Shared RecyclerView adapter for rendering Pinterest-style masonry photo grids.
- * Uses Glide with cross-fade animation to smoothly load image thumbnails.
+ * Dynamically updates ConstraintLayout dimensionRatio so placeholders size instantly
+ * before Glide downloads the bitmap, eliminating layout shifts and span hopping.
  */
 public class PhotoAdapter extends ListAdapter<Photo, PhotoAdapter.PhotoViewHolder> {
 
@@ -73,6 +75,14 @@ public class PhotoAdapter extends ListAdapter<Photo, PhotoAdapter.PhotoViewHolde
             } else {
                 binding.buttonItemFavorite.setImageResource(R.drawable.ic_favorite_border);
                 binding.buttonItemFavorite.setColorFilter(Color.WHITE);
+            }
+
+            // Apply clamped aspect ratio to ConstraintLayout layout params synchronously
+            ConstraintLayout.LayoutParams lp = (ConstraintLayout.LayoutParams) binding.imageThumbnail.getLayoutParams();
+            String targetRatio = photo.getDimensionRatio();
+            if (!targetRatio.equals(lp.dimensionRatio)) {
+                lp.dimensionRatio = targetRatio;
+                binding.imageThumbnail.setLayoutParams(lp);
             }
 
             Glide.with(binding.imageThumbnail.getContext())

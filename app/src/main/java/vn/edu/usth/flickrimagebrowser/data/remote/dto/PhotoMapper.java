@@ -52,6 +52,13 @@ public final class PhotoMapper {
         String owner = firstNonBlank(dto.getUser(), "Unknown Author");
         String descriptionText = firstNonBlank(dto.getTags(), dto.getPageUrl());
 
+        int width = dto.getWebformatWidth() > 0 ? dto.getWebformatWidth() :
+                (dto.getImageWidth() > 0 ? dto.getImageWidth() :
+                (dto.getPreviewWidth() > 0 ? dto.getPreviewWidth() : 0));
+        int height = dto.getWebformatHeight() > 0 ? dto.getWebformatHeight() :
+                (dto.getImageHeight() > 0 ? dto.getImageHeight() :
+                (dto.getPreviewHeight() > 0 ? dto.getPreviewHeight() : 0));
+
         return new Photo(
                 id,
                 title,
@@ -59,6 +66,8 @@ public final class PhotoMapper {
                 descriptionText != null ? descriptionText : "",
                 thumbnailUrl,
                 detailUrl,
+                width,
+                height,
                 isFavorite,
                 0L
         );
@@ -90,6 +99,8 @@ public final class PhotoMapper {
                 entity.getDescription(),
                 withoutDemoQuery(entity.getThumbnailUrl()),
                 withoutDemoQuery(entity.getDetailUrl()),
+                entity.getWidth(),
+                entity.getHeight(),
                 entity.isFavorite(),
                 entity.getSavedAt()
         );
@@ -124,6 +135,8 @@ public final class PhotoMapper {
                 photo.getDescription(),
                 photo.getThumbnailUrl(),
                 photo.getDetailUrl(),
+                photo.getWidth(),
+                photo.getHeight(),
                 isFavorite,
                 savedAt
         );

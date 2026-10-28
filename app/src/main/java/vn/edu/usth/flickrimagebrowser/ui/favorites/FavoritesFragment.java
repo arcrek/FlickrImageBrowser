@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -56,6 +57,7 @@ public class FavoritesFragment extends Fragment implements PhotoAdapter.OnPhotoA
         public void afterTextChanged(Editable s) {
         }
     };
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -79,9 +81,19 @@ public class FavoritesFragment extends Fragment implements PhotoAdapter.OnPhotoA
             StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(
                     GRID_SPAN_COUNT, StaggeredGridLayoutManager.VERTICAL
             );
-            layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS);
+            layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
             binding.recyclerFavorites.setLayoutManager(layoutManager);
             binding.recyclerFavorites.setAdapter(photoAdapter);
+
+            binding.recyclerFavorites.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                    super.onScrollStateChanged(recyclerView, newState);
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                        layoutManager.invalidateSpanAssignments();
+                    }
+                }
+            });
 
             binding.editFavoriteSearch.addTextChangedListener(searchWatcher);
             binding.chipGroupSort.setOnCheckedChangeListener((group, checkedId) -> {

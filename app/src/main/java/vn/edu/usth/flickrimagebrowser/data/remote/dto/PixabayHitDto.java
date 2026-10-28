@@ -85,6 +85,20 @@ public class PixabayHitDto {
         this.largeImageUrl = largeImageUrl;
     }
 
+    public PixabayHitDto(@Nullable Long id,
+                         @Nullable String tags,
+                         @Nullable String user,
+                         @Nullable String pageUrl,
+                         @Nullable String previewUrl,
+                         @Nullable String webformatUrl,
+                         @Nullable String largeImageUrl,
+                         int webformatWidth,
+                         int webformatHeight) {
+        this(id, tags, user, pageUrl, previewUrl, webformatUrl, largeImageUrl);
+        this.webformatWidth = webformatWidth;
+        this.webformatHeight = webformatHeight;
+    }
+
     @Nullable
     public Long getId() {
         return id;
