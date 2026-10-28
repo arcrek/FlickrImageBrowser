@@ -33,6 +33,11 @@ public final class PhotoMapper {
                 dto.getPreviewUrl(),
                 dto.getLargeImageUrl()
         );
+        // shortcut: signed /get URLs can require a browser challenge; use API previews until native access works.
+        if (thumbnailUrl != null && thumbnailUrl.startsWith("https://pixabay.com/get/")
+                && !isBlank(dto.getPreviewUrl())) {
+            thumbnailUrl = dto.getPreviewUrl().trim();
+        }
         String detailUrl = firstNonBlank(
                 dto.getLargeImageUrl(),
                 dto.getWebformatUrl(),

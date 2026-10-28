@@ -182,7 +182,10 @@ public class PhotoRepositoryImpl implements PhotoRepository {
                 if (!response.isSuccessful() || response.body() == null) {
                     int code = response.code();
                     String errorMsg;
-                    if (code == 400 || code == 401 || code == 403) {
+                    if ("challenge".equalsIgnoreCase(response.headers().get("cf-mitigated"))) {
+                        errorMsg = "Pixabay requires browser verification on this connection. "
+                                + "Try another network or retry later.";
+                    } else if (code == 400 || code == 401 || code == 403) {
                         errorMsg = "Invalid or unauthorized Pixabay API key or parameters (HTTP " + code + ").";
                     } else if (code == 429) {
                         errorMsg = "Pixabay API rate limit exceeded (HTTP 429). Please wait before retrying.";

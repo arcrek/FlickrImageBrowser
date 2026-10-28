@@ -157,7 +157,8 @@ public class PhotoDetailActivity extends AppCompatActivity {
                 .load(photo.getDetailUrl())
                 .thumbnail(Glide.with(this).load(photo.getThumbnailUrl()))
                 .placeholder(R.drawable.ic_photo_placeholder)
-                .error(R.drawable.ic_broken_image)
+                .error(Glide.with(this).load(photo.getThumbnailUrl())
+                        .error(R.drawable.ic_broken_image))
                 .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
                 .into(binding.imageDetailPhoto);
     }
