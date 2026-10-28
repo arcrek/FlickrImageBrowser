@@ -80,6 +80,12 @@ The compiled debug APK is generated at `app/build/outputs/apk/debug/app-debug.ap
 ./gradlew testDebugUnitTest
 ```
 
+### Probe Pixabay Through a Temporary Python Proxy
+
+Run `python3 scripts/test-pixabay-proxy.py` with Python 3 and the existing API-key configuration. By default, the script uses standard-library HTTP requests, starts a loopback proxy on port `18765`, and tests search, Featured, and image downloads. It prints status/content-type/challenge metadata without the key, verifies that the proxy preserves upstream responses, and stops the server automatically. A completed probe returns exit code `1` when at least one route fails; it does not connect the Android app to the proxy or prove access from a hosted server.
+
+The probe sends Edge 156 navigation/client-hint headers based on the supplied HAR, advertises gzip compression, and decodes gzip responses. By default its upstream transport is HTTP/1.1. With `curl_cffi` installed in the active Python environment, run `python scripts/test-pixabay-proxy.py --http3` to require HTTP/3 without fallback. Output includes the negotiated upstream HTTP version and transport errors. This mode uses curl_cffi's default TLS/QUIC configuration rather than reproducing the Edge fingerprint.
+
 ### Run Instrumented Room DAO Tests (Requires Connected Device or Emulator)
 ```bash
 ./gradlew connectedDebugAndroidTest
