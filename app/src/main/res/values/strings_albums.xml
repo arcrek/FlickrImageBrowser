@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Album photo count plurals -->
+    <plurals name="album_photo_count">
+        <item quantity="one">%d photo</item>
+        <item quantity="other">%d photos</item>
+    </plurals>
+
+    <!-- Album creation and editing dialogs -->
+    <string name="dialog_create_album_title">New Album</string>
+    <string name="dialog_edit_album_title">Edit Album</string>
+    <string name="album_name_hint">Album name</string>
+    <string name="album_description_hint">Description (optional)</string>
+    <string name="action_create_album">Create</string>
+    <string name="action_save_album">Save</string>
+    <string name="error_empty_album_name">Album name cannot be empty</string>
+    <string name="error_duplicate_album_name">An album with this name already exists</string>
+    <string name="album_saving">Saving album…</string>
+    <string name="album_created_success">Album created</string>
+    <string name="album_updated_success">Album updated</string>
+
+    <!-- Album deletion confirmation (accurate local retention note) -->
+    <string name="dialog_delete_album_title">Delete Album</string>
+    <string name="dialog_delete_album_message">Deleting \"%1$s\" will remove this album. Photos that are favorited or saved in other albums will remain saved locally.</string>
+
+    <!-- Photo removal from album confirmation -->
+    <string name="dialog_remove_photos_title">Remove from Album</string>
+    <string name="dialog_remove_photo_single_message">Remove this photo from \"%1$s\"? Photos that are favorited or saved in other albums will remain saved locally.</string>
+    <string name="dialog_remove_photos_multi_message">Remove %1$d selected photo(s) from \"%2$s\"? Photos that are favorited or saved in other albums will remain saved locally.</string>
+    <string name="action_remove_selected">Remove</string>
+
+    <!-- Favorites picker inside album -->
+    <string name="picker_favorites_title">Add Photos from Favorites</string>
+    <string name="picker_favorites_empty">No favorites available to add. Favorite some photos first!</string>
+    <string name="picker_favorites_confirm">Add (%d)</string>
+    <string name="picker_favorites_confirm_zero">Add</string>
+    <string name="action_add_photos">Add photos</string>
+    <string name="action_cancel_selection">Cancel</string>
+    <string name="photos_added_to_album">Added %1$d photo(s) to album</string>
+    <string name="photos_removed_from_album">Removed %1$d photo(s) from album</string>
+
+    <!-- Accessibility content descriptions -->
+    <string name="content_desc_album_cover">Cover photo for %1$s</string>
+    <string name="content_desc_album_menu">Options for %1$s</string>
+    <string name="content_desc_photo_checkbox">Select photo</string>
+</resources>

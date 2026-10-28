@@ -62,9 +62,9 @@
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
         android:clipToPadding="false"
-        android:paddingHorizontal="6dp"
-        android:paddingTop="6dp"
-        android:paddingBottom="12dp"
+        android:paddingHorizontal="3dp"
+        android:paddingTop="3dp"
+        android:paddingBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -99,6 +99,19 @@
             android:text="@string/favorites_empty_state"
             android:textColor="@color/text_secondary"
             android:textSize="14sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_empty_explore"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@color/primary"
+            android:fontFamily="@font/plus_jakarta_sans"
+            android:text="@string/action_search"
+            android:textColor="@color/on_primary"
+            app:cornerRadius="20dp"
+            app:elevation="0dp" />
 
     </LinearLayout>
 

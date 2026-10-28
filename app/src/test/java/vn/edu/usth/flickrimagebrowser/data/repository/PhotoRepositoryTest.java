@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -219,7 +220,7 @@ public class PhotoRepositoryTest {
         assertNotNull(resource);
         assertEquals(Resource.Status.ERROR, resource.getStatus());
         assertNotNull(resource.getMessage());
-        assertTrue(resource.getMessage().contains("400"));
+        assertTrue(resource.getMessage().toLowerCase().contains("cannot load photos"));
     }
 
     @Test
@@ -227,7 +228,7 @@ public class PhotoRepositoryTest {
         Photo photo = new Photo(
                 "900", "Lotus Pond", "Author", "Desc",
                 "https://example.com/q.jpg", "https://example.com/z.jpg",
-                false, 0L
+                false, 0L, 0, 0
         );
         when(photoDao.getPhotoByIdSync("900")).thenReturn(null);
 
@@ -242,31 +243,58 @@ public class PhotoRepositoryTest {
     }
 
     @Test
+    public void restoreFavorite_preservesOriginalSavedAtTimestamp() {
+        long originalSavedAt = 123456789L;
+        Photo photo = new Photo(
+                "901", "Sunrise", "Author", "Desc",
+                "https://example.com/thumb.jpg", "https://example.com/detail.jpg",
+                false, originalSavedAt, 0, 0
+        );
+
+        repository.restoreFavorite(photo);
+
+        ArgumentCaptor<PhotoEntity> captor = ArgumentCaptor.forClass(PhotoEntity.class);
+        verify(photoDao).upsertPhoto(captor.capture());
+        PhotoEntity saved = captor.getValue();
+        assertEquals("901", saved.getId());
+        assertTrue(saved.isFavorite());
+        assertEquals(originalSavedAt, saved.getSavedAt());
+    }
+
+    @Test
     public void deleteCollection_deletesFromCollectionDaoAndCleansUpAllOrphans() {
+        doCallRealMethod().when(collectionDao).deleteCollectionAndCleanOrphans(
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyLong()
+        );
         repository.deleteCollection(10L);
+        verify(collectionDao).deleteCollectionAndCleanOrphans(photoDao, 10L);
         verify(collectionDao).deleteCollectionById(10L);
         verify(photoDao).deleteAllOrphanPhotos();
     }
 
     @Test
-    public void renameCollection_whenUnique_updatesNameInDao() {
+    public void updateCollection_whenUnique_updatesInDao() {
         when(collectionDao.getCollectionsSync()).thenReturn(Collections.emptyList());
-        repository.renameCollection(5L, "New Name");
-        verify(collectionDao).renameCollection(5L, "New Name");
+        when(collectionDao.updateCollection(5L, "New Name", "New Desc")).thenReturn(1);
+        repository.updateCollection(5L, "New Name", "New Desc");
+        verify(collectionDao).updateCollection(5L, "New Name", "New Desc");
     }
 
     @Test
-    public void renameCollection_whenDuplicateCaseInsensitive_doesNotCallDao() {
+    public void updateCollection_whenDuplicateCaseInsensitive_doesNotCallDao() {
         vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionEntity existing =
                 new vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionEntity(10L, "Nature", "desc", 100L);
         when(collectionDao.getCollectionsSync()).thenReturn(Collections.singletonList(existing));
-        repository.renameCollection(5L, "  nature  ");
-        verify(collectionDao, never()).renameCollection(org.mockito.ArgumentMatchers.anyLong(), anyString());
+        repository.updateCollection(5L, "  nature  ", null);
+        verify(collectionDao, never()).updateCollection(org.mockito.ArgumentMatchers.anyLong(), anyString(), anyString());
     }
-
     @Test
     public void removePhotoFromCollection_removesFromCollectionDaoAndCleansUpOrphan() {
+        doCallRealMethod().when(collectionDao).removePhotosAndCleanOrphans(
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyList()
+        );
         repository.removePhotoFromCollection(10L, "photo_123");
+        verify(collectionDao).removePhotosAndCleanOrphans(photoDao, 10L, Collections.singletonList("photo_123"));
         verify(collectionDao).removePhotoFromCollection(10L, "photo_123");
         verify(photoDao).deleteOrphanIfUnreferenced("photo_123");
     }

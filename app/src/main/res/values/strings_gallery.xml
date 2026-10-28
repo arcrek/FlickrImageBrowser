@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_error_network">Unable to connect. Please check your internet connection.</string>
+    <string name="search_error_generic">Unable to load photos at this time. Tap Retry to try again.</string>
+    <string name="search_suggestion_featured">Featured</string>
+    <string name="search_suggestion_nature">Nature</string>
+    <string name="search_suggestion_architecture">Architecture</string>
+    <string name="search_suggestion_travel">Travel</string>
+    <string name="search_clear_query">Clear search query</string>
+    <string name="gallery_remove_favorite">Remove %1$s from favorites</string>
+    <string name="gallery_add_favorite">Save %1$s to favorites</string>
+    <string name="gallery_state_favorite_saved">Saved</string>
+    <string name="gallery_state_favorite_not_saved">Not saved</string>
+</resources>

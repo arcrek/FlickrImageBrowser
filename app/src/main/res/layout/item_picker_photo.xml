@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="4dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardBackgroundColor="@color/surface_light"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="1dp"
+    app:strokeColor="@color/dock_stroke"
+    app:strokeWidth="1dp">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="110dp">
+
+        <ImageView
+            android:id="@+id/image_picker_thumb"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/content_desc_photo_checkbox"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_photo_placeholder" />
+
+        <!-- Selection Scrim -->
+        <View
+            android:id="@+id/view_picker_selected_scrim"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#661688FF"
+            android:visibility="gone" />
+
+        <!-- Selection Check Badge -->
+        <ImageView
+            android:id="@+id/image_picker_check"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="6dp"
+            android:background="@drawable/bg_favorite_pill"
+            android:contentDescription="@string/content_desc_photo_checkbox"
+            android:padding="5dp"
+            android:src="@drawable/ic_favorite_filled"
+            android:visibility="gone"
+            app:tint="@color/on_primary" />
+
+    </FrameLayout>
+
+</com.google.android.material.card.MaterialCardView>

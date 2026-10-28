@@ -12,10 +12,12 @@ import java.util.Objects;
 import vn.edu.usth.flickrimagebrowser.data.repository.PhotoRepository;
 import vn.edu.usth.flickrimagebrowser.domain.model.Collection;
 import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
+import vn.edu.usth.flickrimagebrowser.util.Resource;
 
 /**
  * ViewModel for the photo detail screen, observing live favorite status,
- * toggling persistence, and assigning photos to collections.
+ * toggling persistence, observing albums/collections, and assigning photos
+ * to collections with observable mutation results.
  */
 public class DetailViewModel extends ViewModel {
 
@@ -61,14 +63,19 @@ public class DetailViewModel extends ViewModel {
         }
     }
 
-    public void addPhotoToCollection(long collectionId) {
+    @NonNull
+    public LiveData<Resource<Void>> addPhotoToCollection(long collectionId) {
         Photo photo = currentPhoto.getValue();
         if (photo != null) {
-            repository.addPhotoToCollection(collectionId, photo);
+            return repository.addPhotoToCollection(collectionId, photo);
         }
+        MutableLiveData<Resource<Void>> errorLiveData = new MutableLiveData<>();
+        errorLiveData.setValue(Resource.error("Photo is not available", null));
+        return errorLiveData;
     }
 
-    public void addToCollection(long collectionId) {
-        addPhotoToCollection(collectionId);
+    @NonNull
+    public LiveData<Resource<Void>> addToCollection(long collectionId) {
+        return addPhotoToCollection(collectionId);
     }
 }

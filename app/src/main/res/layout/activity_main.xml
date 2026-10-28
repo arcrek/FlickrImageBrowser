@@ -6,17 +6,17 @@
     android:layout_height="match_parent"
     android:background="@color/background_light">
 
-    <!-- Top Bar: Elegant Brand Header with Mint Dot (Fits all machine screen types, cutouts, status bars) -->
+    <!-- Top Bar: Dark Charcoal Brand Header with Understated Blue/Pink Marks -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:minHeight="56dp"
-        android:background="@color/surface_light"
-        app:contentInsetEnd="16dp"
-        app:contentInsetStart="20dp"
-        app:contentInsetLeft="20dp"
-        app:contentInsetRight="16dp"
+        android:background="@color/header_background"
+        app:contentInsetEnd="12dp"
+        app:contentInsetStart="16dp"
+        app:contentInsetLeft="16dp"
+        app:contentInsetRight="12dp"
         app:elevation="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -25,9 +25,11 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/toolbar_content_container"
             android:layout_width="match_parent"
-            android:layout_height="56dp">
+            android:layout_height="wrap_content"
+            android:minHeight="56dp"
+            android:paddingVertical="4dp">
 
-            <!-- Brand Logo Text with Mint Dot -->
+            <!-- Brand Logo Text -->
             <TextView
                 android:id="@+id/toolbar_title"
                 android:layout_width="wrap_content"
@@ -35,8 +37,8 @@
                 android:fontFamily="@font/plus_jakarta_sans"
                 android:letterSpacing="0.01"
                 android:text="@string/brand_name_display"
-                android:textColor="@color/text_primary"
-                android:textSize="21sp"
+                android:textColor="@color/header_foreground"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 android:singleLine="true"
                 android:maxLines="1"
@@ -45,9 +47,38 @@
                 app:layout_constraintHorizontal_chainStyle="packed"
                 app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/toolbar_tagline"
+                app:layout_constraintEnd_toStartOf="@id/brand_marks_container"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- Understated Blue and Pink Brand Marks -->
+            <LinearLayout
+                android:id="@+id/brand_marks_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:importantForAccessibility="no"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintBottom_toBottomOf="@id/toolbar_title"
+                app:layout_constraintEnd_toStartOf="@id/toolbar_tagline"
+                app:layout_constraintStart_toEndOf="@id/toolbar_title"
+                app:layout_constraintTop_toTopOf="@id/toolbar_title">
+
+                <View
+                    android:id="@+id/brand_dot_blue"
+                    android:layout_width="7dp"
+                    android:layout_height="7dp"
+                    android:background="@drawable/bg_brand_mark_blue" />
+
+                <View
+                    android:id="@+id/brand_dot_pink"
+                    android:layout_width="7dp"
+                    android:layout_height="7dp"
+                    android:layout_marginStart="3dp"
+                    android:background="@drawable/bg_brand_mark_pink" />
+            </LinearLayout>
 
             <!-- Brand Tagline / Section Descriptor -->
             <TextView
@@ -58,7 +89,7 @@
                 android:layout_marginEnd="8dp"
                 android:fontFamily="@font/plus_jakarta_sans"
                 android:text="@string/brand_tagline"
-                android:textColor="@color/text_secondary"
+                android:textColor="@color/nav_inactive"
                 android:textSize="11sp"
                 android:singleLine="true"
                 android:maxLines="1"
@@ -67,30 +98,32 @@
                 app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintBaseline_toBaselineOf="@id/toolbar_title"
                 app:layout_constraintEnd_toStartOf="@id/btn_action_sparkle"
-                app:layout_constraintStart_toEndOf="@id/toolbar_title" />
+                app:layout_constraintStart_toEndOf="@id/brand_marks_container" />
 
-            <!-- Discover Sparkle Action Button -->
+            <!-- Discover Sparkle Action Button (48dp Touch Target) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_action_sparkle"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:contentDescription="@string/nav_search"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:minWidth="48dp"
+                android:minHeight="48dp"
+                android:contentDescription="@string/nav_action_search_description"
                 android:insetLeft="0dp"
                 android:insetTop="0dp"
                 android:insetRight="0dp"
                 android:insetBottom="0dp"
-                android:padding="8dp"
-                app:cornerRadius="19dp"
-                app:icon="@drawable/ic_sparkle"
+                android:padding="12dp"
+                app:cornerRadius="24dp"
+                app:icon="@drawable/ic_search"
                 app:iconGravity="textStart"
                 app:iconPadding="0dp"
-                app:iconSize="20dp"
-                app:iconTint="@color/primary"
+                app:iconSize="22dp"
+                app:iconTint="@color/header_foreground"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:rippleColor="@color/mint_pill_bg" />
+                app:rippleColor="?attr/colorControlHighlight" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.appbar.MaterialToolbar>

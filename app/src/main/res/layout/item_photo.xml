@@ -1,31 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_margin="5dp"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
     app:cardBackgroundColor="@color/surface_light"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="2dp"
-    app:strokeColor="@color/dock_stroke"
-    app:strokeWidth="0.5dp">
+    app:cardCornerRadius="2dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent">
 
         <!-- Full-card Photo Thumbnail -->
         <ImageView
             android:id="@+id/image_thumbnail"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:adjustViewBounds="true"
+            android:layout_height="0dp"
             android:contentDescription="@string/content_desc_photo"
-            android:minHeight="140dp"
-            android:scaleType="centerCrop"
+            android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -35,29 +31,26 @@
         <View
             android:id="@+id/view_scrim"
             android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_height="36dp"
             android:background="@drawable/bg_photo_scrim"
             app:layout_constraintBottom_toBottomOf="@id/image_thumbnail"
             app:layout_constraintEnd_toEndOf="@id/image_thumbnail"
-            app:layout_constraintStart_toStartOf="@id/image_thumbnail"
-            app:layout_constraintTop_toTopOf="@id/text_photo_owner"
-            android:layout_marginTop="-20dp" />
+            app:layout_constraintStart_toStartOf="@id/image_thumbnail" />
 
-        <!-- Top Right Frosted Favorite Pill -->
+        <!-- Top Right Frosted Favorite Pill (48dp accessible touch target) -->
         <ImageButton
             android:id="@+id/button_item_favorite"
-            android:layout_width="34dp"
-            android:layout_height="34dp"
-            android:layout_margin="8dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="@drawable/bg_favorite_pill"
             android:contentDescription="@string/action_toggle_favorite"
-            android:padding="6dp"
+            android:padding="12dp"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_favorite_border"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- Floating Photo Title (Hidden on main feed so tags do not clutter image) -->
+        <!-- Floating Photo Title (Hidden on main feed) -->
         <TextView
             android:id="@+id/text_photo_title"
             android:layout_width="0dp"
@@ -67,7 +60,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <!-- Floating Photo Owner (Mint Tinted) -->
+        <!-- Floating Photo Owner -->
         <TextView
             android:id="@+id/text_photo_owner"
             android:layout_width="0dp"
@@ -75,8 +68,8 @@
             android:ellipsize="end"
             android:fontFamily="@font/plus_jakarta_sans"
             android:maxLines="1"
-            android:paddingHorizontal="10dp"
-            android:paddingBottom="9dp"
+            android:paddingHorizontal="6dp"
+            android:paddingBottom="5dp"
             android:shadowColor="#B3000000"
             android:shadowDx="0"
             android:shadowDy="1"

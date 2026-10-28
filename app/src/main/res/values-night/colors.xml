@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#8ABEFF</color>
+    <color name="primary_variant">#B6D7FF</color>
+    <color name="primary_light">#203653</color>
+    <color name="secondary">#FF88C4</color>
+    <color name="secondary_variant">#FFB3D9</color>
+    <color name="background_light">#141619</color>
+    <color name="surface_light">#202328</color>
+    <color name="on_primary">#10243B</color>
+    <color name="on_secondary">#3C102B</color>
+    <color name="text_primary">#F2F4F7</color>
+    <color name="text_secondary">#BEC5CF</color>
+    <color name="text_tertiary">#A7B0BD</color>
+    <color name="nav_active">#8ABEFF</color>
+    <color name="nav_inactive">#BEC5CF</color>
+    <color name="dock_background">#202328</color>
+    <color name="dock_stroke">#424851</color>
+    <color name="card_stroke">#424851</color>
+    <color name="mint_pill_bg">#203653</color>
+    <color name="mint_pill_text">#B6D7FF</color>
+    <color name="error">#FFB4AB</color>
+</resources>

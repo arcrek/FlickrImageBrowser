@@ -1,25 +1,19 @@
 package vn.edu.usth.flickrimagebrowser.ui.collections;
 
-import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -40,7 +34,7 @@ public class CollectionsFragment extends Fragment implements CollectionAdapter.O
 
     private CollectionsViewModel viewModel;
     private CollectionAdapter collectionAdapter;
-
+    private GridLayoutManager gridLayoutManager;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -61,12 +55,13 @@ public class CollectionsFragment extends Fragment implements CollectionAdapter.O
 
         collectionAdapter = new CollectionAdapter(this);
         if (binding != null) {
-            binding.recyclerCollections.setLayoutManager(new LinearLayoutManager(requireContext()));
+            int spanCount = getResponsiveSpanCount();
+            gridLayoutManager = new GridLayoutManager(requireContext(), spanCount);
+            binding.recyclerCollections.setLayoutManager(gridLayoutManager);
             binding.recyclerCollections.setAdapter(collectionAdapter);
 
-            binding.fabCreateCollection.setOnClickListener(v -> showCreateCollectionDialog());
+            binding.buttonHeaderCreateCollection.setOnClickListener(v -> showCreateCollectionDialog());
         }
-
         viewModel.getCollections().observe(getViewLifecycleOwner(), this::renderCollections);
     }
 
@@ -74,62 +69,21 @@ public class CollectionsFragment extends Fragment implements CollectionAdapter.O
      * Displays a MaterialAlertDialog prompting the user to create a new collection with name and description.
      */
     public void showCreateCollectionDialog() {
-        Context context = requireContext();
-        View dialogView = LayoutInflater.from(context)
-                .inflate(R.layout.dialog_collection_form, null, false);
-        TextInputLayout nameInputLayout = dialogView.findViewById(R.id.dialog_collection_name_layout);
-        TextInputEditText nameEditText = dialogView.findViewById(R.id.dialog_collection_name_input);
-        TextInputEditText descEditText = dialogView.findViewById(R.id.dialog_collection_description_input);
+        CollectionFormDialogFragment.newInstance()
+                .show(getChildFragmentManager(), CollectionFormDialogFragment.TAG);
+    }
 
-        AlertDialog dialog = new MaterialAlertDialogBuilder(context)
-                .setTitle(R.string.dialog_create_collection_title)
-                .setView(dialogView)
-                .setPositiveButton(R.string.action_create, null)
-                .setNegativeButton(R.string.action_cancel, null)
-                .create();
+    private int getResponsiveSpanCount() {
+        int screenWidthDp = getResources().getConfiguration().screenWidthDp;
+        return Math.max(2, screenWidthDp / 180);
+    }
 
-        dialog.setOnShowListener(d -> {
-            Button createButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-            createButton.setOnClickListener(v -> {
-                Editable nameText = nameEditText.getText();
-                String name = nameText != null ? nameText.toString().trim() : "";
-                /*Kiểm tra k được để trống */
-                if (name.isEmpty()) {
-                    nameInputLayout.setError(getString(R.string.error_empty_collection_name));
-                    return;
-                }
-                /*Kiểm tra k trùng lặp */
-                if (!viewModel.isCollectionNameUnique(name, -1)) {
-                    nameInputLayout.setError(getString(R.string.error_duplicate_collection_name));
-                    return;
-                }
-
-                Editable descText = descEditText.getText();
-                String description = descText != null ? descText.toString().trim() : "";
-
-                viewModel.createCollection(name, description);
-                dialog.dismiss();
-            });
-        });
-
-        nameEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (nameInputLayout.getError() != null) {
-                    nameInputLayout.setError(null);
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
-        });
-
-        dialog.show();
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (gridLayoutManager != null) {
+            gridLayoutManager.setSpanCount(getResponsiveSpanCount());
+        }
     }
 
     private void renderCollections(@Nullable List<Collection> collections) {
@@ -153,79 +107,22 @@ public class CollectionsFragment extends Fragment implements CollectionAdapter.O
 
     @Override
     public void onRenameCollection(@NonNull Collection collection) {
-        Context context = requireContext();
-        View dialogView = LayoutInflater.from(context)
-                .inflate(R.layout.dialog_collection_form, null, false);
-        TextInputLayout inputLayout = dialogView.findViewById(R.id.dialog_collection_name_layout);
-        TextInputEditText editText = dialogView.findViewById(R.id.dialog_collection_name_input);
-        View descriptionLayout = dialogView.findViewById(R.id.dialog_collection_description_layout);
-        descriptionLayout.setVisibility(View.GONE);
-
-        editText.setText(collection.getName());
-        editText.setSelection(collection.getName().length());
-
-        AlertDialog dialog = new MaterialAlertDialogBuilder(context)
-                .setTitle(R.string.dialog_rename_collection_title)
-                .setView(dialogView)
-                .setPositiveButton(R.string.action_save, null)
-                .setNegativeButton(R.string.action_cancel, null)
-                .create();
-
-        dialog.setOnShowListener(d -> {
-            Button saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-            saveButton.setOnClickListener(v -> {
-                Editable text = editText.getText();
-                String newName = text != null ? text.toString().trim() : "";
-
-                if (newName.isEmpty()) {
-                    inputLayout.setError(getString(R.string.error_empty_collection_name));
-                    return;
-                }
-
-                if (newName.equals(collection.getName())) {
-                    dialog.dismiss();
-                    return;
-                }
-
-                if (!viewModel.isCollectionNameUnique(newName, collection.getId())) {
-                    inputLayout.setError(getString(R.string.error_duplicate_collection_name));
-                    return;
-                }
-
-                viewModel.renameCollection(collection.getId(), newName);
-                dialog.dismiss();
-            });
-        });
-
-        editText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (inputLayout.getError() != null) {
-                    inputLayout.setError(null);
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
-        });
-
-        dialog.show();
+        CollectionFormDialogFragment.newInstanceForEdit(
+                collection.getId(),
+                collection.getName(),
+                collection.getDescription()
+        ).show(getChildFragmentManager(), CollectionFormDialogFragment.TAG);
     }
 
     @Override
     public void onDeleteCollection(@NonNull Collection collection) {
         new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.dialog_delete_collection_title)
-                .setMessage(getString(R.string.dialog_delete_collection_message, collection.getName()))
+                .setTitle(R.string.dialog_delete_album_title)
+                .setMessage(getString(R.string.dialog_delete_album_message, collection.getName()))
                 .setPositiveButton(R.string.action_delete, (dialog, which) -> {
                     viewModel.deleteCollection(collection);
                 })
-                .setNegativeButton(R.string.action_cancel, null)
+                .setNegativeButton(android.R.string.cancel, null)
                 .show();
     }
 

@@ -21,18 +21,46 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/text_collections_heading"
+    <LinearLayout
+        android:id="@+id/layout_collections_header"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="@string/collections_heading"
-        android:textColor="@color/text_primary"
-        android:textSize="25sp"
-        android:textStyle="bold"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/text_collections_eyebrow" />
+        app:layout_constraintTop_toBottomOf="@id/text_collections_eyebrow">
+
+        <TextView
+            android:id="@+id/text_collections_heading"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="@font/plus_jakarta_sans"
+            android:text="@string/collections_heading"
+            android:textColor="@color/text_primary"
+            android:textSize="25sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_header_create_collection"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
+            android:paddingHorizontal="16dp"
+            android:contentDescription="@string/action_create_album"
+            android:fontFamily="@font/plus_jakarta_sans"
+            android:text="@string/action_create_album"
+            android:textAllCaps="false"
+            android:textColor="@color/primary"
+            android:textStyle="bold"
+            app:icon="@drawable/ic_collections"
+            app:iconTint="@color/primary" />
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/text_collections_subtitle"
@@ -44,7 +72,7 @@
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/text_collections_heading" />
+        app:layout_constraintTop_toBottomOf="@id/layout_collections_header" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_collections"
@@ -52,7 +80,7 @@
         android:layout_height="0dp"
         android:layout_marginTop="18dp"
         android:clipToPadding="false"
-        android:paddingBottom="96dp"
+        android:paddingBottom="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -73,22 +101,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/text_collections_subtitle" />
 
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/fab_create_collection"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:contentDescription="@string/action_new_collection"
-        android:text="@string/action_new_collection"
-        android:textAllCaps="false"
-        android:textStyle="bold"
-        android:textColor="@color/on_primary"
-        app:cornerRadius="20dp"
-        app:elevation="6dp"
-        app:backgroundTint="@color/primary"
-        app:icon="@drawable/ic_collections"
-        app:iconTint="@color/on_primary"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

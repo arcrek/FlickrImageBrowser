@@ -23,6 +23,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Arrays;
+import java.util.List;
+import vn.edu.usth.flickrimagebrowser.data.local.entity.PhotoEntity;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionEntity;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionPhotoCrossRef;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionWithPhotos;
@@ -151,6 +154,35 @@ public class CollectionDaoTest {
 
         assertEquals(Integer.valueOf(0), awaitValue(collections.observePhotoCount(id)));
         assertNotNull(awaitValue(collections.observeCollectionById(id)));
+    }
+
+    @Test
+    public void updateCollection_updatesNameAndDescription() throws Exception {
+        long id = collections.insertCollection(new CollectionEntity(0, "Old Name", "Old Desc", 100));
+        int rows = collections.updateCollection(id, "Updated Name", "Updated Desc");
+        assertEquals(1, rows);
+        CollectionWithPhotos relation = awaitValue(collections.observeCollectionById(id));
+        assertEquals("Updated Name", relation.collection.getName());
+        assertEquals("Updated Desc", relation.collection.getDescription());
+    }
+
+    @Test
+    public void addPhotosAndCrossRefs_atomicallyPersistsEntitiesAndLinks() throws Exception {
+        long id = collection("BatchAlbum");
+        List<PhotoEntity> entityList = Arrays.asList(
+                photo("b1", "Batch 1", "Owner", false, 100),
+                photo("b2", "Batch 2", "Owner", true, 200)
+        );
+        List<CollectionPhotoCrossRef> refList = Arrays.asList(
+                new CollectionPhotoCrossRef(id, "b1", 100),
+                new CollectionPhotoCrossRef(id, "b2", 200)
+        );
+        collections.addPhotosAndCrossRefs(photos, entityList, refList);
+
+        CollectionWithPhotos relation = awaitValue(collections.observeCollectionById(id));
+        assertEquals(2, relation.photos.size());
+        assertNotNull(photos.getPhotoByIdSync("b1"));
+        assertNotNull(photos.getPhotoByIdSync("b2"));
     }
 
     private long collection(String name) {

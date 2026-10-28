@@ -9,10 +9,10 @@ import android.view.inputmethod.EditorInfo;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityOptionsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.google.android.material.snackbar.Snackbar;
 
@@ -25,32 +25,28 @@ import vn.edu.usth.flickrimagebrowser.R;
 import vn.edu.usth.flickrimagebrowser.databinding.FragmentSearchBinding;
 import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
 import vn.edu.usth.flickrimagebrowser.ui.AppViewModelFactory;
+import vn.edu.usth.flickrimagebrowser.ui.common.JustifiedGridLayoutManager;
 import vn.edu.usth.flickrimagebrowser.ui.common.PhotoAdapter;
 import vn.edu.usth.flickrimagebrowser.ui.detail.PhotoDetailActivity;
 import vn.edu.usth.flickrimagebrowser.util.Resource;
 
 /**
- * Fragment presenting search input, a Pinterest-style 2-column staggered photo grid,
- * Loading/Empty/Error states, and endless-scroll pagination.
+ * Fragment presenting top compact search input, Flickr-style justified rows,
+ * Loading/Empty/Error states, and endless-scroll pagination without retry storms.
  */
 public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActionListener {
 
-    private static final int GRID_SPAN_COUNT = 2;
     private static final int PAGINATION_THRESHOLD = 4;
 
     private static final String[] RECOMMENDATION_PROMPTS = {
             "Mùa thu Hà Nội",
-            "Cyberpunk Tokyo",
-            "Minimalist Architecture",
-            "Hồ Gươm hoàng hôn",
-            "Mùa hoa cúc họa mi",
-            "Vintage Film Photography",
-            "Cappuccino & Rainy Morning",
-            "Northern Lights Iceland",
-            "Street Food Saigon",
-            "Deep Ocean Coral Reef",
-            "Cozy Alpine Cabin",
-            "Sunset over Santorini"
+            "Vịnh Hạ Long",
+            "Phố cổ Hội An",
+            "Cầu Vàng Đà Nẵng",
+            "Ruộng bậc thang Sa Pa",
+            "Hoàng hôn Phú Quốc",
+            "Chợ nổi Cái Răng",
+            "Hoa anh đào Đà Lạt"
     };
 
     @Nullable
@@ -58,9 +54,8 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
 
     private SearchViewModel viewModel;
     private PhotoAdapter photoAdapter;
+    private JustifiedGridLayoutManager justifiedLayoutManager;
     private String currentRecommendation = "Mùa thu Hà Nội";
-
-    private final int[] lastPositionsReuse = new int[GRID_SPAN_COUNT];
 
     @Nullable
     @Override
@@ -80,13 +75,10 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
                 .getViewModelFactory();
         viewModel = new ViewModelProvider(this, factory).get(SearchViewModel.class);
 
-        photoAdapter = new PhotoAdapter(this);
+        photoAdapter = new PhotoAdapter(this, R.layout.item_photo);
         if (binding != null) {
-            StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(
-                    GRID_SPAN_COUNT, StaggeredGridLayoutManager.VERTICAL
-            );
-            layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS);
-            binding.recyclerPhotos.setLayoutManager(layoutManager);
+            justifiedLayoutManager = new JustifiedGridLayoutManager(requireContext());
+            binding.recyclerPhotos.setLayoutManager(justifiedLayoutManager);
             binding.recyclerPhotos.setAdapter(photoAdapter);
 
             binding.recyclerPhotos.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -96,19 +88,15 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
                     if (dy <= 0) {
                         return;
                     }
-                    int totalItemCount = layoutManager.getItemCount();
-                    int[] lastPositions = layoutManager.findLastVisibleItemPositions(lastPositionsReuse);
-                    int maxLastVisible = 0;
-                    if (lastPositions != null) {
-                        for (int pos : lastPositions) {
-                            if (pos > maxLastVisible) {
-                                maxLastVisible = pos;
-                            }
-                        }
-                    }
+                    int totalItemCount = justifiedLayoutManager.getItemCount();
+                    int lastVisible = justifiedLayoutManager.findLastVisibleItemPosition();
 
-                    if (maxLastVisible >= totalItemCount - PAGINATION_THRESHOLD && totalItemCount > 0) {
-                        viewModel.loadNextPage();
+                    if (lastVisible != RecyclerView.NO_POSITION
+                            && lastVisible >= totalItemCount - PAGINATION_THRESHOLD
+                            && totalItemCount > 0) {
+                        if (!viewModel.hasFailedOnNextPage() && !viewModel.isLoadingNextPage()) {
+                            viewModel.loadNextPage();
+                        }
                     }
                 }
             });
@@ -125,6 +113,7 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
 
             binding.buttonSearch.setOnClickListener(v -> triggerSearch());
             binding.buttonRetry.setOnClickListener(v -> viewModel.retryLastQuery());
+            binding.buttonRetryPagination.setOnClickListener(v -> viewModel.retryLastQuery());
             binding.inputLayoutQuery.setEndIconOnClickListener(v -> {
                 binding.editQuery.setText("");
                 viewModel.submitQuery("", false);
@@ -154,6 +143,7 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
             return;
         }
         String query = binding.editQuery.getText().toString();
+        binding.recyclerPhotos.scrollToPosition(0);
         viewModel.submitQuery(query, false);
     }
 
@@ -169,18 +159,22 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
                 if (!hasExistingData) {
                     binding.progressLoading.setVisibility(View.VISIBLE);
                     binding.recyclerPhotos.setVisibility(View.GONE);
+                    binding.recyclerPhotos.scrollToPosition(0);
                     binding.layoutState.setVisibility(View.GONE);
                 } else {
                     binding.progressLoading.setVisibility(View.GONE);
                     binding.recyclerPhotos.setVisibility(View.VISIBLE);
                     binding.layoutState.setVisibility(View.GONE);
+                    photoAdapter.submitList(resource.getData());
                 }
+                binding.layoutPaginationError.setVisibility(View.GONE);
                 break;
 
             case SUCCESS:
                 binding.progressLoading.setVisibility(View.GONE);
                 binding.layoutState.setVisibility(View.GONE);
                 binding.recyclerPhotos.setVisibility(View.VISIBLE);
+                binding.layoutPaginationError.setVisibility(View.GONE);
                 photoAdapter.submitList(
                         resource.getData() != null ? resource.getData() : Collections.emptyList()
                 );
@@ -195,6 +189,7 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
                     binding.buttonRetry.setVisibility(View.GONE);
                     photoAdapter.submitList(Collections.emptyList());
                 }
+                binding.layoutPaginationError.setVisibility(View.GONE);
                 break;
 
             case ERROR:
@@ -208,25 +203,36 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
                                     : getString(R.string.search_empty_state)
                     );
                     binding.buttonRetry.setVisibility(View.VISIBLE);
+                    binding.layoutPaginationError.setVisibility(View.GONE);
                     photoAdapter.submitList(Collections.emptyList());
                 } else {
                     binding.progressLoading.setVisibility(View.GONE);
                     binding.layoutState.setVisibility(View.GONE);
                     binding.recyclerPhotos.setVisibility(View.VISIBLE);
-                    Snackbar.make(
-                            binding.getRoot(),
-                            resource.getMessage() != null ? resource.getMessage() : "Error loading more photos",
-                            Snackbar.LENGTH_LONG
-                    ).setAction(R.string.action_retry, v -> viewModel.loadNextPage()).show();
+                    photoAdapter.submitList(resource.getData());
+                    binding.layoutPaginationError.setVisibility(View.VISIBLE);
+                    binding.textPaginationError.setText(
+                            resource.getMessage() != null
+                                    ? resource.getMessage()
+                                    : getString(R.string.search_error_generic)
+                    );
                 }
                 break;
         }
     }
-
     @Override
     public void onPhotoClicked(@NonNull Photo photo) {
         Intent intent = PhotoDetailActivity.newIntent(requireContext(), photo);
-        startActivity(intent);
+        if (PhotoAdapter.areAnimationsEnabled(requireContext())) {
+            Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(
+                    requireContext(),
+                    android.R.anim.fade_in,
+                    android.R.anim.fade_out
+            ).toBundle();
+            startActivity(intent, bundle);
+        } else {
+            startActivity(intent);
+        }
     }
 
     @Override

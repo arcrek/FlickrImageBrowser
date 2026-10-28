@@ -47,6 +47,18 @@ public final class PhotoMapper {
         String owner = firstNonBlank(dto.getUser(), "Unknown Author");
         String descriptionText = firstNonBlank(dto.getTags(), dto.getPageUrl());
 
+        int width = 0;
+        int height = 0;
+        if (!isBlank(dto.getWebformatUrl()) && dto.getWebformatWidth() > 0 && dto.getWebformatHeight() > 0) {
+            width = dto.getWebformatWidth();
+            height = dto.getWebformatHeight();
+        } else if (!isBlank(dto.getLargeImageUrl()) && dto.getImageWidth() > 0 && dto.getImageHeight() > 0) {
+            width = dto.getImageWidth();
+            height = dto.getImageHeight();
+        } else if (!isBlank(dto.getPreviewUrl()) && dto.getPreviewWidth() > 0 && dto.getPreviewHeight() > 0) {
+            width = dto.getPreviewWidth();
+            height = dto.getPreviewHeight();
+        }
         return new Photo(
                 id,
                 title,
@@ -55,7 +67,9 @@ public final class PhotoMapper {
                 thumbnailUrl,
                 detailUrl,
                 isFavorite,
-                0L
+                0L,
+                width,
+                height
         );
     }
 
@@ -86,7 +100,9 @@ public final class PhotoMapper {
                 entity.getThumbnailUrl(),
                 entity.getDetailUrl(),
                 entity.isFavorite(),
-                entity.getSavedAt()
+                entity.getSavedAt(),
+                0,
+                0
         );
     }
 
@@ -125,18 +141,38 @@ public final class PhotoMapper {
         }
         List<Collection> result = new ArrayList<>(relations.size());
         for (CollectionWithPhotos relation : relations) {
-            if (relation != null && relation.collection != null) {
-                int count = relation.photos != null ? relation.photos.size() : 0;
-                result.add(new Collection(
-                        relation.collection.getId(),
-                        relation.collection.getName(),
-                        relation.collection.getDescription(),
-                        relation.collection.getCreatedAt(),
-                        count
-                ));
+            Collection mapped = fromCollectionRelation(relation);
+            if (mapped != null) {
+                result.add(mapped);
             }
         }
         return result;
+    }
+
+    @Nullable
+    public static Collection fromCollectionRelation(@Nullable CollectionWithPhotos relation) {
+        if (relation == null || relation.collection == null) {
+            return null;
+        }
+        int count = relation.photos != null ? relation.photos.size() : 0;
+        String coverUrl = "";
+        if (relation.photos != null && !relation.photos.isEmpty()) {
+            PhotoEntity first = relation.photos.get(0);
+            if (first != null) {
+                coverUrl = first.getThumbnailUrl();
+                if (isBlank(coverUrl)) {
+                    coverUrl = first.getDetailUrl();
+                }
+            }
+        }
+        return new Collection(
+                relation.collection.getId(),
+                relation.collection.getName(),
+                relation.collection.getDescription(),
+                relation.collection.getCreatedAt(),
+                count,
+                coverUrl
+        );
     }
 
     @Nullable

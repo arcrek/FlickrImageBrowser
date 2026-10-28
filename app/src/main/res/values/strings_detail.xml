@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Photo Detail Viewer Specific Strings -->
+    <string name="detail_loading_photo">Loading full image…</string>
+    <string name="detail_error_loading_image">Couldn\'t load high-resolution photo.</string>
+    <string name="detail_action_retry">Retry</string>
+    <string name="detail_albums_loading">Loading albums…</string>
+    <string name="detail_albums_empty_title">No albums yet</string>
+    <string name="detail_albums_empty_message">You don\'t have any albums yet. Create one to organize your photos.</string>
+    <string name="detail_action_create_album">Create new album</string>
+    <string name="detail_add_to_album_title">Add to album</string>
+    <string name="detail_photo_added_success">Added to \"%1$s\"</string>
+    <string name="detail_photo_add_failure">Could not add photo to album. Please try again.</string>
+    <string name="detail_favorite_added">Saved to Favorites</string>
+    <string name="detail_favorite_removed">Removed from Favorites</string>
+    <string name="detail_action_save_photo">Save photo to favorites</string>
+    <string name="detail_action_remove_photo">Remove photo from favorites</string>
+    <string name="detail_action_share_photo">Share photo</string>
+</resources>

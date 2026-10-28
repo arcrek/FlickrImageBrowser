@@ -8,6 +8,7 @@ import java.util.Objects;
 
 import vn.edu.usth.flickrimagebrowser.data.repository.PhotoRepository;
 import vn.edu.usth.flickrimagebrowser.ui.collections.CollectionDetailViewModel;
+import vn.edu.usth.flickrimagebrowser.ui.collections.CollectionFormViewModel;
 import vn.edu.usth.flickrimagebrowser.ui.collections.CollectionsViewModel;
 import vn.edu.usth.flickrimagebrowser.ui.detail.DetailViewModel;
 import vn.edu.usth.flickrimagebrowser.ui.favorites.FavoritesViewModel;
@@ -39,6 +40,9 @@ public class AppViewModelFactory implements ViewModelProvider.Factory {
         }
         if (modelClass.isAssignableFrom(CollectionDetailViewModel.class)) {
             return (T) new CollectionDetailViewModel(repository);
+        }
+        if (modelClass.isAssignableFrom(CollectionFormViewModel.class)) {
+            return (T) new CollectionFormViewModel(repository);
         }
         if (modelClass.isAssignableFrom(DetailViewModel.class)) {
             return (T) new DetailViewModel(repository);

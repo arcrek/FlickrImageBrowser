@@ -10,6 +10,7 @@ import java.util.Objects;
 
 import vn.edu.usth.flickrimagebrowser.data.repository.PhotoRepository;
 import vn.edu.usth.flickrimagebrowser.domain.model.Collection;
+import vn.edu.usth.flickrimagebrowser.util.Resource;
 
 /**
  * ViewModel managing user photo collections stored in Room.
@@ -29,29 +30,37 @@ public class CollectionsViewModel extends ViewModel {
         return collections;
     }
 
-    public void createCollection(@NonNull String name, @Nullable String description) {
+    @NonNull
+    public LiveData<Resource<Long>> createCollection(@NonNull String name, @Nullable String description) {
         String trimmed = Objects.requireNonNull(name, "name must not be null").trim();
         if (trimmed.isEmpty() || !isCollectionNameUnique(trimmed, -1L)) {
-            return;
+            androidx.lifecycle.MutableLiveData<Resource<Long>> err = new androidx.lifecycle.MutableLiveData<>();
+            err.setValue(Resource.error("Invalid or duplicate album name", null));
+            return err;
         }
-        repository.createCollection(trimmed, description);
+        return repository.createCollection(trimmed, description);
     }
 
-    public void deleteCollection(long collectionId) {
-        repository.deleteCollection(collectionId);
+    @NonNull
+    public LiveData<Resource<Void>> deleteCollection(long collectionId) {
+        return repository.deleteCollection(collectionId);
     }
 
-    public void deleteCollection(@NonNull Collection collection) {
+    @NonNull
+    public LiveData<Resource<Void>> deleteCollection(@NonNull Collection collection) {
         Objects.requireNonNull(collection, "collection must not be null");
-        repository.deleteCollection(collection.getId());
+        return repository.deleteCollection(collection.getId());
     }
 
-    public void renameCollection(long collectionId, @NonNull String newName) {
+    @NonNull
+    public LiveData<Resource<Void>> updateCollection(long collectionId, @NonNull String newName, @Nullable String newDescription) {
         String trimmed = Objects.requireNonNull(newName, "newName must not be null").trim();
         if (trimmed.isEmpty() || !isCollectionNameUnique(trimmed, collectionId)) {
-            return;
+            androidx.lifecycle.MutableLiveData<Resource<Void>> err = new androidx.lifecycle.MutableLiveData<>();
+            err.setValue(Resource.error("Invalid or duplicate album name", null));
+            return err;
         }
-        repository.renameCollection(collectionId, trimmed);
+        return repository.updateCollection(collectionId, trimmed, newDescription);
     }
 
     /**

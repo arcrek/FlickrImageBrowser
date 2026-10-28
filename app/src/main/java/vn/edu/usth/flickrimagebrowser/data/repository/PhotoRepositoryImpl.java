@@ -113,11 +113,11 @@ public class PhotoRepositoryImpl implements PhotoRepository {
                     int code = response.code();
                     String errorMsg;
                     if (code == 400 || code == 401 || code == 403) {
-                        errorMsg = "Invalid or unauthorized Pixabay API key or parameters (HTTP " + code + ").";
+                        errorMsg = "Cannot load photos. Please verify your credentials or search parameters.";
                     } else if (code == 429) {
-                        errorMsg = "Pixabay API rate limit exceeded (HTTP 429). Please wait before retrying.";
+                        errorMsg = "Rate limit reached. Please wait a moment and try again.";
                     } else {
-                        errorMsg = "Server returned HTTP " + code;
+                        errorMsg = "Unable to load photos at this time. Please try again later.";
                     }
                     result.postValue(Resource.error(errorMsg, null));
                     return;
@@ -142,9 +142,7 @@ public class PhotoRepositoryImpl implements PhotoRepository {
                 if (call.isCanceled()) {
                     return;
                 }
-                String message = t.getMessage() != null && !t.getMessage().trim().isEmpty()
-                        ? "Network error: " + t.getMessage().trim()
-                        : "Network error: Unable to reach Pixabay.";
+                String message = "Unable to connect. Please check your internet connection.";
                 result.postValue(Resource.error(message, null));
             }
         });
@@ -199,7 +197,9 @@ public class PhotoRepositoryImpl implements PhotoRepository {
                                 thumbUrl,
                                 detailUrl,
                                 isFav,
-                                System.currentTimeMillis() - (index * 60000L)
+                                System.currentTimeMillis() - (index * 60000L),
+                                300,
+                                thumbHeight
                         ));
                     }
                 }
@@ -247,6 +247,16 @@ public class PhotoRepositoryImpl implements PhotoRepository {
     }
 
     @Override
+    public void restoreFavorite(@NonNull Photo photo) {
+        long originalSavedAt = photo.getSavedAt();
+        long effectiveSavedAt = originalSavedAt > 0L ? originalSavedAt : System.currentTimeMillis();
+        executors.diskIO().execute(() -> {
+            PhotoEntity updated = PhotoMapper.toEntity(photo, true, effectiveSavedAt);
+            photoDao.upsertPhoto(updated);
+        });
+    }
+
+    @Override
     public void setFavorite(@NonNull Photo photo, boolean isFavorite) {
         executors.diskIO().execute(() -> {
             long now = System.currentTimeMillis();
@@ -267,90 +277,159 @@ public class PhotoRepositoryImpl implements PhotoRepository {
         );
     }
 
+    @NonNull
     @Override
-    public void createCollection(@NonNull String name, @Nullable String description) {
+    public LiveData<Resource<Long>> createCollection(@NonNull String name, @Nullable String description) {
+        MutableLiveData<Resource<Long>> result = new MutableLiveData<>(Resource.loading(null));
         String trimmedName = name.trim();
         if (trimmedName.isEmpty()) {
-            return;
+            result.setValue(Resource.error("Album name cannot be empty.", null));
+            return result;
         }
         String cleanDesc = description != null ? description.trim() : "";
         executors.diskIO().execute(() -> {
-            List<CollectionEntity> existingCollections = collectionDao.getCollectionsSync();
-            if (existingCollections != null) {
-                for (CollectionEntity existing : existingCollections) {
-                    if (existing.getName().equalsIgnoreCase(trimmedName)) {
-                        return;
+            try {
+                List<CollectionEntity> existingCollections = collectionDao.getCollectionsSync();
+                if (existingCollections != null) {
+                    for (CollectionEntity existing : existingCollections) {
+                        if (existing.getName().equalsIgnoreCase(trimmedName)) {
+                            result.postValue(Resource.error("An album with this name already exists.", null));
+                            return;
+                        }
                     }
                 }
-            }
-            CollectionEntity entity = new CollectionEntity(
-                    0L,
-                    trimmedName,
-                    cleanDesc,
-                    System.currentTimeMillis()
-            );
-            try {
-                collectionDao.insertCollection(entity);
-            } catch (RuntimeException ignored) {
-                // Ignore duplicate constraint violations
+                CollectionEntity entity = new CollectionEntity(
+                        0L,
+                        trimmedName,
+                        cleanDesc,
+                        System.currentTimeMillis()
+                );
+                long id = collectionDao.insertCollection(entity);
+                result.postValue(Resource.success(id));
+            } catch (Exception e) {
+                result.postValue(Resource.error("Failed to create album. Please try again.", null));
             }
         });
+        return result;
     }
 
+    @NonNull
     @Override
-    public void addPhotoToCollection(long collectionId, @NonNull Photo photo) {
+    public LiveData<Resource<Void>> addPhotoToCollection(long collectionId, @NonNull Photo photo) {
+        return addPhotosToCollection(collectionId, java.util.Collections.singletonList(photo));
+    }
+
+    @NonNull
+    @Override
+    public LiveData<Resource<Void>> addPhotosToCollection(long collectionId, @NonNull List<Photo> photos) {
+        MutableLiveData<Resource<Void>> result = new MutableLiveData<>(Resource.loading(null));
         if (collectionId <= 0L) {
-            return;
+            result.setValue(Resource.error("Invalid album identifier.", null));
+            return result;
+        }
+        if (photos.isEmpty()) {
+            result.setValue(Resource.success(null));
+            return result;
         }
         executors.diskIO().execute(() -> {
-            PhotoEntity existing = photoDao.getPhotoByIdSync(photo.getId());
-            boolean keepFavorite = existing != null && existing.isFavorite();
-            long savedAt = existing != null ? existing.getSavedAt() : System.currentTimeMillis();
-            PhotoEntity entity = PhotoMapper.toEntity(photo, keepFavorite, savedAt);
-            photoDao.upsertPhoto(entity);
-            collectionDao.addPhotoToCollection(
-                    new CollectionPhotoCrossRef(collectionId, photo.getId(), System.currentTimeMillis())
-            );
+            try {
+                long now = System.currentTimeMillis();
+                List<PhotoEntity> entities = new ArrayList<>(photos.size());
+                List<CollectionPhotoCrossRef> refs = new ArrayList<>(photos.size());
+                for (Photo photo : photos) {
+                    PhotoEntity existing = photoDao.getPhotoByIdSync(photo.getId());
+                    boolean keepFavorite = existing != null && existing.isFavorite();
+                    long savedAt = existing != null ? existing.getSavedAt() : now;
+                    entities.add(PhotoMapper.toEntity(photo, keepFavorite, savedAt));
+                    refs.add(new CollectionPhotoCrossRef(collectionId, photo.getId(), now));
+                }
+                collectionDao.addPhotosAndCrossRefs(photoDao, entities, refs);
+                result.postValue(Resource.success(null));
+            } catch (Exception e) {
+                result.postValue(Resource.error("Failed to add photo(s) to album. Please try again.", null));
+            }
         });
-    }
-    @Override
-    public void deleteCollection(long collectionId) {
-        executors.diskIO().execute(() -> {
-            collectionDao.deleteCollectionById(collectionId);
-            photoDao.deleteAllOrphanPhotos();
-        });
+        return result;
     }
 
+    @NonNull
     @Override
-    public void renameCollection(long collectionId, @NonNull String newName) {
+    public LiveData<Resource<Void>> deleteCollection(long collectionId) {
+        MutableLiveData<Resource<Void>> result = new MutableLiveData<>(Resource.loading(null));
+        if (collectionId <= 0L) {
+            result.setValue(Resource.error("Invalid album identifier.", null));
+            return result;
+        }
+        executors.diskIO().execute(() -> {
+            try {
+                collectionDao.deleteCollectionAndCleanOrphans(photoDao, collectionId);
+                result.postValue(Resource.success(null));
+            } catch (Exception e) {
+                result.postValue(Resource.error("Failed to delete album. Please try again.", null));
+            }
+        });
+        return result;
+    }
+
+    @NonNull
+    @Override
+    public LiveData<Resource<Void>> updateCollection(long collectionId, @NonNull String newName, @Nullable String newDescription) {
+        MutableLiveData<Resource<Void>> result = new MutableLiveData<>(Resource.loading(null));
         String trimmedName = newName.trim();
         if (trimmedName.isEmpty()) {
-            return;
+            result.setValue(Resource.error("Album name cannot be empty.", null));
+            return result;
         }
         executors.diskIO().execute(() -> {
-            List<CollectionEntity> existingCollections = collectionDao.getCollectionsSync();
-            if (existingCollections != null) {
-                for (CollectionEntity existing : existingCollections) {
-                    if (existing.getId() != collectionId
-                            && existing.getName().equalsIgnoreCase(trimmedName)) {
-                        return;
+            try {
+                List<CollectionEntity> existingCollections = collectionDao.getCollectionsSync();
+                CollectionEntity target = null;
+                if (existingCollections != null) {
+                    for (CollectionEntity existing : existingCollections) {
+                        if (existing.getId() == collectionId) {
+                            target = existing;
+                        } else if (existing.getName().equalsIgnoreCase(trimmedName)) {
+                            result.postValue(Resource.error("An album with this name already exists.", null));
+                            return;
+                        }
                     }
                 }
-            }
-            try {
-                collectionDao.renameCollection(collectionId, trimmedName);
-            } catch (RuntimeException ignored) {
-                // Ignore duplicate constraint violations
+                String finalDesc = newDescription != null ? newDescription.trim() : (target != null ? target.getDescription() : "");
+                int updatedRows = collectionDao.updateCollection(collectionId, trimmedName, finalDesc);
+                if (updatedRows > 0) {
+                    result.postValue(Resource.success(null));
+                } else {
+                    result.postValue(Resource.error("Album not found.", null));
+                }
+            } catch (Exception e) {
+                result.postValue(Resource.error("Failed to update album. Please try again.", null));
             }
         });
+        return result;
     }
 
+    @NonNull
     @Override
-    public void removePhotoFromCollection(long collectionId, @NonNull String photoId) {
+    public LiveData<Resource<Void>> removePhotoFromCollection(long collectionId, @NonNull String photoId) {
+        return removePhotosFromCollection(collectionId, java.util.Collections.singletonList(photoId));
+    }
+    @NonNull
+    @Override
+    public LiveData<Resource<Void>> removePhotosFromCollection(long collectionId, @NonNull List<String> photoIds) {
+        MutableLiveData<Resource<Void>> result = new MutableLiveData<>(Resource.loading(null));
+        if (collectionId <= 0L || photoIds.isEmpty()) {
+            result.setValue(Resource.success(null));
+            return result;
+        }
         executors.diskIO().execute(() -> {
-            collectionDao.removePhotoFromCollection(collectionId, photoId);
-            photoDao.deleteOrphanIfUnreferenced(photoId);
+            try {
+                collectionDao.removePhotosAndCleanOrphans(photoDao, collectionId, photoIds);
+                result.postValue(Resource.success(null));
+            } catch (Exception e) {
+                result.postValue(Resource.error("Failed to remove photo(s) from album: " + e.getMessage(), null));
+            }
         });
+        return result;
     }
 
     @NonNull

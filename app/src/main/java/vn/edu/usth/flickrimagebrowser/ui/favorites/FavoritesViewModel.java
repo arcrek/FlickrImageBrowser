@@ -99,7 +99,7 @@ public class FavoritesViewModel extends ViewModel {
     public void restoreFavorite(@Nullable Photo photo) {
         Photo target = photo != null ? photo : recentlyRemovedPhoto;
         if (target != null) {
-            repository.setFavorite(target, true);
+            repository.restoreFavorite(target);
             if (target == recentlyRemovedPhoto) {
                 recentlyRemovedPhoto = null;
             }

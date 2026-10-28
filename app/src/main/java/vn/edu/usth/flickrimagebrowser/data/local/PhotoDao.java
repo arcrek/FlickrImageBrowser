@@ -51,6 +51,9 @@ public interface PhotoDao {
     @Upsert
     void upsertPhoto(@NonNull PhotoEntity photoEntity);
 
+    @Upsert
+    void upsertPhotos(@NonNull List<PhotoEntity> photoEntities);
+
     @Query("UPDATE photos SET is_favorite = :isFavorite, saved_at = :savedAt WHERE id = :photoId")
     void updateFavoriteState(@NonNull String photoId, boolean isFavorite, long savedAt);
 

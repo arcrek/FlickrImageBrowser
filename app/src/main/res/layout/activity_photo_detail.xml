@@ -4,143 +4,205 @@
     android:id="@+id/detail_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_light">
+    android:background="@color/image_viewer_background">
 
-    <!-- Top Bar: Clean White & Mint Accent (Fits all machine screen types, cutouts, status bars) -->
+    <!-- Top Bar in dark viewer surface -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar_detail"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:minHeight="?attr/actionBarSize"
-        android:background="@color/surface_light"
-        app:elevation="1dp"
+        android:background="@color/image_viewer_background"
+        app:elevation="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:navigationIconTint="@color/text_primary"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:navigationIconTint="@color/image_viewer_foreground"
         app:title="@string/detail_title"
         app:titleCentered="true"
         app:titleTextAppearance="@style/TextAppearance.Flickr.ToolbarTitle"
-        app:titleTextColor="@color/text_primary" />
+        app:titleTextColor="@color/image_viewer_foreground" />
 
-    <View
-        android:id="@+id/detail_toolbar_divider"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:background="@color/dock_stroke"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar_detail" />
-
-    <ScrollView
-        android:id="@+id/detail_scroll_view"
+    <!-- Safe Stable Viewing Viewport: constrained strictly between toolbar and metadata so portrait images are never hidden behind chrome -->
+    <FrameLayout
+        android:id="@+id/image_container"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:clipToPadding="false"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:background="@color/image_viewer_background"
+        app:layout_constraintBottom_toTopOf="@id/detail_scroll_view"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/detail_toolbar_divider">
+        app:layout_constraintTop_toBottomOf="@id/toolbar_detail">
+
+        <vn.edu.usth.flickrimagebrowser.ui.detail.ZoomableImageView
+            android:id="@+id/image_detail_photo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/content_desc_photo" />
+
+        <ProgressBar
+            android:id="@+id/progress_detail_image"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:indeterminateTint="@color/brand_blue"
+            android:visibility="gone" />
+
+        <!-- Error Layout with retry; preserves underlying thumbnail on large image failure -->
+        <LinearLayout
+            android:id="@+id/layout_image_error"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="#CC111214"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_broken_image"
+                app:tint="@color/image_viewer_foreground" />
+
+            <TextView
+                android:id="@+id/text_image_error"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/plus_jakarta_sans"
+                android:text="@string/detail_error_loading_image"
+                android:textAlignment="center"
+                android:textColor="@color/viewer_secondary"
+                android:textSize="13sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_retry_image"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:minHeight="48dp"
+                android:text="@string/detail_action_retry"
+                android:textColor="@color/brand_blue"
+                app:icon="@drawable/ic_refresh"
+                app:iconTint="@color/brand_blue" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <!-- Metadata & ONE Row of Actions below the image, capped at max 240dp so long text/landscape stays bounded -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/detail_scroll_view"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/image_viewer_background"
+        android:clipToPadding="false"
+        app:layout_constrainedHeight="true"
+        app:layout_constraintHeight_max="240dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:paddingStart="16dp"
+            android:paddingTop="12dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="20dp">
 
-            <!-- Rounded Photo Container -->
-            <com.google.android.material.card.MaterialCardView
+            <!-- Author / Owner -->
+            <TextView
+                android:id="@+id/text_detail_owner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/plus_jakarta_sans"
+                android:textColor="@color/image_viewer_foreground"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <!-- Title -->
+            <TextView
+                android:id="@+id/text_detail_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/plus_jakarta_sans"
+                android:letterSpacing="0.01"
+                android:lineSpacingExtra="2dp"
+                android:textColor="@color/viewer_secondary"
+                android:textSize="13.5sp" />
+
+            <!-- Description (Shown when distinct from title) -->
+            <TextView
+                android:id="@+id/text_detail_description"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="3dp"
-                app:strokeColor="@color/dock_stroke"
-                app:strokeWidth="1dp">
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/plus_jakarta_sans"
+                android:lineSpacingExtra="3dp"
+                android:textColor="@color/viewer_secondary"
+                android:textSize="13sp" />
 
-                <ImageView
-                    android:id="@+id/image_detail_photo"
-                    android:layout_width="match_parent"
-                    android:layout_height="320dp"
-                    android:adjustViewBounds="true"
-                    android:background="#FFF3F4F6"
-                    android:contentDescription="@string/content_desc_photo"
-                    android:scaleType="centerCrop" />
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Metadata Header: Author + Tags/Title and Action Buttons -->
+            <!-- ONE Row: Favorite / Add to Album / Share -->
             <LinearLayout
+                android:id="@+id/layout_action_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="16dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="12dp"
-                    android:orientation="vertical">
+                <ImageButton
+                    android:id="@+id/button_favorite"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_favorite_pill"
+                    android:contentDescription="@string/detail_action_save_photo"
+                    android:padding="12dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_favorite_border" />
 
-                    <!-- Owner Name with Mint Accent -->
-                    <TextView
-                        android:id="@+id/text_detail_owner"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/plus_jakarta_sans"
-                        android:textColor="@color/primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <!-- Tags / Title: Refined smaller size -->
-                    <TextView
-                        android:id="@+id/text_detail_title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:fontFamily="@font/plus_jakarta_sans"
-                        android:letterSpacing="0.01"
-                        android:lineSpacingExtra="3dp"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="13.5sp" />
-
-                </LinearLayout>
+                <Space
+                    android:layout_width="16dp"
+                    android:layout_height="wrap_content" />
 
                 <ImageButton
                     android:id="@+id/button_add_to_collection"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:layout_marginEnd="8dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/action_add_to_collection"
-                    android:src="@drawable/ic_collections" />
+                    android:padding="10dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_collections"
+                    app:tint="@color/image_viewer_foreground" />
+
+                <Space
+                    android:layout_width="16dp"
+                    android:layout_height="wrap_content" />
 
                 <ImageButton
-                    android:id="@+id/button_favorite"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_favorite_pill"
-                    android:contentDescription="@string/action_toggle_favorite"
-                    android:padding="9dp"
+                    android:id="@+id/button_share"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/action_share"
+                    android:padding="10dp"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/ic_favorite_border" />
+                    android:src="@drawable/ic_share"
+                    app:tint="@color/image_viewer_foreground" />
 
             </LinearLayout>
 
-            <!-- Description (Shown when distinct from title/tags) -->
-            <TextView
-                android:id="@+id/text_detail_description"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:fontFamily="@font/plus_jakarta_sans"
-                android:lineSpacingExtra="4dp"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp" />
-
         </LinearLayout>
 
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

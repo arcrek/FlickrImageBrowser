@@ -2,6 +2,8 @@
 
 A native Android application written in **Java** (Android Views + XML layouts + `ViewBinding`) for discovering public photos via the **Pixabay REST API** (migrated from Flickr and Pexels due to API signup/approval restrictions), viewing photo details, saving favorites offline, and organizing photos into local collections.
 
+Search, Favorites, and Album Detail screens use a Flickr-style edge-to-edge justified row layout (`JustifiedGridLayoutManager`) so photos keep their natural aspect ratios without cropping; `PhotoDetailActivity` provides a full-bleed dark photo viewer with double-tap and pinch-to-zoom (`ZoomableImageView`).
+
 ---
 
 ## 1. Prerequisites
@@ -49,11 +51,11 @@ app/src/
 │   │   ├── domain/model/     # Immutable Photo and Collection models
 │   │   ├── ui/
 │   │   │   ├── AppViewModelFactory.java
-│   │   │   ├── common/       # Shared PhotoAdapter (Glide thumbnail loading)
+│   │   │   ├── common/       # JustifiedGridLayoutManager, PhotoAdapter, PhotoDimensionCache
 │   │   │   ├── search/       # SearchFragment & SearchViewModel
-│   │   │   ├── detail/       # PhotoDetailActivity & DetailViewModel
+│   │   │   ├── detail/       # PhotoDetailActivity, ZoomableImageView & DetailViewModel
 │   │   │   ├── favorites/    # FavoritesFragment & FavoritesViewModel
-│   │   │   └── collections/  # CollectionsFragment, CollectionsViewModel, CollectionAdapter
+│   │   │   └── collections/  # CollectionsFragment, CollectionDetailFragment, FavoritesPickerDialogFragment, ViewModels
 │   │   └── util/             # Resource<T>, AppExecutors, AppContainer
 │   └── res/                  # Material XML layouts, menus, vector drawables, themes
 ├── test/                     # Local JVM unit tests (JUnit 4 + Mockito + Arch Core Testing)

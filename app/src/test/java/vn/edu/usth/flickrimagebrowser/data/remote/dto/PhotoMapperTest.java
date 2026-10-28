@@ -120,12 +120,39 @@ public class PhotoMapperTest {
                 "https://example.com/thumb.jpg",
                 "https://example.com/detail.jpg",
                 true,
-                1700000000L
+                1700000000L,
+                0,
+                0
         );
 
         PhotoEntity entity = PhotoMapper.toEntity(original, true, 1700000000L);
         Photo roundTrip = PhotoMapper.fromEntity(entity);
 
         assertEquals(original, roundTrip);
+    }
+
+    @Test
+    public void fromCollectionRelations_extractsFirstPhotoCoverAndCount() {
+        vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionEntity entity =
+                new vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionEntity(42L, "Vacation", "Summer trip", 5000L);
+        vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionWithPhotos relation =
+                new vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionWithPhotos();
+        relation.collection = entity;
+        relation.photos = Arrays.asList(
+                new PhotoEntity("p1", "Beach", "Author", "Desc", "https://example.com/cover.jpg", "https://example.com/large1.jpg", false, 100L),
+                new PhotoEntity("p2", "Hotel", "Author", "Desc", "https://example.com/thumb2.jpg", "https://example.com/large2.jpg", false, 200L)
+        );
+
+        List<vn.edu.usth.flickrimagebrowser.domain.model.Collection> mapped =
+                PhotoMapper.fromCollectionRelations(Collections.singletonList(relation));
+
+        assertNotNull(mapped);
+        assertEquals(1, mapped.size());
+        vn.edu.usth.flickrimagebrowser.domain.model.Collection collection = mapped.get(0);
+        assertEquals(42L, collection.getId());
+        assertEquals("Vacation", collection.getName());
+        assertEquals("Summer trip", collection.getDescription());
+        assertEquals(2, collection.getPhotoCount());
+        assertEquals("https://example.com/cover.jpg", collection.getCoverPhotoUrl());
     }
 }

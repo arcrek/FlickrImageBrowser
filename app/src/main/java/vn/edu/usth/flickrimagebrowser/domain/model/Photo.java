@@ -33,6 +33,8 @@ public final class Photo implements Serializable {
 
     private final boolean favorite;
     private final long savedAt;
+    private final int width;
+    private final int height;
 
     public Photo(@NonNull String id,
                  @Nullable String title,
@@ -41,7 +43,9 @@ public final class Photo implements Serializable {
                  @Nullable String thumbnailUrl,
                  @Nullable String detailUrl,
                  boolean favorite,
-                 long savedAt) {
+                 long savedAt,
+                 int width,
+                 int height) {
         this.id = Objects.requireNonNull(id, "id must not be null");
         this.title = title != null && !title.trim().isEmpty() ? title.trim() : "Untitled Photo";
         this.ownerName = ownerName != null && !ownerName.trim().isEmpty() ? ownerName.trim() : "Unknown Author";
@@ -52,11 +56,13 @@ public final class Photo implements Serializable {
                 : this.thumbnailUrl;
         this.favorite = favorite;
         this.savedAt = savedAt;
+        this.width = Math.max(0, width);
+        this.height = Math.max(0, height);
     }
 
     @NonNull
     public Photo withFavorite(boolean newFavorite, long newSavedAt) {
-        return new Photo(id, title, ownerName, description, thumbnailUrl, detailUrl, newFavorite, newSavedAt);
+        return new Photo(id, title, ownerName, description, thumbnailUrl, detailUrl, newFavorite, newSavedAt, width, height);
     }
 
     @NonNull
@@ -97,6 +103,22 @@ public final class Photo implements Serializable {
         return savedAt;
     }
 
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public boolean hasDimensions() {
+        return width > 0 && height > 0;
+    }
+
+    public float getAspectRatio() {
+        return hasDimensions() ? ((float) width / (float) height) : 1.0f;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -104,6 +126,8 @@ public final class Photo implements Serializable {
         Photo photo = (Photo) o;
         return favorite == photo.favorite
                 && savedAt == photo.savedAt
+                && width == photo.width
+                && height == photo.height
                 && id.equals(photo.id)
                 && title.equals(photo.title)
                 && ownerName.equals(photo.ownerName)
@@ -114,6 +138,6 @@ public final class Photo implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, title, ownerName, description, thumbnailUrl, detailUrl, favorite, savedAt);
+        return Objects.hash(id, title, ownerName, description, thumbnailUrl, detailUrl, favorite, savedAt, width, height);
     }
 }

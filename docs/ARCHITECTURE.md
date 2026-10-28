@@ -62,16 +62,16 @@ All source code resides under `vn.edu.usth.flickrimagebrowser`:
 | `(root)` | `FlickrApplication`, `MainActivity` | Application-scoped dependency initialization (`AppContainer`) and Single-Activity `BottomNavigationView` host. |
 | `data/remote/` | `PixabayApiService`, `PixabayClient` | Retrofit service definition for `GET https://pixabay.com/api/` (`key`, `q`, `editors_choice`, `order`, `image_type`, `safesearch`, `page`, `per_page`) and OkHttp client configuration (15s connect/write, 20s read timeouts, query-key redaction in debug logs). |
 | `data/remote/dto/` | `PixabaySearchResponse`, `PixabayHitDto`, `PhotoMapper` | Gson DTOs matching Pixabay's JSON contract (`total`, `totalHits`, `hits`, `webformatURL`, `largeImageURL`, `tags`, `user`) and null-safe conversion into domain `Photo` objects. |
-| `data/local/` | `AppDatabase`, `PhotoDao`, `CollectionDao` | Room SQLite persistence, reactive `LiveData` queries, and explicit schema migration definitions (`MIGRATION_1_2`). |
-| `data/local/entity/` | `PhotoEntity`, `CollectionEntity`, `CollectionPhotoCrossRef`, `CollectionWithPhotos` | Database tables for saved photos, collections, and their many-to-many junction table with foreign-key cascade rules. |
+| `data/local/` | `AppDatabase`, `PhotoDao`, `CollectionDao` | Room SQLite persistence (v3), reactive `LiveData` queries, album cover preview queries, and explicit schema migrations (`MIGRATION_1_2`, `MIGRATION_2_3`). |
+| `data/local/entity/` | `PhotoEntity`, `CollectionEntity`, `CollectionPhotoCrossRef`, `CollectionWithPhotos`, `CollectionSummaryRow` | Database tables for saved photos (including intrinsic width/height), collections, and their many-to-many junction table with foreign-key cascade rules. |
 | `data/repository/` | `PhotoRepository`, `PhotoRepositoryImpl` | Single source of truth coordinating Retrofit network callbacks, parameter clamping (`per_page` 3..200), HTTP/API error checks (400/401/403, 429), and background Room reads/writes via `AppExecutors`. |
-| `domain/model/` | `Photo`, `Collection` | Immutable Java domain models shared across ViewModels and UI adapters. |
+| `domain/model/` | `Photo`, `Collection` | Immutable Java domain models (with intrinsic photo dimensions and album cover thumbnail URL) shared across ViewModels and UI adapters. |
 | `ui/` | `AppViewModelFactory` | Constructor-injected `ViewModelProvider.Factory` supplying `PhotoRepository` to ViewModels. |
-| `ui/common/` | `PhotoAdapter` | Shared `ListAdapter` + `DiffUtil` rendering photo thumbnails via Glide (`webformatURL` / `previewURL`). |
+| `ui/common/` | `JustifiedGridLayoutManager`, `PhotoAdapter`, `PhotoDimensionCache` | Flickr-style edge-to-edge justified row layout manager, shared `ListAdapter` + `DiffUtil`, and aspect-ratio cache. |
 | `ui/search/` | `SearchFragment`, `SearchViewModel` | Initial/cleared Featured Photos (Editor's Choice) feed, keyword search input, `Resource<List<Photo>>` pagination observation, and Loading / Empty / Error / Retry UI states. |
-| `ui/favorites/` | `FavoritesFragment`, `FavoritesViewModel` | Reactive grid of locally persisted favorite photos from Room. |
-| `ui/collections/` | `CollectionsFragment`, `CollectionsViewModel`, `CollectionAdapter` | Reactive list and creation flow for user photo collections. |
-| `ui/detail/` | `PhotoDetailActivity`, `DetailViewModel` | Full photo detail view loading `largeImageURL` via Glide and observing/toggling favorite state in Room. |
+| `ui/favorites/` | `FavoritesFragment`, `FavoritesViewModel` | Reactive Flickr justified grid of locally persisted favorite photos with search filter, sort chips, and undo removal. |
+| `ui/collections/` | `CollectionsFragment`, `CollectionDetailFragment`, `FavoritesPickerDialogFragment`, `CollectionFormViewModel` | Album cover cards, rotation-safe album dialogs, multi-select photo addition from Favorites, and multi-select batch removal. |
+| `ui/detail/` | `PhotoDetailActivity`, `ZoomableImageView`, `DetailViewModel` | Full-bleed dark photo lightbox loading `largeImageURL` via Glide with pinch/double-tap zoom, pan clamping, and chrome toggle. |
 | `util/` | `Resource`, `AppExecutors`, `AppContainer` | Generic UI state wrapper, background thread pools (`diskIO`, `networkIO`, `mainThread`), and manual dependency container. |
 
 ---

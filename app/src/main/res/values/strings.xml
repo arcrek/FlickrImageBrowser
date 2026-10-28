@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">FlickrImage Browser</string>
-    <string name="brand_name_display">Lumina •</string>
-    <string name="brand_tagline">Visual Gallery</string>
+    <string name="brand_name_display">Photo Browser</string>
+    <string name="brand_tagline">Discover photography</string>
 
     <!-- Navigation -->
     <string name="nav_search">Search</string>
     <string name="nav_favorites">Favorites</string>
-    <string name="nav_collections">Collections</string>
-    <string name="tab_saved">Saved</string>
-    <string name="tab_boards">Boards</string>
+    <string name="nav_collections">Albums</string>
+    <string name="tab_saved">Your favorites</string>
+    <string name="tab_boards">Your library</string>
 
     <!-- Search Screen -->
-    <string name="search_hint">Search photos, topics, creators…</string>
+    <string name="search_hint">Search photos</string>
     <string name="action_search">Search</string>
     <string name="action_retry">Retry</string>
     <string name="search_prompt_state">Enter a keyword below or choose a suggested topic.</string>
@@ -21,7 +21,7 @@
     <string name="recommend_action">Try now →</string>
 
     <!-- Favorites Screen -->
-    <string name="favorites_empty_state">No favorite photos saved yet. Tap the heart icon on any photo to save it offline.</string>
+    <string name="favorites_empty_state">Your favorite photos will appear here. Tap a heart to save a photo to your library.</string>
     <string name="favorites_search_hint">Filter favorites by title or author…</string>
     <string name="favorites_sort_newest">Newest</string>
     <string name="favorites_sort_az">A–Z</string>
@@ -30,42 +30,42 @@
     <string name="favorites_filter_empty_state">No favorite photos matched your filter.</string>
 
     <!-- Collections Screen -->
-    <string name="collections_eyebrow">MAKE IT YOURS</string>
-    <string name="collections_heading">Your collections</string>
-    <string name="collections_subtitle">Group photos into little stories.</string>
-    <string name="collections_empty_state">No collections yet. Create a collection to organize saved photos.</string>
-    <string name="action_new_collection">New Collection</string>
-    <string name="collection_name_hint">Collection name</string>
+    <string name="collections_eyebrow">YOUR LIBRARY</string>
+    <string name="collections_heading">Your albums</string>
+    <string name="collections_subtitle">Keep your photos together.</string>
+    <string name="collections_empty_state">No albums yet. Create an album to organize your photos.</string>
+    <string name="action_new_collection">New album</string>
+    <string name="collection_name_hint">Album name</string>
     <string name="collection_photo_count">%1$d photos</string>
-    <string name="action_collection_menu">Collection options</string>
+    <string name="action_collection_menu">Album options</string>
     <string name="action_rename">Rename</string>
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_save">Save</string>
     <string name="action_back">Navigate back</string>
-    <string name="error_empty_collection_name">Collection name cannot be empty.</string>
-    <string name="error_duplicate_collection_name">A collection with this name already exists.</string>
-    <string name="dialog_create_collection_title">New Collection</string>
+    <string name="error_empty_collection_name">Enter an album name.</string>
+    <string name="error_duplicate_collection_name">An album with this name already exists.</string>
+    <string name="dialog_create_collection_title">New album</string>
     <string name="collection_description_hint">Description (optional)</string>
     <string name="action_create">Create</string>
-    <string name="dialog_delete_collection_title">Delete Collection</string>
-    <string name="dialog_delete_collection_message">Are you sure you want to delete \"%1$s\"? Photos in this collection will remain in your favorites.</string>
-    <string name="dialog_rename_collection_title">Rename Collection</string>
-    <string name="collection_detail_empty">No photos in this collection yet.\nAdd photos from the photo detail screen.</string>
-    <string name="action_remove_from_collection">Remove from collection</string>
-    <string name="dialog_remove_photo_title">Remove Photo</string>
-    <string name="dialog_remove_photo_message">Remove \"%1$s\" from this collection? The photo will remain in your Favorites if saved.</string>
+    <string name="dialog_delete_collection_title">Delete album</string>
+    <string name="dialog_delete_collection_message">Delete "%1$s"? Photos you favorited or saved in another album will remain in your library. Photos saved only in this album will be removed from your library.</string>
+    <string name="dialog_rename_collection_title">Edit album</string>
+    <string name="collection_detail_empty">No photos yet. Add favorites to this album.</string>
+    <string name="action_remove_from_collection">Remove from album</string>
+    <string name="dialog_remove_photo_title">Remove photo</string>
+    <string name="dialog_remove_photo_message">Remove "%1$s" from this album? Photos you favorited or saved in another album will remain in your library.</string>
 
     <!-- Detail Screen -->
-    <string name="detail_title">Photo Details</string>
+    <string name="detail_title">Photo</string>
     <string name="detail_by_owner">By %1$s</string>
     <string name="detail_no_description">No description provided.</string>
     <string name="action_toggle_favorite">Toggle Favorite</string>
-    <string name="action_add_to_collection">Add to Collection</string>
+    <string name="action_add_to_collection">Add to album</string>
     <string name="action_share">Share</string>
-    <string name="dialog_select_collection_title">Select Collection</string>
-    <string name="dialog_no_collections_message">No collections available. Please create a collection in the Collections tab first.</string>
-    <string name="dialog_photo_added_to_collection">Added photo to %1$s</string>
+    <string name="dialog_select_collection_title">Choose an album</string>
+    <string name="dialog_no_collections_message">Create your first album to organize this photo.</string>
+    <string name="dialog_photo_added_to_collection">Added to %1$s</string>
     <string name="share_photo_title">Share Photo</string>
     <string name="content_desc_photo">Photo</string>
 </resources>

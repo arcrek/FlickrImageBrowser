@@ -78,12 +78,23 @@ public class SearchViewModel extends ViewModel {
             accumulatedPhotos.clear();
             accumulatedPhotos.addAll(updated);
             Resource<List<Photo>> current = searchResults.getValue();
-            if (current != null && current.getStatus() == Resource.Status.SUCCESS) {
-                searchResults.setValue(Resource.success(new ArrayList<>(accumulatedPhotos)));
+            if (current != null) {
+                switch (current.getStatus()) {
+                    case SUCCESS:
+                        searchResults.setValue(Resource.success(new ArrayList<>(accumulatedPhotos)));
+                        break;
+                    case ERROR:
+                        searchResults.setValue(Resource.error(current.getMessage(), new ArrayList<>(accumulatedPhotos)));
+                        break;
+                    case LOADING:
+                        searchResults.setValue(Resource.loading(new ArrayList<>(accumulatedPhotos)));
+                        break;
+                    case EMPTY:
+                        break;
+                }
             }
         }
     }
-
     @NonNull
     public LiveData<Resource<List<Photo>>> getSearchResults() {
         return searchResults;
@@ -106,11 +117,13 @@ public class SearchViewModel extends ViewModel {
     public boolean isLoadingNextPage() {
         return isLoadingNextPage;
     }
-
     public boolean hasMorePages() {
         return hasMorePages;
     }
 
+    public boolean hasFailedOnNextPage() {
+        return lastFailedOnNextPage;
+    }
     /**
      * Loads the initial featured photos feed when no query or featured feed has been loaded yet.
      */
@@ -127,7 +140,12 @@ public class SearchViewModel extends ViewModel {
      */
     public void submitQuery(@NonNull String query, boolean forceRefresh) {
         String normalized = query.trim();
-        if (!forceRefresh && normalized.equals(lastQuery) && searchResults.getValue() != null) {
+        Resource<List<Photo>> current = searchResults.getValue();
+        if (!forceRefresh
+                && normalized.equals(lastQuery)
+                && current != null
+                && current.getStatus() != Resource.Status.ERROR
+                && !lastFailedOnNextPage) {
             return;
         }
 
@@ -204,10 +222,9 @@ public class SearchViewModel extends ViewModel {
      * existing accumulated list.
      */
     public void loadNextPage() {
-        if (isLoadingNextPage || !hasMorePages || lastQuery == null || accumulatedPhotos.isEmpty()) {
+        if (isLoadingNextPage || !hasMorePages || lastQuery == null || accumulatedPhotos.isEmpty() || lastFailedOnNextPage) {
             return;
         }
-
         isLoadingNextPage = true;
         isLoadingMore.setValue(true);
         int nextPage = currentPage + 1;
@@ -284,6 +301,7 @@ public class SearchViewModel extends ViewModel {
             return;
         }
         if (lastFailedOnNextPage && !accumulatedPhotos.isEmpty()) {
+            lastFailedOnNextPage = false;
             loadNextPage();
         } else {
             submitQuery(lastQuery, true);

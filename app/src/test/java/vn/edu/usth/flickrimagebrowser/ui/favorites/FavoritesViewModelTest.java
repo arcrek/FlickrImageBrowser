@@ -59,17 +59,17 @@ public class FavoritesViewModelTest {
         photoForest = new Photo(
                 "1", "Rừng xanh", "An Nguyễn", "Desc 1",
                 "https://example.com/1_thumb.jpg", "https://example.com/1_large.jpg",
-                true, 1000L
+                true, 1000L, 0, 0
         );
         photoCoast = new Photo(
                 "2", "Bờ biển", "Bình Trần", "Desc 2",
                 "https://example.com/2_thumb.jpg", "https://example.com/2_large.jpg",
-                true, 3000L
+                true, 3000L, 0, 0
         );
         photoWaterfall = new Photo(
                 "3", "Thác nước", "An Nguyễn", "Desc 3",
                 "https://example.com/3_thumb.jpg", "https://example.com/3_large.jpg",
-                true, 2000L
+                true, 2000L, 0, 0
         );
 
         rawFavoritesLive = new MutableLiveData<>();
@@ -160,11 +160,11 @@ public class FavoritesViewModelTest {
     }
 
     @Test
-    public void restoreFavorite_callsRepositorySetFavoriteTrueAndClearsTarget() {
+    public void restoreFavorite_callsRepositoryRestoreFavoritePreservingSavedAtAndClearsTarget() {
         viewModel.removeFavorite(photoForest);
         viewModel.restoreFavorite(null);
 
-        verify(repository).setFavorite(photoForest, true);
+        verify(repository).restoreFavorite(photoForest);
         assertNull(viewModel.getRecentlyRemovedPhoto());
     }
 

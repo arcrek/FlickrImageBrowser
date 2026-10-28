@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import vn.edu.usth.flickrimagebrowser.data.repository.PhotoRepository;
 import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
+import vn.edu.usth.flickrimagebrowser.domain.model.Collection;
 
 /**
  * ViewModel for the Collection Detail screen.
@@ -23,6 +24,7 @@ public class CollectionDetailViewModel extends ViewModel {
     private final PhotoRepository repository;
     private final MutableLiveData<Long> collectionIdLiveData = new MutableLiveData<>(-1L);
     private final LiveData<List<Photo>> photos;
+    private final LiveData<Collection> collection;
 
     public CollectionDetailViewModel(@NonNull PhotoRepository repository) {
         this.repository = Objects.requireNonNull(repository, "repository must not be null");
@@ -35,6 +37,25 @@ public class CollectionDetailViewModel extends ViewModel {
                         return empty;
                     }
                     return this.repository.observePhotosInCollection(id);
+                }
+        );
+        this.collection = Transformations.switchMap(
+                collectionIdLiveData,
+                targetId -> {
+                    LiveData<List<Collection>> allCollections = repository.observeCollections();
+                    if (allCollections == null) {
+                        return new MutableLiveData<>();
+                    }
+                    return Transformations.map(
+                            allCollections,
+                            list -> {
+                                if (list == null || targetId == null || targetId <= 0) return null;
+                                for (Collection c : list) {
+                                    if (c.getId() == targetId) return c;
+                                }
+                                return null;
+                            }
+                    );
                 }
         );
     }
@@ -59,6 +80,17 @@ public class CollectionDetailViewModel extends ViewModel {
         return photos;
     }
 
+    @NonNull
+    public LiveData<Collection> getCollection() {
+        return collection;
+    }
+
+
+    public long getCollectionId() {
+        Long id = collectionIdLiveData.getValue();
+        return id != null ? id : -1L;
+    }
+
     /**
      * Removes a photo from this collection.
      * If the photo is not a favorite AND not in any other collection,
@@ -72,5 +104,31 @@ public class CollectionDetailViewModel extends ViewModel {
             return;
         }
         repository.removePhotoFromCollection(id, photo.getId());
+    }
+
+    @NonNull
+    public LiveData<vn.edu.usth.flickrimagebrowser.util.Resource<Void>> removePhotosFromCollection(@NonNull List<String> photoIds) {
+        Long id = collectionIdLiveData.getValue();
+        if (id == null || id <= 0) {
+            MutableLiveData<vn.edu.usth.flickrimagebrowser.util.Resource<Void>> err = new MutableLiveData<>();
+            err.setValue(vn.edu.usth.flickrimagebrowser.util.Resource.error("Invalid album", null));
+            return err;
+        }
+        return repository.removePhotosFromCollection(id, photoIds);
+    }
+
+    @NonNull
+    public LiveData<vn.edu.usth.flickrimagebrowser.util.Resource<Void>> addPhotosToCollection(@NonNull List<Photo> photosToAdd) {
+        Long id = collectionIdLiveData.getValue();
+        if (id == null || id <= 0) {
+            MutableLiveData<vn.edu.usth.flickrimagebrowser.util.Resource<Void>> err = new MutableLiveData<>();
+            err.setValue(vn.edu.usth.flickrimagebrowser.util.Resource.error("Invalid album", null));
+            return err;
+        }
+        return repository.addPhotosToCollection(id, photosToAdd);
+    }
+
+    public void toggleFavorite(@NonNull Photo photo) {
+        repository.toggleFavorite(photo);
     }
 }

@@ -56,7 +56,7 @@ public class SearchViewModelTest {
         Photo sample = new Photo(
                 "1", "Bridge", "Author", "",
                 "https://example.com/1_q.jpg", "https://example.com/1_z.jpg",
-                false, 0L
+                false, 0L, 0, 0
         );
         MutableLiveData<Resource<List<Photo>>> repoLive = new MutableLiveData<>();
         repoLive.setValue(Resource.success(Collections.singletonList(sample)));
@@ -105,7 +105,7 @@ public class SearchViewModelTest {
             page1List.add(new Photo(
                     String.valueOf(i), "Title " + i, "Author", "",
                     "https://example.com/" + i + "_q.jpg", "https://example.com/" + i + "_z.jpg",
-                    false, 0L
+                    false, 0L, 0, 0
             ));
         }
         MutableLiveData<Resource<List<Photo>>> page1Live = new MutableLiveData<>(Resource.success(page1List));
@@ -123,7 +123,7 @@ public class SearchViewModelTest {
             page2List.add(new Photo(
                     String.valueOf(i), "Title " + i, "Author", "",
                     "https://example.com/" + i + "_q.jpg", "https://example.com/" + i + "_z.jpg",
-                    false, 0L
+                    false, 0L, 0, 0
             ));
         }
         MutableLiveData<Resource<List<Photo>>> page2Live = new MutableLiveData<>(Resource.success(page2List));
@@ -149,7 +149,7 @@ public class SearchViewModelTest {
         List<Photo> smallPage = Collections.singletonList(new Photo(
                 "1", "Solo", "Author", "",
                 "https://example.com/1_q.jpg", "https://example.com/1_z.jpg",
-                false, 0L
+                false, 0L, 0, 0
         ));
         MutableLiveData<Resource<List<Photo>>> page1Live = new MutableLiveData<>(Resource.success(smallPage));
         when(repository.searchPhotos("small", 1, 30)).thenReturn(page1Live);
@@ -170,7 +170,7 @@ public class SearchViewModelTest {
             page1List.add(new Photo(
                     String.valueOf(i), "Title " + i, "Author", "",
                     "https://example.com/" + i + "_q.jpg", "https://example.com/" + i + "_z.jpg",
-                    false, 0L
+                    false, 0L, 0, 0
             ));
         }
         MutableLiveData<Resource<List<Photo>>> page1Live = new MutableLiveData<>(Resource.success(page1List));
@@ -203,7 +203,7 @@ public class SearchViewModelTest {
             page1List.add(new Photo(
                     String.valueOf(i), "Title " + i, "Author", "",
                     "https://example.com/" + i + "_q.jpg", "https://example.com/" + i + "_z.jpg",
-                    false, 0L
+                    false, 0L, 0, 0
             ));
         }
         MutableLiveData<Resource<List<Photo>>> page1Live = new MutableLiveData<>(Resource.success(page1List));
@@ -216,7 +216,7 @@ public class SearchViewModelTest {
                 Resource.success(Collections.singletonList(new Photo(
                         "99", "Saigon River", "Author", "",
                         "https://example.com/99_q.jpg", "https://example.com/99_z.jpg",
-                        false, 0L
+                        false, 0L, 0, 0
                 )))
         );
         when(repository.searchPhotos("saigon", 1, 30)).thenReturn(newQueryLive);
@@ -242,7 +242,7 @@ public class SearchViewModelTest {
         Photo sample = new Photo(
                 "42", "Lake", "Author", "",
                 "https://example.com/42_q.jpg", "https://example.com/42_z.jpg",
-                false, 0L
+                false, 0L, 0, 0
         );
         MutableLiveData<Resource<List<Photo>>> repoLive = new MutableLiveData<>(
                 Resource.success(Collections.singletonList(sample))
@@ -268,7 +268,7 @@ public class SearchViewModelTest {
             page1List.add(new Photo(
                     String.valueOf(i), "Title " + i, "Author", "",
                     "https://example.com/" + i + "_q.jpg", "https://example.com/" + i + "_z.jpg",
-                    false, 0L
+                    false, 0L, 0, 0
             ));
         }
         MutableLiveData<Resource<List<Photo>>> page1Live = new MutableLiveData<>(Resource.success(page1List));
@@ -289,7 +289,7 @@ public class SearchViewModelTest {
                 Resource.success(Collections.singletonList(new Photo(
                         "31", "Title 31", "Author", "",
                         "https://example.com/31_q.jpg", "https://example.com/31_z.jpg",
-                        false, 0L
+                        false, 0L, 0, 0
                 )))
         );
         when(repository.searchPhotos("city", 2, 30)).thenReturn(retryPage2Live);
@@ -304,7 +304,7 @@ public class SearchViewModelTest {
         Photo featured = new Photo(
                 "10", "Featured Peak", "Author", "",
                 "https://example.com/10_q.jpg", "https://example.com/10_z.jpg",
-                false, 0L
+                false, 0L, 0, 0
         );
         MutableLiveData<Resource<List<Photo>>> featuredLive = new MutableLiveData<>(
                 Resource.success(Collections.singletonList(featured))
@@ -336,7 +336,7 @@ public class SearchViewModelTest {
                 Resource.success(Collections.singletonList(new Photo(
                         "1", "Hanoi", "Author", "",
                         "https://example.com/1_q.jpg", "https://example.com/1_z.jpg",
-                        false, 0L
+                        false, 0L, 0, 0
                 )))
         );
         when(repository.searchPhotos("hanoi", 1, 30)).thenReturn(keywordLive);
@@ -346,7 +346,7 @@ public class SearchViewModelTest {
             featuredPage1.add(new Photo(
                     "f" + i, "Featured " + i, "Author", "",
                     "https://example.com/f" + i + "_q.jpg", "https://example.com/f" + i + "_z.jpg",
-                    false, 0L
+                    false, 0L, 0, 0
             ));
         }
         MutableLiveData<Resource<List<Photo>>> featuredPage1Live = new MutableLiveData<>(
@@ -357,7 +357,7 @@ public class SearchViewModelTest {
         List<Photo> featuredPage2 = Collections.singletonList(new Photo(
                 "f31", "Featured 31", "Author", "",
                 "https://example.com/f31_q.jpg", "https://example.com/f31_z.jpg",
-                false, 0L
+                false, 0L, 0, 0
         ));
         MutableLiveData<Resource<List<Photo>>> featuredPage2Live = new MutableLiveData<>(
                 Resource.success(featuredPage2)
@@ -382,5 +382,94 @@ public class SearchViewModelTest {
         assertEquals(2, viewModel.getCurrentPage());
         assertEquals(31, viewModel.getSearchResults().getValue().getData().size());
         assertEquals("f31", viewModel.getSearchResults().getValue().getData().get(30).getId());
+    }
+
+    @Test
+    public void favoritesObserver_updatesAccumulatedPhotosEvenDuringErrorState() {
+        MutableLiveData<List<Photo>> favoritesLive = new MutableLiveData<>(Collections.emptyList());
+        when(repository.observeFavorites()).thenReturn(favoritesLive);
+
+        SearchViewModel vm = new SearchViewModel(repository);
+        vm.getSearchResults().observeForever(observer);
+
+        List<Photo> page1List = new ArrayList<>();
+        for (int i = 1; i <= 30; i++) {
+            page1List.add(new Photo(
+                    String.valueOf(i), "Lake " + i, "Author", "",
+                    "https://example.com/" + i + "_q.jpg", "https://example.com/" + i + "_z.jpg",
+                    false, 0L, 0, 0
+            ));
+        }
+        MutableLiveData<Resource<List<Photo>>> repoLive = new MutableLiveData<>(
+                Resource.success(page1List)
+        );
+        when(repository.searchPhotos("lake", SearchViewModel.DEFAULT_PAGE, SearchViewModel.DEFAULT_PER_PAGE))
+                .thenReturn(repoLive);
+
+        vm.submitQuery("lake", false);
+        assertFalse(vm.getSearchResults().getValue().getData().get(0).isFavorite());
+
+        // Next page fails, putting search results into ERROR status with existing page 1 data retained
+        MutableLiveData<Resource<List<Photo>>> errorLive = new MutableLiveData<>(
+                Resource.error("Rate limit reached", null)
+        );
+        when(repository.searchPhotos("lake", 2, 30)).thenReturn(errorLive);
+        vm.loadNextPage();
+        assertEquals(Resource.Status.ERROR, vm.getSearchResults().getValue().getStatus());
+
+        // While in ERROR status, user favorites photo 42
+        Photo favoritedSample = page1List.get(0).withFavorite(true, System.currentTimeMillis());
+        favoritesLive.setValue(Collections.singletonList(favoritedSample));
+
+        // Heart state must reactively update in search results without stale heart bug
+        Resource<List<Photo>> updatedResult = vm.getSearchResults().getValue();
+        assertNotNull(updatedResult);
+        assertEquals(Resource.Status.ERROR, updatedResult.getStatus());
+        assertTrue(updatedResult.getData().get(0).isFavorite());
+    }
+
+    @Test
+    public void loadNextPage_afterFailure_doesNotTriggerRetryUntilExplicitlyRetried() {
+        List<Photo> page1List = new ArrayList<>();
+        for (int i = 1; i <= 30; i++) {
+            page1List.add(new Photo(
+                    String.valueOf(i), "Title " + i, "Author", "",
+                    "https://example.com/" + i + "_q.jpg", "https://example.com/" + i + "_z.jpg",
+                    false, 0L, 0, 0
+            ));
+        }
+        MutableLiveData<Resource<List<Photo>>> page1Live = new MutableLiveData<>(Resource.success(page1List));
+        when(repository.searchPhotos("river", 1, 30)).thenReturn(page1Live);
+
+        viewModel.getSearchResults().observeForever(observer);
+        viewModel.submitQuery("river", false);
+
+        MutableLiveData<Resource<List<Photo>>> errorLive = new MutableLiveData<>(
+                Resource.error("Connection failed", null)
+        );
+        when(repository.searchPhotos("river", 2, 30)).thenReturn(errorLive);
+
+        viewModel.loadNextPage();
+        assertTrue(viewModel.hasFailedOnNextPage());
+        verify(repository, times(1)).searchPhotos("river", 2, 30);
+
+        // Subsequent scroll events calling loadNextPage() must be blocked to prevent retry storm
+        viewModel.loadNextPage();
+        viewModel.loadNextPage();
+        verify(repository, times(1)).searchPhotos("river", 2, 30);
+
+        // Explicit user retry unblocks next page load
+        MutableLiveData<Resource<List<Photo>>> retryLive = new MutableLiveData<>(
+                Resource.success(Collections.singletonList(new Photo(
+                        "31", "Title 31", "Author", "",
+                        "https://example.com/31_q.jpg", "https://example.com/31_z.jpg",
+                        false, 0L, 0, 0
+                )))
+        );
+        when(repository.searchPhotos("river", 2, 30)).thenReturn(retryLive);
+
+        viewModel.retryLastQuery();
+        verify(repository, times(2)).searchPhotos("river", 2, 30);
+        assertFalse(viewModel.hasFailedOnNextPage());
     }
 }

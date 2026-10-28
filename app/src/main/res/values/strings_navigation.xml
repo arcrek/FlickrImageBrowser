@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navigation Accessibility & Feature Labels -->
+    <string name="nav_brand_mark_description">Photo Browser brand mark</string>
+    <string name="nav_action_search_description">Discover and search photos</string>
+    <string name="nav_back_action_description">Navigate back</string>
+    <string name="nav_tab_search_label">Search</string>
+    <string name="nav_tab_favorites_label">Favorites</string>
+    <string name="nav_tab_collections_label">Collections</string>
+</resources>

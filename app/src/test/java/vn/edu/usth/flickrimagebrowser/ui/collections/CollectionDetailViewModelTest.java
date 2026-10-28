@@ -54,7 +54,7 @@ public class CollectionDetailViewModelTest {
         MutableLiveData<List<Photo>> liveData = new MutableLiveData<>();
         Photo samplePhoto = new Photo(
                 "p1", "Sunrise", "Author", "Desc",
-                "thumbUrl", "detailUrl", false, 1000L
+                "thumbUrl", "detailUrl", false, 1000L, 0, 0
         );
         liveData.setValue(Collections.singletonList(samplePhoto));
         when(repository.observePhotosInCollection(collectionId)).thenReturn(liveData);
@@ -79,10 +79,33 @@ public class CollectionDetailViewModelTest {
 
         Photo photoToRemove = new Photo(
                 "p99", "Sea", "Author", "Desc",
-                "thumbUrl", "detailUrl", false, 1000L
+                "thumbUrl", "detailUrl", false, 1000L, 0, 0
         );
         viewModel.removePhotoFromCollection(photoToRemove);
 
         verify(repository).removePhotoFromCollection(collectionId, "p99");
+    }
+
+    @Test
+    public void removePhotosFromCollection_delegatesBatchToRepository() {
+        long collectionId = 20L;
+        viewModel.setCollectionId(collectionId);
+        List<String> ids = Collections.singletonList("p55");
+
+        viewModel.removePhotosFromCollection(ids);
+
+        verify(repository).removePhotosFromCollection(collectionId, ids);
+    }
+
+    @Test
+    public void addPhotosToCollection_delegatesBatchToRepository() {
+        long collectionId = 25L;
+        viewModel.setCollectionId(collectionId);
+        Photo p = new Photo("p77", "Title", "Owner", "Desc", "u1", "u2", false, 100L, 0, 0);
+        List<Photo> photos = Collections.singletonList(p);
+
+        viewModel.addPhotosToCollection(photos);
+
+        verify(repository).addPhotosToCollection(collectionId, photos);
     }
 }

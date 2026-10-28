@@ -28,19 +28,31 @@ public interface PhotoRepository {
 
     void setFavorite(@NonNull Photo photo, boolean isFavorite);
 
+    void restoreFavorite(@NonNull Photo photo);
+
     @NonNull
     LiveData<List<Collection>> observeCollections();
 
-    void createCollection(@NonNull String name, @Nullable String description);
+    @NonNull
+    LiveData<Resource<Long>> createCollection(@NonNull String name, @Nullable String description);
 
-    void deleteCollection(long collectionId);
+    @NonNull
+    LiveData<Resource<Void>> deleteCollection(long collectionId);
 
-    void renameCollection(long collectionId, @NonNull String newName);
+    @NonNull
+    LiveData<Resource<Void>> updateCollection(long collectionId, @NonNull String newName, @Nullable String newDescription);
 
-    void addPhotoToCollection(long collectionId, @NonNull Photo photo);
+    @NonNull
+    LiveData<Resource<Void>> addPhotoToCollection(long collectionId, @NonNull Photo photo);
 
-    void removePhotoFromCollection(long collectionId, @NonNull String photoId);
+    @NonNull
+    LiveData<Resource<Void>> addPhotosToCollection(long collectionId, @NonNull List<Photo> photos);
 
+    @NonNull
+    LiveData<Resource<Void>> removePhotoFromCollection(long collectionId, @NonNull String photoId);
+
+    @NonNull
+    LiveData<Resource<Void>> removePhotosFromCollection(long collectionId, @NonNull List<String> photoIds);
     @NonNull
     LiveData<List<Photo>> observePhotosInCollection(long collectionId);
 }

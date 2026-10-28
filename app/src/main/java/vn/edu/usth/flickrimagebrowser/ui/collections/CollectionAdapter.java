@@ -1,6 +1,8 @@
 package vn.edu.usth.flickrimagebrowser.ui.collections;
 
+import android.content.Context;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -9,6 +11,9 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import vn.edu.usth.flickrimagebrowser.R;
 import vn.edu.usth.flickrimagebrowser.databinding.ItemCollectionBinding;
@@ -70,14 +75,44 @@ public class CollectionAdapter extends ListAdapter<Collection, CollectionAdapter
         }
 
         void bind(@NonNull Collection collection) {
+            Context context = binding.getRoot().getContext();
             binding.textCollectionName.setText(collection.getName());
-            binding.textCollectionCount.setText(
-                    binding.getRoot().getContext().getString(
-                            R.string.collection_photo_count,
-                            collection.getPhotoCount()
-                    )
+            binding.imageCollectionCover.setContentDescription(
+                    context.getString(R.string.content_desc_album_cover, collection.getName())
+            );
+            binding.buttonCollectionMenu.setContentDescription(
+                    context.getString(R.string.content_desc_album_menu, collection.getName())
             );
 
+            int count = collection.getPhotoCount();
+            String countStr = context.getResources().getQuantityString(
+                    R.plurals.album_photo_count,
+                    count,
+                    count
+            );
+            binding.textCollectionCount.setText(countStr);
+
+            String desc = collection.getDescription();
+            if (!desc.isEmpty()) {
+                binding.textCollectionDescription.setText(desc);
+                binding.textCollectionDescription.setVisibility(View.VISIBLE);
+            } else {
+                binding.textCollectionDescription.setVisibility(View.GONE);
+            }
+
+            String coverUrl = collection.getCoverPhotoUrl();
+            if (coverUrl != null && !coverUrl.isEmpty()) {
+                Glide.with(context)
+                        .load(coverUrl)
+                        .placeholder(R.drawable.ic_photo_placeholder)
+                        .error(R.drawable.ic_photo_placeholder)
+                        .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                        .centerCrop()
+                        .into(binding.imageCollectionCover);
+            } else {
+                Glide.with(context).clear(binding.imageCollectionCover);
+                binding.imageCollectionCover.setImageResource(R.drawable.ic_photo_placeholder);
+            }
             binding.getRoot().setOnClickListener(v -> {
                 if (actionListener != null) {
                     actionListener.onCollectionClick(collection);

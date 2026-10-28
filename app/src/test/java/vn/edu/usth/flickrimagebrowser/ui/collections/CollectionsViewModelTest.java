@@ -50,8 +50,8 @@ public class CollectionsViewModelTest {
     @Test
     public void getCollections_observesRepositoryLiveData() {
         List<Collection> sample = Arrays.asList(
-                new Collection(1L, "Nature", "Outdoor photos", 1000L, 5),
-                new Collection(2L, "Travel", "Trips", 2000L, 12)
+                new Collection(1L, "Nature", "Outdoor photos", 1000L, 5, ""),
+                new Collection(2L, "Travel", "Trips", 2000L, 12, "")
         );
         collectionsLiveData.setValue(sample);
 
@@ -77,7 +77,7 @@ public class CollectionsViewModelTest {
     @Test
     public void createCollection_withDuplicateName_doesNotCallRepository() {
         collectionsLiveData.setValue(Collections.singletonList(
-                new Collection(1L, "Nature", "", 1000L, 0)
+                new Collection(1L, "Nature", "", 1000L, 0, "")
         ));
 
         viewModel.createCollection(" nature ", "Duplicate");
@@ -87,7 +87,7 @@ public class CollectionsViewModelTest {
 
     @Test
     public void deleteCollection_byCollectionObject_delegatesToRepository() {
-        Collection collection = new Collection(10L, "Portrait", "People", 5000L, 3);
+        Collection collection = new Collection(10L, "Portrait", "People", 5000L, 3, "");
         viewModel.deleteCollection(collection);
         verify(repository).deleteCollection(10L);
     }
@@ -99,27 +99,27 @@ public class CollectionsViewModelTest {
     }
 
     @Test
-    public void renameCollection_delegatesToRepository() {
-        viewModel.renameCollection(10L, "Urban Architecture");
-        verify(repository).renameCollection(10L, "Urban Architecture");
+    public void updateCollection_delegatesToRepository() {
+        viewModel.updateCollection(10L, "Urban Architecture", "Buildings");
+        verify(repository).updateCollection(10L, "Urban Architecture", "Buildings");
     }
 
     @Test
-    public void renameCollection_withWhitespaceOrEmpty_doesNotCallRepository() {
-        viewModel.renameCollection(10L, "  ");
-        verify(repository, never()).renameCollection(Mockito.anyLong(), Mockito.anyString());
+    public void updateCollection_withWhitespaceOrEmpty_doesNotCallRepository() {
+        viewModel.updateCollection(10L, "  ", null);
+        verify(repository, never()).updateCollection(Mockito.anyLong(), Mockito.anyString(), Mockito.any());
     }
 
     @Test
-    public void renameCollection_withDuplicateName_doesNotCallRepository() {
+    public void updateCollection_withDuplicateName_doesNotCallRepository() {
         collectionsLiveData.setValue(Arrays.asList(
-                new Collection(10L, "Nature", "", 1000L, 0),
-                new Collection(11L, "Travel", "", 2000L, 0)
+                new Collection(10L, "Nature", "", 1000L, 0, ""),
+                new Collection(11L, "Travel", "", 2000L, 0, "")
         ));
 
-        viewModel.renameCollection(10L, " travel ");
+        viewModel.updateCollection(10L, " travel ", null);
 
-        verify(repository, never()).renameCollection(Mockito.anyLong(), Mockito.anyString());
+        verify(repository, never()).updateCollection(Mockito.anyLong(), Mockito.anyString(), Mockito.any());
     }
 
     @Test
@@ -137,7 +137,7 @@ public class CollectionsViewModelTest {
     @Test
     public void isCollectionNameUnique_whenDuplicateName_returnsFalse() {
         collectionsLiveData.setValue(Collections.singletonList(
-                new Collection(1L, "Nature", "", 1000L, 0)
+                new Collection(1L, "Nature", "", 1000L, 0, "")
         ));
 
         // Exact match
@@ -150,7 +150,7 @@ public class CollectionsViewModelTest {
     @Test
     public void isCollectionNameUnique_whenExcludingCurrentId_returnsTrue() {
         collectionsLiveData.setValue(Collections.singletonList(
-                new Collection(1L, "Nature", "", 1000L, 0)
+                new Collection(1L, "Nature", "", 1000L, 0, "")
         ));
 
         // When renaming the same collection without changing name, exclude its own ID
@@ -161,7 +161,7 @@ public class CollectionsViewModelTest {
     @Test
     public void isCollectionNameUnique_whenDistinctName_returnsTrue() {
         collectionsLiveData.setValue(Collections.singletonList(
-                new Collection(1L, "Nature", "", 1000L, 0)
+                new Collection(1L, "Nature", "", 1000L, 0, "")
         ));
 
         assertTrue(viewModel.isCollectionNameUnique("Urban", -1));

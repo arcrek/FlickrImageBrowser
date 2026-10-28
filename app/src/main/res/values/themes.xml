@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.FlickrImageBrowser" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Brand Colors: White & Mint Green -->
+        <!-- Blue actions and pink favorites over neutral photographic surfaces. -->
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryVariant">@color/primary_variant</item>
         <item name="colorOnPrimary">@color/on_primary</item>
@@ -9,11 +9,18 @@
         <item name="colorSecondaryVariant">@color/secondary_variant</item>
         <item name="colorOnSecondary">@color/on_secondary</item>
         
-        <!-- System Windows: Clean White with Dark Icons -->
-        <item name="android:statusBarColor">@color/surface_light</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:colorBackground">@color/background_light</item>
+        <item name="colorSurface">@color/surface_light</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnBackground">@color/text_primary</item>
+        <item name="colorError">@color/error</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:windowBackground">@color/background_light</item>
+        <item name="android:statusBarColor">@color/header_background</item>
+        <item name="android:windowLightStatusBar">false</item>
         <item name="android:navigationBarColor">@color/surface_light</item>
-        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">@bool/light_navigation_bar</item>
 
         <!-- Typography & Global Appearance: Plus Jakarta Sans -->
         <item name="fontFamily">@font/plus_jakarta_sans</item>
@@ -29,7 +36,7 @@
         <item name="android:letterSpacing">0.02</item>
     </style>
 
-    <!-- Custom Modern Floating Bottom Navigation View -->
+    <!-- Compact navigation retains readable labels and native interaction semantics. -->
     <style name="Widget.Flickr.BottomNavigationView" parent="Widget.MaterialComponents.BottomNavigationView">
         <item name="elevation">0dp</item>
         <item name="itemIconTint">@color/selector_bottom_nav</item>
@@ -40,14 +47,14 @@
     </style>
 
     <style name="TextAppearance.Flickr.BottomNav.Active" parent="TextAppearance.MaterialComponents.Caption">
-        <item name="android:textSize">11sp</item>
+        <item name="android:textSize">12sp</item>
         <item name="fontFamily">@font/plus_jakarta_sans</item>
         <item name="android:fontFamily">@font/plus_jakarta_sans</item>
         <item name="android:textStyle">bold</item>
     </style>
 
     <style name="TextAppearance.Flickr.BottomNav.Inactive" parent="TextAppearance.MaterialComponents.Caption">
-        <item name="android:textSize">11sp</item>
+        <item name="android:textSize">12sp</item>
         <item name="fontFamily">@font/plus_jakarta_sans</item>
         <item name="android:fontFamily">@font/plus_jakarta_sans</item>
     </style>

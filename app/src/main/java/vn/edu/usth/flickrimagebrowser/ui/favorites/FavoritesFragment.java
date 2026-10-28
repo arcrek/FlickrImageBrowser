@@ -10,9 +10,9 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityOptionsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.google.android.material.snackbar.Snackbar;
 
@@ -24,21 +24,23 @@ import vn.edu.usth.flickrimagebrowser.R;
 import vn.edu.usth.flickrimagebrowser.databinding.FragmentFavoritesBinding;
 import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
 import vn.edu.usth.flickrimagebrowser.ui.AppViewModelFactory;
+import vn.edu.usth.flickrimagebrowser.ui.common.JustifiedGridLayoutManager;
 import vn.edu.usth.flickrimagebrowser.ui.common.PhotoAdapter;
 import vn.edu.usth.flickrimagebrowser.ui.detail.PhotoDetailActivity;
 
 /**
- * Fragment displaying locally saved favorite photos from Room in a Pinterest-style staggered masonry grid.
+ * Fragment displaying locally saved favorite photos in Flickr-style justified rows.
+ * Filter query, sort order, and scroll anchor survive device rotation, and Undo
+ * restores original savedAt timestamps.
  */
 public class FavoritesFragment extends Fragment implements PhotoAdapter.OnPhotoActionListener {
-
-    private static final int GRID_SPAN_COUNT = 2;
 
     @Nullable
     private FragmentFavoritesBinding binding;
 
     private FavoritesViewModel viewModel;
     private PhotoAdapter photoAdapter;
+    private JustifiedGridLayoutManager layoutManager;
 
     private final TextWatcher searchWatcher = new TextWatcher() {
         @Override
@@ -46,7 +48,7 @@ public class FavoritesFragment extends Fragment implements PhotoAdapter.OnPhotoA
         }
 
         @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
+        public void onTextChanged(CharSequence s, int start, int count, int after) {
             if (viewModel != null) {
                 viewModel.setFilterQuery(s != null ? s.toString() : "");
             }
@@ -56,6 +58,7 @@ public class FavoritesFragment extends Fragment implements PhotoAdapter.OnPhotoA
         public void afterTextChanged(Editable s) {
         }
     };
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -74,16 +77,33 @@ public class FavoritesFragment extends Fragment implements PhotoAdapter.OnPhotoA
                 .getViewModelFactory();
         viewModel = new ViewModelProvider(this, factory).get(FavoritesViewModel.class);
 
-        photoAdapter = new PhotoAdapter(this);
+        photoAdapter = new PhotoAdapter(this, R.layout.item_favorite_photo);
         if (binding != null) {
-            StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(
-                    GRID_SPAN_COUNT, StaggeredGridLayoutManager.VERTICAL
-            );
-            layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS);
+            layoutManager = new JustifiedGridLayoutManager(requireContext());
             binding.recyclerFavorites.setLayoutManager(layoutManager);
             binding.recyclerFavorites.setAdapter(photoAdapter);
 
+            // Restore active filter query across rotation
+            String currentFilter = viewModel.getFilterQuery().getValue();
+            if (currentFilter != null && !currentFilter.isEmpty()) {
+                binding.editFavoriteSearch.setText(currentFilter);
+                binding.editFavoriteSearch.setSelection(currentFilter.length());
+            }
+
+            // Restore active sort order across rotation
+            FavoritesViewModel.SortOrder currentSort = viewModel.getSortOrder().getValue();
+            if (currentSort == FavoritesViewModel.SortOrder.TITLE_ASC) {
+                binding.chipSortAz.setChecked(true);
+            } else {
+                binding.chipSortNewest.setChecked(true);
+            }
+
             binding.editFavoriteSearch.addTextChangedListener(searchWatcher);
+            binding.buttonEmptyExplore.setOnClickListener(v -> {
+                if (requireActivity() instanceof vn.edu.usth.flickrimagebrowser.MainActivity) {
+                    ((vn.edu.usth.flickrimagebrowser.MainActivity) requireActivity()).navigateToSearch();
+                }
+            });
             binding.chipGroupSort.setOnCheckedChangeListener((group, checkedId) -> {
                 if (checkedId == R.id.chip_sort_az) {
                     viewModel.setSortOrder(FavoritesViewModel.SortOrder.TITLE_ASC);
@@ -104,11 +124,13 @@ public class FavoritesFragment extends Fragment implements PhotoAdapter.OnPhotoA
         photoAdapter.submitList(safeList);
         boolean isEmpty = safeList.isEmpty();
         if (isEmpty) {
+            boolean isFilter = viewModel.isFilterActive();
             binding.textEmptyFavorites.setText(
-                    viewModel.isFilterActive()
+                    isFilter
                             ? R.string.favorites_filter_empty_state
                             : R.string.favorites_empty_state
             );
+            binding.buttonEmptyExplore.setVisibility(isFilter ? View.GONE : View.VISIBLE);
             binding.layoutEmptyFavorites.setVisibility(View.VISIBLE);
             binding.recyclerFavorites.setVisibility(View.GONE);
         } else {
@@ -120,7 +142,16 @@ public class FavoritesFragment extends Fragment implements PhotoAdapter.OnPhotoA
     @Override
     public void onPhotoClicked(@NonNull Photo photo) {
         Intent intent = PhotoDetailActivity.newIntent(requireContext(), photo);
-        startActivity(intent);
+        if (PhotoAdapter.areAnimationsEnabled(requireContext())) {
+            Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(
+                    requireContext(),
+                    android.R.anim.fade_in,
+                    android.R.anim.fade_out
+            ).toBundle();
+            startActivity(intent, bundle);
+        } else {
+            startActivity(intent);
+        }
     }
 
     @Override
