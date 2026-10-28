@@ -77,7 +77,9 @@ public class PhotoMapperTest {
                 "https://pixabay.com/photos/sunset-west-lake-101/",
                 "https://cdn.pixabay.com/photo/101_150.jpg",
                 "https://cdn.pixabay.com/photo/101_640.jpg",
-                "https://cdn.pixabay.com/photo/101_1280.jpg"
+                "https://cdn.pixabay.com/photo/101_1280.jpg",
+                640,
+                480
         );
 
         Photo photo = PhotoMapper.fromDto(dto, true);
@@ -89,6 +91,9 @@ public class PhotoMapperTest {
         assertEquals("sunset, west lake, hanoi", photo.getDescription());
         assertEquals("https://cdn.pixabay.com/photo/101_640.jpg", photo.getThumbnailUrl());
         assertEquals("https://cdn.pixabay.com/photo/101_1280.jpg", photo.getDetailUrl());
+        assertEquals(640, photo.getWidth());
+        assertEquals(480, photo.getHeight());
+        assertEquals("H,640:480", photo.getDimensionRatio());
         assertTrue(photo.isFavorite());
     }
 
@@ -113,6 +118,9 @@ public class PhotoMapperTest {
         assertEquals("https://pixabay.com/photos/202/", photo.getDescription());
         assertEquals("https://cdn.pixabay.com/photo/202_150.jpg", photo.getThumbnailUrl());
         assertEquals("https://cdn.pixabay.com/photo/202_150.jpg", photo.getDetailUrl());
+        assertEquals(0, photo.getWidth());
+        assertEquals(0, photo.getHeight());
+        assertEquals("H,1:1", photo.getDimensionRatio());
         assertFalse(photo.isFavorite());
     }
 
@@ -157,7 +165,7 @@ public class PhotoMapperTest {
     }
 
     @Test
-    public void entityRoundTrip_preservesAllFields() {
+    public void entityRoundTrip_preservesAllFieldsIncludingDimensions() {
         Photo original = new Photo(
                 "555",
                 "Ha Long Bay",
@@ -165,13 +173,18 @@ public class PhotoMapperTest {
                 "Limestone karsts",
                 "https://example.com/thumb.jpg",
                 "https://example.com/detail.jpg",
+                640,
+                960,
                 true,
                 1700000000L
         );
 
         PhotoEntity entity = PhotoMapper.toEntity(original, true, 1700000000L);
-        Photo roundTrip = PhotoMapper.fromEntity(entity);
+        assertEquals(640, entity.getWidth());
+        assertEquals(960, entity.getHeight());
 
+        Photo roundTrip = PhotoMapper.fromEntity(entity);
         assertEquals(original, roundTrip);
+        assertEquals("H,640:960", roundTrip.getDimensionRatio());
     }
 }

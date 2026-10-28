@@ -56,6 +56,7 @@ public class FavoritesFragment extends Fragment implements PhotoAdapter.OnPhotoA
         public void afterTextChanged(Editable s) {
         }
     };
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -79,7 +80,7 @@ public class FavoritesFragment extends Fragment implements PhotoAdapter.OnPhotoA
             StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(
                     GRID_SPAN_COUNT, StaggeredGridLayoutManager.VERTICAL
             );
-            layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS);
+            layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
             binding.recyclerFavorites.setLayoutManager(layoutManager);
             binding.recyclerFavorites.setAdapter(photoAdapter);
 

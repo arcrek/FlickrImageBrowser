@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.io.Serializable;
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -31,6 +32,8 @@ public final class Photo implements Serializable {
     @NonNull
     private final String detailUrl;
 
+    private final int width;
+    private final int height;
     private final boolean favorite;
     private final long savedAt;
 
@@ -40,6 +43,8 @@ public final class Photo implements Serializable {
                  @Nullable String description,
                  @Nullable String thumbnailUrl,
                  @Nullable String detailUrl,
+                 int width,
+                 int height,
                  boolean favorite,
                  long savedAt) {
         this.id = Objects.requireNonNull(id, "id must not be null");
@@ -50,13 +55,26 @@ public final class Photo implements Serializable {
         this.detailUrl = detailUrl != null && !detailUrl.trim().isEmpty()
                 ? detailUrl.trim()
                 : this.thumbnailUrl;
+        this.width = Math.max(0, width);
+        this.height = Math.max(0, height);
         this.favorite = favorite;
         this.savedAt = savedAt;
     }
 
+    public Photo(@NonNull String id,
+                 @Nullable String title,
+                 @Nullable String ownerName,
+                 @Nullable String description,
+                 @Nullable String thumbnailUrl,
+                 @Nullable String detailUrl,
+                 boolean favorite,
+                 long savedAt) {
+        this(id, title, ownerName, description, thumbnailUrl, detailUrl, 0, 0, favorite, savedAt);
+    }
+
     @NonNull
     public Photo withFavorite(boolean newFavorite, long newSavedAt) {
-        return new Photo(id, title, ownerName, description, thumbnailUrl, detailUrl, newFavorite, newSavedAt);
+        return new Photo(id, title, ownerName, description, thumbnailUrl, detailUrl, width, height, newFavorite, newSavedAt);
     }
 
     @NonNull
@@ -89,6 +107,49 @@ public final class Photo implements Serializable {
         return detailUrl;
     }
 
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    /**
+     * Calculates the clamped aspect ratio (width / height) bounded between 0.5f (tall 1:2)
+     * and 2.0f (wide 2:1) for harmonious Pinterest-style feed display.
+     */
+    public float getAspectRatio() {
+        if (width <= 0 || height <= 0) {
+            return 1.0f;
+        }
+        float ratio = (float) width / (float) height;
+        if (ratio < 0.5f) {
+            return 0.5f;
+        } else if (ratio > 2.0f) {
+            return 2.0f;
+        }
+        return ratio;
+    }
+
+    /**
+     * Returns the ConstraintLayout dimension ratio string formatted for height-constrained
+     * views (e.g., "H,1:1", "H,1:2", "H,2:1", or "H,width:height").
+     */
+    @NonNull
+    public String getDimensionRatio() {
+        if (width <= 0 || height <= 0) {
+            return "H,1:1";
+        }
+        float ratio = (float) width / (float) height;
+        if (ratio < 0.5f) {
+            return "H,1:2";
+        } else if (ratio > 2.0f) {
+            return "H,2:1";
+        }
+        return String.format(Locale.US, "H,%d:%d", width, height);
+    }
+
     public boolean isFavorite() {
         return favorite;
     }
@@ -102,7 +163,9 @@ public final class Photo implements Serializable {
         if (this == o) return true;
         if (!(o instanceof Photo)) return false;
         Photo photo = (Photo) o;
-        return favorite == photo.favorite
+        return width == photo.width
+                && height == photo.height
+                && favorite == photo.favorite
                 && savedAt == photo.savedAt
                 && id.equals(photo.id)
                 && title.equals(photo.title)
@@ -114,6 +177,6 @@ public final class Photo implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, title, ownerName, description, thumbnailUrl, detailUrl, favorite, savedAt);
+        return Objects.hash(id, title, ownerName, description, thumbnailUrl, detailUrl, width, height, favorite, savedAt);
     }
 }

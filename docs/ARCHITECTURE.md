@@ -121,3 +121,9 @@ Collection forms must wait for confirmed persistence to avoid silently losing ed
 3. **Orphan-Safe Shared `photos` Table:**
    - Both Favorites (`is_favorite = 1`) and Collections (`collection_photo_cross_ref`) reference `PhotoEntity` in the `photos` table.
    - Unfavoriting a photo updates `is_favorite = 0` and only deletes the row if no collection references it, preventing accidental foreign-key cascade deletions from user collections.
+
+4. **Pinterest-Style Dynamic Aspect Ratio Image Sizing (Zero CLS):**
+   - Pixabay dimensions (`webformatWidth` & `webformatHeight`) are extracted in `PhotoMapper` and stored in `Photo` (and `PhotoEntity` in Room v2).
+   - `Photo` clamps aspect ratios between 0.5 (1:2 vertical portrait) and 2.0 (2:1 horizontal landscape) to keep feeds balanced.
+   - `PhotoAdapter` sets `dimensionRatio` on `ConstraintLayout.LayoutParams` synchronously on bind, pre-sizing placeholders to the exact bitmap target before Glide downloads, eliminating layout jumps.
+   - `StaggeredGridLayoutManager` gap handling is configured to `GAP_HANDLING_NONE`, preserving span assignments when scrolling stops to prevent column swapping.

@@ -23,7 +23,7 @@ import vn.edu.usth.flickrimagebrowser.data.local.entity.PhotoEntity;
                 CollectionEntity.class,
                 CollectionPhotoCrossRef.class
         },
-        version = 1,
+        version = 2,
         exportSchema = true
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -33,13 +33,14 @@ public abstract class AppDatabase extends RoomDatabase {
     private static volatile AppDatabase instance;
 
     /**
-     * Explicit migration placeholder for future schema upgrades (v1 -> v2).
-     * Avoids destructive migrations so saved favorites and collections are preserved.
+     * Migration from v1 to v2 adding width and height columns to photos table
+     * for natural Pinterest-style aspect ratio rendering without re-fetching.
      */
     public static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
-            // Reserved for future v2 schema additions (e.g., ALTER TABLE photos ADD COLUMN ...).
+            database.execSQL("ALTER TABLE photos ADD COLUMN width INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE photos ADD COLUMN height INTEGER NOT NULL DEFAULT 0");
         }
     };
 
