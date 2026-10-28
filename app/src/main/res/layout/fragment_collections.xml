@@ -4,102 +4,116 @@
     android:id="@+id/collections_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_light"
-    android:paddingStart="16dp"
-    android:paddingTop="18dp"
-    android:paddingEnd="16dp">
+    android:background="@color/background_light">
 
-    <TextView
-        android:id="@+id/text_collections_eyebrow"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:letterSpacing="0.12"
-        android:text="@string/collections_eyebrow"
-        android:textColor="@color/secondary"
-        android:textSize="11sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
+    <!-- Unified Dark Top Header matching Search and Favorites -->
     <LinearLayout
-        android:id="@+id/layout_collections_header"
+        android:id="@+id/layout_collections_top_panel"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
+        android:background="@color/search_container_background"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/text_collections_eyebrow">
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:id="@+id/text_collections_heading"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:fontFamily="@font/plus_jakarta_sans"
-            android:text="@string/collections_heading"
-            android:textColor="@color/text_primary"
-            android:textSize="25sp"
-            android:textStyle="bold" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_header_create_collection"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:id="@+id/text_collections_eyebrow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:minWidth="48dp"
-            android:minHeight="48dp"
-            android:paddingHorizontal="16dp"
-            android:contentDescription="@string/action_create_album"
-            android:fontFamily="@font/plus_jakarta_sans"
-            android:text="@string/action_create_album"
-            android:textAllCaps="false"
-            android:textColor="@color/primary"
-            android:textStyle="bold"
-            app:icon="@drawable/ic_collections"
-            app:iconTint="@color/primary" />
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/layout_collections_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/text_collections_heading"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/plus_jakarta_sans"
+                    android:text="@string/collections_heading"
+                    android:textColor="@color/search_box_text"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/text_collections_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/collections_subtitle"
+                    android:textColor="@color/search_box_hint"
+                    android:textSize="13sp" />
+
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_header_create_collection"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:minHeight="46dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:backgroundTint="@color/primary"
+                android:contentDescription="@string/action_create_album"
+                android:fontFamily="@font/plus_jakarta_sans"
+                android:paddingHorizontal="18dp"
+                android:text="@string/action_create_album"
+                android:textAllCaps="false"
+                android:textColor="@color/on_primary"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                app:cornerRadius="23dp"
+                app:elevation="0dp"
+                app:icon="@drawable/ic_collections"
+                app:iconPadding="8dp"
+                app:iconSize="18dp"
+                app:iconTint="@color/on_primary" />
+
+        </LinearLayout>
 
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/text_collections_subtitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="3dp"
-        android:text="@string/collections_subtitle"
-        android:textColor="@color/text_secondary"
-        android:textSize="14sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layout_collections_header" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_collections"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="18dp"
         android:clipToPadding="false"
+        android:paddingHorizontal="10dp"
+        android:paddingTop="10dp"
         android:paddingBottom="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/text_collections_subtitle" />
+        app:layout_constraintTop_toBottomOf="@id/layout_collections_top_panel" />
 
     <TextView
         android:id="@+id/text_empty_collections"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
+        android:lineSpacingExtra="4dp"
         android:padding="32dp"
         android:text="@string/collections_empty_state"
         android:textColor="@color/text_secondary"
         android:textSize="15sp"
-        android:lineSpacingExtra="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/text_collections_subtitle" />
-
+        app:layout_constraintTop_toBottomOf="@id/layout_collections_top_panel" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

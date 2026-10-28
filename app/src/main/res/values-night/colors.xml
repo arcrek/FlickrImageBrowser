@@ -19,10 +19,17 @@
     <color name="card_stroke">#424851</color>
     <color name="mint_pill_bg">#203653</color>
     <color name="mint_pill_text">#B6D7FF</color>
-    <color name="search_container_background">#141619</color>
-    <color name="search_box_background">#202328</color>
-    <color name="search_box_stroke">#4E545E</color>
+    <color name="header_background">#181A1E</color>
+    <color name="header_foreground">#FFFFFF</color>
+    <color name="search_container_background">#181A1E</color>
+    <color name="search_box_background">#25282E</color>
+    <color name="search_box_stroke">#424852</color>
     <color name="search_box_text">#FFFFFF</color>
-    <color name="search_box_hint">#D0D5DD</color>
+    <color name="search_box_hint">#CBD2DC</color>
+    <color name="header_divider">#2A2E35</color>
+    <color name="header_chip_bg_selected">#203653</color>
+    <color name="header_chip_text_selected">#B6D7FF</color>
+    <color name="header_chip_bg_unselected">#25282E</color>
+    <color name="header_chip_text_unselected">#BEC5CF</color>
     <color name="error">#FFB4AB</color>
 </resources>

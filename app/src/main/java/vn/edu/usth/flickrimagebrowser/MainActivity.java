@@ -398,14 +398,17 @@ public class MainActivity extends AppCompatActivity {
             binding.toolbarTitle.setText(R.string.nav_favorites);
             binding.toolbarTagline.setText(R.string.tab_saved);
             binding.toolbar.setTitle(R.string.nav_favorites);
+            binding.btnActionSparkle.setVisibility(View.GONE);
         } else if (itemId == R.id.nav_collections) {
             binding.toolbarTitle.setText(R.string.nav_collections);
             binding.toolbarTagline.setText(R.string.tab_boards);
             binding.toolbar.setTitle(R.string.nav_collections);
+            binding.btnActionSparkle.setVisibility(View.VISIBLE);
         } else {
             binding.toolbarTitle.setText(R.string.brand_name_display);
             binding.toolbarTagline.setText(R.string.brand_tagline);
             binding.toolbar.setTitle(R.string.app_name);
+            binding.btnActionSparkle.setVisibility(View.GONE);
         }
     }
 

@@ -8,8 +8,8 @@
     <string name="nav_search">Search</string>
     <string name="nav_favorites">Favorites</string>
     <string name="nav_collections">Albums</string>
-    <string name="tab_saved">Your favorites</string>
-    <string name="tab_boards">Your library</string>
+    <string name="tab_saved">Saved offline</string>
+    <string name="tab_boards">Photo collections</string>
 
     <!-- Search Screen -->
     <string name="search_hint">Search photos</string>

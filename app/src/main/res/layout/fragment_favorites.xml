@@ -6,61 +6,107 @@
     android:layout_height="match_parent"
     android:background="@color/background_light">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/input_layout_favorite_search"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+    <LinearLayout
+        android:id="@+id/layout_favorites_header"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="@string/favorites_search_hint"
-        app:endIconMode="clear_text"
+        android:background="@color/search_container_background"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:startIconDrawable="@drawable/ic_search">
+        app:layout_constraintTop_toTopOf="parent">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/edit_favorite_search"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/input_layout_favorite_search"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:gravity="center_vertical"
+            app:boxBackgroundColor="@color/search_box_background"
+            app:boxCornerRadiusBottomEnd="23dp"
+            app:boxCornerRadiusBottomStart="23dp"
+            app:boxCornerRadiusTopEnd="23dp"
+            app:boxCornerRadiusTopStart="23dp"
+            app:boxStrokeColor="@color/search_box_stroke"
+            app:boxStrokeWidth="1dp"
+            app:boxStrokeWidthFocused="1.5dp"
+            app:endIconMode="clear_text"
+            app:endIconTint="@color/search_box_hint"
+            app:hintEnabled="false"
+            app:startIconDrawable="@drawable/ic_search"
+            app:startIconTint="@color/search_box_hint">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_favorite_search"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:hint="@string/favorites_search_hint"
+                android:imeOptions="actionDone"
+                android:inputType="text"
+                android:maxLines="1"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
+                android:textColor="@color/search_box_text"
+                android:textColorHint="@color/search_box_hint"
+                android:textSize="14sp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_sort"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:imeOptions="actionDone"
-            android:inputType="text"
-            android:maxLines="1" />
+            android:layout_marginTop="8dp"
+            app:selectionRequired="true"
+            app:singleSelection="true">
 
-    </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_sort_newest"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:fontFamily="@font/plus_jakarta_sans"
+                android:text="@string/favorites_sort_newest"
+                android:textColor="@color/selector_header_chip_text"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                app:chipBackgroundColor="@color/selector_header_chip_bg"
+                app:chipCornerRadius="16dp"
+                app:chipMinHeight="32dp"
+                app:chipStrokeColor="@color/search_box_stroke"
+                app:chipStrokeWidth="1dp"
+                app:ensureMinTouchTargetSize="false" />
 
-    <com.google.android.material.chip.ChipGroup
-        android:id="@+id/chip_group_sort"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input_layout_favorite_search"
-        app:selectionRequired="true"
-        app:singleSelection="true">
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_sort_az"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/plus_jakarta_sans"
+                android:text="@string/favorites_sort_az"
+                android:textColor="@color/selector_header_chip_text"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                app:chipBackgroundColor="@color/selector_header_chip_bg"
+                app:chipCornerRadius="16dp"
+                app:chipMinHeight="32dp"
+                app:chipStrokeColor="@color/search_box_stroke"
+                app:chipStrokeWidth="1dp"
+                app:ensureMinTouchTargetSize="false" />
 
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_sort_newest"
-            style="@style/Widget.MaterialComponents.Chip.Choice"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="@string/favorites_sort_newest" />
+        </com.google.android.material.chip.ChipGroup>
 
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_sort_az"
-            style="@style/Widget.MaterialComponents.Chip.Choice"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/favorites_sort_az" />
-
-    </com.google.android.material.chip.ChipGroup>
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_favorites"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
         android:clipToPadding="false"
         android:paddingHorizontal="3dp"
         android:paddingTop="3dp"
@@ -68,7 +114,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/chip_group_sort" />
+        app:layout_constraintTop_toBottomOf="@id/layout_favorites_header" />
 
     <LinearLayout
         android:id="@+id/layout_empty_favorites"
@@ -80,7 +126,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/chip_group_sort">
+        app:layout_constraintTop_toBottomOf="@id/layout_favorites_header">
 
         <ImageView
             android:layout_width="56dp"
