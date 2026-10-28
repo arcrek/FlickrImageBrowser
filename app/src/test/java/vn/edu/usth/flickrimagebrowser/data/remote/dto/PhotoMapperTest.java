@@ -23,6 +23,35 @@ import vn.edu.usth.flickrimagebrowser.domain.model.Photo;
 public class PhotoMapperTest {
 
     @Test
+    public void fromDto_usesCdnPreviewForSignedImagesAndPreservesItWhenSaved() {
+        PixabayHitDto dto = new PixabayHitDto(101L, "Photo", "Author", null,
+                "https://cdn.pixabay.com/photo/101_150.jpg",
+                "https://pixabay.com/get/signed_640.jpg",
+                "https://pixabay.com/get/signed_1280.jpg");
+
+        Photo photo = PhotoMapper.fromDto(dto, false);
+
+        assertNotNull(photo);
+        assertEquals(dto.getPreviewUrl(), photo.getThumbnailUrl());
+        assertEquals(dto.getLargeImageUrl(), photo.getDetailUrl());
+        Photo saved = PhotoMapper.fromEntity(PhotoMapper.toEntity(photo, true, 100L));
+        assertEquals(photo.getThumbnailUrl(), saved.getThumbnailUrl());
+        assertEquals(photo.getDetailUrl(), saved.getDetailUrl());
+    }
+
+    @Test
+    public void fromDto_keepsSignedImageWhenPreviewMissing() {
+        PixabayHitDto dto = new PixabayHitDto(101L, "Photo", "Author", null,
+                "  ", "https://pixabay.com/get/signed_640.jpg", null);
+
+        Photo photo = PhotoMapper.fromDto(dto, false);
+
+        assertNotNull(photo);
+        assertEquals(dto.getWebformatUrl(), photo.getThumbnailUrl());
+        assertEquals(dto.getWebformatUrl(), photo.getDetailUrl());
+    }
+
+    @Test
     public void fromEntity_removesQueryFromLegacyDemoUrlsWithoutChangingSavedIdentity() {
         PhotoEntity entity = new PhotoEntity("demo_medical_condition_31", "Title", "Author", "Description",
                 "https://picsum.photos/seed/demo_medical_condition_31/300/260",

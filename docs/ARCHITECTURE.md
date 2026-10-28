@@ -55,6 +55,10 @@ flowchart TD
 
 ## 2. Package & Component Responsibilities
 
+When the selected thumbnail URL is a signed `https://pixabay.com/get/` image URL, the mapper uses the supplied CDN `previewURL` when available. The signed URLs can return a Cloudflare browser challenge (HTTP 429) to native image requests independently of the API quota. Detail view still requests the large image and falls back to the thumbnail on failure. CDN previews are limited to 150 px, so this trades sharpness for availability. Previously saved photos retain their stored URLs; there is no database migration or URL reconstruction.
+
+API errors carrying `cf-mitigated: challenge` are reported as browser verification blocks rather than quota or API-key failures. Changing networks or retrying later may restore access; the native client cannot complete the browser challenge. HTTP 429 cooldowns still apply, and responses without the challenge header retain their existing error handling.
+
 All source code resides under `vn.edu.usth.flickrimagebrowser`:
 
 | Package | Key Classes | Responsibility |
@@ -67,7 +71,7 @@ All source code resides under `vn.edu.usth.flickrimagebrowser`:
 | `data/repository/` | `PhotoRepository`, `PhotoRepositoryImpl` | Single source of truth coordinating Retrofit network callbacks, parameter clamping (`per_page` 3..200), HTTP/API error checks (400/401/403, 429), and background Room reads/writes via `AppExecutors`. |
 | `domain/model/` | `Photo`, `Collection` | Immutable Java domain models shared across ViewModels and UI adapters. |
 | `ui/` | `AppViewModelFactory` | Constructor-injected `ViewModelProvider.Factory` supplying `PhotoRepository` to ViewModels. |
-| `ui/common/` | `PhotoAdapter` | Shared `ListAdapter` + `DiffUtil` rendering photo thumbnails via Glide (`webformatURL` / `previewURL`). |
+| `ui/common/` | `PhotoAdapter` | Shared `ListAdapter` + `DiffUtil` rendering each domain `Photo`'s mapped `thumbnailUrl` via Glide. |
 | `ui/search/` | `SearchFragment`, `SearchViewModel` | Initial/cleared Featured Photos (Editor's Choice) feed, keyword search input, `Resource<List<Photo>>` pagination observation, and Loading / Empty / Error / Retry UI states. Pagination errors preserve loaded photos and pause automatic scrolling requests until explicit Retry; the Retry snackbar uses an indefinite duration while that error state is active and is dismissed on retry, manual dismissal, or a subsequent rendered state. |
 | `ui/favorites/` | `FavoritesFragment`, `FavoritesViewModel` | Reactive grid of locally persisted favorite photos from Room. |
 | `ui/collections/` | `CollectionsFragment`, `CollectionsViewModel`, `CollectionAdapter` | Reactive list and creation flow for user photo collections. |
@@ -113,7 +117,7 @@ Collection forms must wait for confirmed persistence to avoid silently losing ed
    - `AppExecutors` allows unit tests (`PhotoRepositoryTest`) to inject synchronous `Runnable::run` executors so asynchronous repository logic can be tested deterministically.
 2. **Pixabay Responsive Image Size Selection (Avoiding OOM & Blurry Grids):**
    - `PixabayHitDto` exposes flat image URLs (`previewURL` at 150px, `webformatURL` at 640px, and `largeImageURL` at 1280px).
-   - `PhotoMapper` maps `webformatURL` (falling back to `previewURL`) to `thumbnailUrl` for crisp 2-column grid scrolling and `largeImageURL` (1280px) to `detailUrl`, avoiding multi-megabyte full-resolution bitmaps that could trigger `OutOfMemoryError`.
+   - `PhotoMapper` maps `webformatURL` (falling back to `previewURL`) to `thumbnailUrl` for crisp 2-column grid scrolling, substitutes `previewURL` when that selected thumbnail is a signed `/get/` URL, and maps `largeImageURL` (1280px) to `detailUrl`, avoiding multi-megabyte full-resolution bitmaps that could trigger `OutOfMemoryError`.
 3. **Orphan-Safe Shared `photos` Table:**
    - Both Favorites (`is_favorite = 1`) and Collections (`collection_photo_cross_ref`) reference `PhotoEntity` in the `photos` table.
    - Unfavoriting a photo updates `is_favorite = 0` and only deletes the row if no collection references it, preventing accidental foreign-key cascade deletions from user collections.

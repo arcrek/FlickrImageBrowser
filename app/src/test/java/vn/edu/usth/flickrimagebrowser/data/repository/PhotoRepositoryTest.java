@@ -323,6 +323,55 @@ public class PhotoRepositoryTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    public void searchPhotos_whenBrowserChallenge_reportsVerificationInsteadOfQuotaOrKeyError() {
+        when(apiService.searchPhotos(anyString(), anyString(), anyString(), anyBoolean(), anyInt(), anyInt()))
+                .thenReturn(mockCall);
+        when(apiService.getFeaturedPhotos(anyString(), anyBoolean(), anyString(), anyString(),
+                anyBoolean(), anyInt(), anyInt())).thenReturn(mockCall);
+
+        for (int code : new int[]{403, 429}) {
+            doAnswer(invocation -> {
+                Callback<PixabaySearchResponse> callback = invocation.getArgument(0);
+                okhttp3.Response raw = new okhttp3.Response.Builder()
+                        .request(new okhttp3.Request.Builder().url("https://pixabay.com/api/").build())
+                        .protocol(okhttp3.Protocol.HTTP_1_1).code(code).message("Blocked")
+                        .header("cf-mitigated", "challenge").build();
+                callback.onResponse(mockCall, Response.error(
+                        ResponseBody.create("<html>Just a moment...</html>", MediaType.parse("text/html")), raw));
+                return null;
+            }).when(mockCall).enqueue(ArgumentMatchers.any(Callback.class));
+
+            for (String query : new String[]{"", "nature"}) {
+                Resource<List<Photo>> result = repository.searchPhotos(query, 1, 30).getValue();
+                assertNotNull(result);
+                assertEquals(Resource.Status.ERROR, result.getStatus());
+                assertTrue(result.getMessage().contains("browser verification"));
+                assertTrue(result.getMessage().contains("another network"));
+            }
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void searchPhotos_when429WithoutChallenge_keepsQuotaError() {
+        when(apiService.searchPhotos(anyString(), anyString(), anyString(), anyBoolean(), anyInt(), anyInt()))
+                .thenReturn(mockCall);
+        doAnswer(invocation -> {
+            Callback<PixabaySearchResponse> callback = invocation.getArgument(0);
+            callback.onResponse(mockCall, Response.error(429,
+                    ResponseBody.create("API rate limit exceeded", MediaType.parse("text/plain"))));
+            return null;
+        }).when(mockCall).enqueue(ArgumentMatchers.any(Callback.class));
+
+        Resource<List<Photo>> result = repository.searchPhotos("nature", 1, 30).getValue();
+        assertNotNull(result);
+        assertEquals(Resource.Status.ERROR, result.getStatus());
+        assertEquals("Pixabay API rate limit exceeded (HTTP 429). Please wait before retrying.",
+                result.getMessage());
+    }
+
+    @Test
     public void deleteCollection_deletesFromCollectionDaoAndCleansUpAllOrphans() {
         repository.deleteCollection(10L);
         verify(collectionDao).deleteCollectionById(10L);
