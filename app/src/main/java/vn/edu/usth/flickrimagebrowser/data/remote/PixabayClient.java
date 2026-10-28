@@ -18,6 +18,7 @@ public final class PixabayClient {
     private static final long CONNECT_TIMEOUT_SECONDS = 15L;
     private static final long READ_TIMEOUT_SECONDS = 20L;
     private static final long WRITE_TIMEOUT_SECONDS = 15L;
+    private static final PixabayRateLimitInterceptor RATE_LIMITER = new PixabayRateLimitInterceptor();
 
     private PixabayClient() {
     }
@@ -45,6 +46,7 @@ public final class PixabayClient {
                 .readTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .writeTimeout(WRITE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .addInterceptor(loggingInterceptor)
+                .addNetworkInterceptor(RATE_LIMITER)
                 .build();
 
         Retrofit retrofit = new Retrofit.Builder()

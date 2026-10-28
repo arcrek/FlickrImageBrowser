@@ -56,6 +56,9 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
     @Nullable
     private FragmentSearchBinding binding;
 
+    @Nullable
+    private Snackbar paginationErrorSnackbar;
+
     private SearchViewModel viewModel;
     private PhotoAdapter photoAdapter;
     private String currentRecommendation = "Mùa thu Hà Nội";
@@ -161,6 +164,7 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
         if (binding == null || resource == null) {
             return;
         }
+        dismissPaginationError();
 
         boolean hasExistingData = resource.getData() != null && !resource.getData().isEmpty();
 
@@ -213,13 +217,21 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
                     binding.progressLoading.setVisibility(View.GONE);
                     binding.layoutState.setVisibility(View.GONE);
                     binding.recyclerPhotos.setVisibility(View.VISIBLE);
-                    Snackbar.make(
+                    paginationErrorSnackbar = Snackbar.make(
                             binding.getRoot(),
                             resource.getMessage() != null ? resource.getMessage() : "Error loading more photos",
-                            Snackbar.LENGTH_LONG
-                    ).setAction(R.string.action_retry, v -> viewModel.loadNextPage()).show();
+                            Snackbar.LENGTH_INDEFINITE
+                    ).setAction(R.string.action_retry, v -> viewModel.retryLastQuery());
+                    paginationErrorSnackbar.show();
                 }
                 break;
+        }
+    }
+
+    private void dismissPaginationError() {
+        if (paginationErrorSnackbar != null) {
+            paginationErrorSnackbar.dismiss();
+            paginationErrorSnackbar = null;
         }
     }
 
@@ -236,6 +248,7 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
 
     @Override
     public void onDestroyView() {
+        dismissPaginationError();
         super.onDestroyView();
         binding = null;
     }

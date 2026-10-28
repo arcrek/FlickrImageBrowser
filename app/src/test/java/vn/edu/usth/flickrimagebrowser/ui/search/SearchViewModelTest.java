@@ -164,7 +164,7 @@ public class SearchViewModelTest {
     }
 
     @Test
-    public void loadNextPage_onError_preservesExistingPhotos() {
+    public void loadNextPage_onFeaturedError_preservesPhotosAndWaitsForRetry() {
         List<Photo> page1List = new ArrayList<>();
         for (int i = 1; i <= 30; i++) {
             page1List.add(new Photo(
@@ -174,15 +174,15 @@ public class SearchViewModelTest {
             ));
         }
         MutableLiveData<Resource<List<Photo>>> page1Live = new MutableLiveData<>(Resource.success(page1List));
-        when(repository.searchPhotos("city", 1, 30)).thenReturn(page1Live);
+        when(repository.searchPhotos("", 1, 30)).thenReturn(page1Live);
 
         viewModel.getSearchResults().observeForever(observer);
-        viewModel.submitQuery("city", false);
+        viewModel.submitQuery("", false);
 
         MutableLiveData<Resource<List<Photo>>> errorLive = new MutableLiveData<>(
                 Resource.error("Network timeout", null)
         );
-        when(repository.searchPhotos("city", 2, 30)).thenReturn(errorLive);
+        when(repository.searchPhotos("", 2, 30)).thenReturn(errorLive);
 
         viewModel.loadNextPage();
 
@@ -194,6 +194,10 @@ public class SearchViewModelTest {
         assertEquals(30, current.getData().size()); // Existing page 1 photos retained!
         assertEquals(1, viewModel.getCurrentPage());
         assertFalse(viewModel.isLoadingNextPage());
+        // Further scroll events must not automatically retry the failed page.
+        viewModel.loadNextPage();
+        viewModel.loadNextPage();
+        verify(repository, times(1)).searchPhotos("", 2, 30);
     }
 
     @Test
