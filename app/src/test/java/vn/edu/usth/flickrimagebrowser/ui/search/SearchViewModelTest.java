@@ -266,6 +266,40 @@ public class SearchViewModelTest {
     }
 
     @Test
+    public void favoritesObserver_preservesPaginationLoadingAndError() {
+        MutableLiveData<List<Photo>> favorites = new MutableLiveData<>(Collections.emptyList());
+        when(repository.observeFavorites()).thenReturn(favorites);
+        SearchViewModel vm = new SearchViewModel(repository);
+        vm.getSearchResults().observeForever(observer);
+        Photo photo = new Photo("42", "Lake", "Author", "", "thumb", "detail", false, 0L);
+        List<Photo> firstPage = new ArrayList<>();
+        for (int i = 0; i < 30; i++) {
+            firstPage.add(photo);
+        }
+        when(repository.searchPhotos("lake", 1, 30)).thenReturn(
+                new MutableLiveData<>(Resource.success(firstPage)));
+        MutableLiveData<Resource<List<Photo>>> nextPage = new MutableLiveData<>(Resource.loading(null));
+        when(repository.searchPhotos("lake", 2, 30)).thenReturn(nextPage);
+        vm.submitQuery("lake", false);
+        vm.loadNextPage();
+
+        favorites.setValue(Collections.singletonList(photo.withFavorite(true, 1L)));
+        Resource<List<Photo>> loading = vm.getSearchResults().getValue();
+        assertEquals(Resource.Status.LOADING, loading.getStatus());
+        assertTrue(loading.getData().get(0).isFavorite());
+        assertTrue(vm.isLoadingNextPage());
+
+        nextPage.setValue(Resource.error("Network timeout", null));
+        favorites.setValue(Collections.emptyList());
+        Resource<List<Photo>> error = vm.getSearchResults().getValue();
+        assertEquals(Resource.Status.ERROR, error.getStatus());
+        assertEquals("Network timeout", error.getMessage());
+        assertFalse(error.getData().get(0).isFavorite());
+        assertEquals(30, error.getData().size());
+        verify(repository, times(1)).searchPhotos("lake", 2, 30);
+    }
+
+    @Test
     public void retryLastQuery_afterNextPageFailure_retriesNextPage() {
         List<Photo> page1List = new ArrayList<>();
         for (int i = 1; i <= 30; i++) {

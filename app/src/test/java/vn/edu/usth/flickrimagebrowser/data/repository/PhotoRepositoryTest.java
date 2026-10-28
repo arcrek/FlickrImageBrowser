@@ -12,6 +12,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.database.sqlite.SQLiteConstraintException;
+
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 import androidx.lifecycle.LiveData;
 
@@ -19,9 +21,12 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,8 +35,10 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
 import vn.edu.usth.flickrimagebrowser.data.local.CollectionDao;
 import vn.edu.usth.flickrimagebrowser.data.local.PhotoDao;
+import vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionEntity;
 import vn.edu.usth.flickrimagebrowser.data.local.entity.PhotoEntity;
 import vn.edu.usth.flickrimagebrowser.data.remote.PixabayApiService;
 import vn.edu.usth.flickrimagebrowser.data.remote.dto.PixabayHitDto;
@@ -74,6 +81,80 @@ public class PhotoRepositoryTest {
                 directExecutors,
                 "test_valid_pixabay_key"
         );
+    }
+
+    @Test
+    public void demoPhotos_useQueryIndependentUrlsAndKeepLocalIdentity() {
+        PhotoRepositoryImpl demo = new PhotoRepositoryImpl(
+                apiService, photoDao, collectionDao, directExecutors, "demo");
+        Photo first = demo.searchPhotos("medical condition", 1, 3).getValue().getData().get(0);
+        Photo otherQuery = demo.searchPhotos("mountains", 1, 3).getValue().getData().get(0);
+        Photo nextPage = demo.searchPhotos("medical condition", 2, 3).getValue().getData().get(0);
+        assertEquals("demo_medical_condition_1", first.getId());
+        assertEquals(first.getThumbnailUrl(), otherQuery.getThumbnailUrl());
+        assertEquals(first.getDetailUrl(), otherQuery.getDetailUrl());
+        org.junit.Assert.assertNotEquals(first.getThumbnailUrl(), nextPage.getThumbnailUrl());
+        org.junit.Assert.assertFalse(first.getThumbnailUrl().contains("medical"));
+        org.junit.Assert.assertFalse(first.getDetailUrl().contains("condition"));
+    }
+
+    @Test
+    public void collectionWrites_reportSuccess() {
+        when(collectionDao.renameCollection(5L, "New Name")).thenReturn(1);
+        assertEquals(Resource.Status.SUCCESS, repository.createCollectionResult("Name", "").getValue().getStatus());
+        assertEquals(Resource.Status.SUCCESS, repository.renameCollectionResult(5L, "New Name").getValue().getStatus());
+    }
+
+    @Test
+    public void collectionWrites_reportStorageFailures() {
+        Mockito.doThrow(new IllegalStateException("disk full"))
+                .when(collectionDao).insertCollection(ArgumentMatchers.any());
+        when(collectionDao.renameCollection(5L, "Name")).thenThrow(new IllegalStateException("disk full"));
+        for (Resource<Boolean> result : Arrays.asList(
+                repository.createCollectionResult("Name", "").getValue(),
+                repository.renameCollectionResult(5L, "Name").getValue())) {
+            assertEquals(Resource.Status.ERROR, result.getStatus());
+            assertEquals("Unable to save collection. Please try again.", result.getMessage());
+        }
+    }
+
+    @Test
+    public void collectionWrites_reportReadFailures() {
+        when(collectionDao.getCollectionsSync()).thenThrow(new IllegalStateException("corrupt"));
+        assertEquals(Resource.Status.ERROR, repository.createCollectionResult("Name", "").getValue().getStatus());
+        assertEquals(Resource.Status.ERROR, repository.renameCollectionResult(5L, "Name").getValue().getStatus());
+    }
+
+    @Test
+    public void collectionWrites_distinguishUniqueNameFromOtherConstraints() {
+        SQLiteConstraintException unique = Mockito.mock(
+                SQLiteConstraintException.class);
+        when(unique.getMessage()).thenReturn("UNIQUE constraint failed: collections.name (code 2067)");
+        SQLiteConstraintException other = Mockito.mock(
+                SQLiteConstraintException.class);
+        when(other.getMessage()).thenReturn("NOT NULL constraint failed: collections.description");
+        Mockito.doThrow(unique).doThrow(other)
+                .when(collectionDao).insertCollection(ArgumentMatchers.any());
+        when(collectionDao.renameCollection(5L, "Name")).thenThrow(unique).thenThrow(other);
+        assertEquals("A collection with this name already exists.",
+                repository.createCollectionResult("Name", "").getValue().getMessage());
+        assertEquals("A collection with this name already exists.",
+                repository.renameCollectionResult(5L, "Name").getValue().getMessage());
+        assertEquals("Unable to save collection. Please try again.",
+                repository.createCollectionResult("Name", "").getValue().getMessage());
+        assertEquals("Unable to save collection. Please try again.",
+                repository.renameCollectionResult(5L, "Name").getValue().getMessage());
+    }
+
+    @Test
+    public void collectionWrites_duplicatePrecheckAndMissingRename_areErrors() {
+        assertEquals(Resource.Status.ERROR, repository.renameCollectionResult(5L, "Name").getValue().getStatus());
+        when(collectionDao.getCollectionsSync()).thenReturn(Collections.singletonList(
+                new CollectionEntity(2L, "Name", "", 0L)));
+        assertEquals("A collection with this name already exists.",
+                repository.createCollectionResult(" name ", "").getValue().getMessage());
+        assertEquals("A collection with this name already exists.",
+                repository.renameCollectionResult(5L, " name ").getValue().getMessage());
     }
 
     @Test
@@ -128,7 +209,7 @@ public class PhotoRepositoryTest {
             Callback<PixabaySearchResponse> callback = invocation.getArgument(0);
             callback.onResponse(mockCall, Response.success(apiResponse));
             return null;
-        }).when(mockCall).enqueue(org.mockito.ArgumentMatchers.any(Callback.class));
+        }).when(mockCall).enqueue(ArgumentMatchers.any(Callback.class));
 
         LiveData<Resource<List<Photo>>> resultLive = repository.searchPhotos("hanoi", 1, 20);
         Resource<List<Photo>> resource = resultLive.getValue();
@@ -172,7 +253,7 @@ public class PhotoRepositoryTest {
             Callback<PixabaySearchResponse> callback = invocation.getArgument(0);
             callback.onResponse(mockCall, Response.success(apiResponse));
             return null;
-        }).when(mockCall).enqueue(org.mockito.ArgumentMatchers.any(Callback.class));
+        }).when(mockCall).enqueue(ArgumentMatchers.any(Callback.class));
 
         LiveData<Resource<List<Photo>>> resultLive = repository.searchPhotos("   ", 1, 30);
         Resource<List<Photo>> resource = resultLive.getValue();
@@ -211,7 +292,7 @@ public class PhotoRepositoryTest {
             );
             callback.onResponse(mockCall, unauthorizedResponse);
             return null;
-        }).when(mockCall).enqueue(org.mockito.ArgumentMatchers.any(Callback.class));
+        }).when(mockCall).enqueue(ArgumentMatchers.any(Callback.class));
 
         LiveData<Resource<List<Photo>>> resultLive = repository.searchPhotos("nature", 1, 20);
         Resource<List<Photo>> resource = resultLive.getValue();
@@ -257,11 +338,11 @@ public class PhotoRepositoryTest {
 
     @Test
     public void renameCollection_whenDuplicateCaseInsensitive_doesNotCallDao() {
-        vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionEntity existing =
-                new vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionEntity(10L, "Nature", "desc", 100L);
+        CollectionEntity existing =
+                new CollectionEntity(10L, "Nature", "desc", 100L);
         when(collectionDao.getCollectionsSync()).thenReturn(Collections.singletonList(existing));
         repository.renameCollection(5L, "  nature  ");
-        verify(collectionDao, never()).renameCollection(org.mockito.ArgumentMatchers.anyLong(), anyString());
+        verify(collectionDao, never()).renameCollection(ArgumentMatchers.anyLong(), anyString());
     }
 
     @Test
@@ -275,7 +356,7 @@ public class PhotoRepositoryTest {
     public void observePhotosInCollection_mapsEntitiesFromRelation() {
         vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionWithPhotos relation =
                 new vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionWithPhotos();
-        relation.collection = new vn.edu.usth.flickrimagebrowser.data.local.entity.CollectionEntity(1L, "Travel", "", 0L);
+        relation.collection = new CollectionEntity(1L, "Travel", "", 0L);
         relation.photos = Collections.singletonList(
                 new PhotoEntity("p1", "Beach", "Author", "Desc", "q", "z", false, 100L)
         );

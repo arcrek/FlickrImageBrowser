@@ -33,6 +33,13 @@ public interface PhotoRepository {
 
     void createCollection(@NonNull String name, @Nullable String description);
 
+    /** Per-operation result for forms that must wait for persistence before dismissing. */
+    @NonNull
+    LiveData<Resource<Boolean>> createCollectionResult(@NonNull String name, @Nullable String description);
+
+    @NonNull
+    LiveData<Resource<Boolean>> renameCollectionResult(long collectionId, @NonNull String newName);
+
     void deleteCollection(long collectionId);
 
     void renameCollection(long collectionId, @NonNull String newName);

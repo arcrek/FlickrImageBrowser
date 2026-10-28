@@ -24,6 +24,7 @@ import java.util.List;
 
 import vn.edu.usth.flickrimagebrowser.data.repository.PhotoRepository;
 import vn.edu.usth.flickrimagebrowser.domain.model.Collection;
+import vn.edu.usth.flickrimagebrowser.util.Resource;
 
 /**
  * Unit tests for CollectionsViewModel testing collection creation, deletion, renaming, and name validation.
@@ -45,6 +46,16 @@ public class CollectionsViewModelTest {
         collectionsLiveData = new MutableLiveData<>();
         when(repository.observeCollections()).thenReturn(collectionsLiveData);
         viewModel = new CollectionsViewModel(repository);
+    }
+
+    @Test
+    public void collectionResults_forwardOperationSpecificState() {
+        MutableLiveData<Resource<Boolean>> create = new MutableLiveData<>();
+        MutableLiveData<Resource<Boolean>> rename = new MutableLiveData<>();
+        when(repository.createCollectionResult("Nature", "description")).thenReturn(create);
+        when(repository.renameCollectionResult(5L, "Travel")).thenReturn(rename);
+        org.junit.Assert.assertSame(create, viewModel.createCollectionResult(" Nature ", "description"));
+        org.junit.Assert.assertSame(rename, viewModel.renameCollectionResult(5L, " Travel "));
     }
 
     @Test

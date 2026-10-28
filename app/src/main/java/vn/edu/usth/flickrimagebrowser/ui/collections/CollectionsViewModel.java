@@ -10,6 +10,7 @@ import java.util.Objects;
 
 import vn.edu.usth.flickrimagebrowser.data.repository.PhotoRepository;
 import vn.edu.usth.flickrimagebrowser.domain.model.Collection;
+import vn.edu.usth.flickrimagebrowser.util.Resource;
 
 /**
  * ViewModel managing user photo collections stored in Room.
@@ -35,6 +36,16 @@ public class CollectionsViewModel extends ViewModel {
             return;
         }
         repository.createCollection(trimmed, description);
+    }
+
+    @NonNull
+    public LiveData<Resource<Boolean>> createCollectionResult(@NonNull String name, @Nullable String description) {
+        return repository.createCollectionResult(name.trim(), description);
+    }
+
+    @NonNull
+    public LiveData<Resource<Boolean>> renameCollectionResult(long collectionId, @NonNull String newName) {
+        return repository.renameCollectionResult(collectionId, newName.trim());
     }
 
     public void deleteCollection(long collectionId) {
