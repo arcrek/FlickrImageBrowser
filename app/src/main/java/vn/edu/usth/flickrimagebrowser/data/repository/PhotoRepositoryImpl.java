@@ -302,6 +302,8 @@ public class PhotoRepositoryImpl implements PhotoRepository {
                                 "High resolution photo of " + effectiveQuery + " (Demo Mode for testing without external API key).",
                                 thumbUrl,
                                 detailUrl,
+                                300,
+                                thumbHeight,
                                 isFav,
                                 System.currentTimeMillis() - (index * 60000L)
                         ));

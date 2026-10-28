@@ -12,7 +12,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -84,16 +83,6 @@ public class FavoritesFragment extends Fragment implements PhotoAdapter.OnPhotoA
             layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
             binding.recyclerFavorites.setLayoutManager(layoutManager);
             binding.recyclerFavorites.setAdapter(photoAdapter);
-
-            binding.recyclerFavorites.addOnScrollListener(new RecyclerView.OnScrollListener() {
-                @Override
-                public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                    super.onScrollStateChanged(recyclerView, newState);
-                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                        layoutManager.invalidateSpanAssignments();
-                    }
-                }
-            });
 
             binding.editFavoriteSearch.addTextChangedListener(searchWatcher);
             binding.chipGroupSort.setOnCheckedChangeListener((group, checkedId) -> {

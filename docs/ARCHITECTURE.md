@@ -126,4 +126,4 @@ Collection forms must wait for confirmed persistence to avoid silently losing ed
    - Pixabay dimensions (`webformatWidth` & `webformatHeight`) are extracted in `PhotoMapper` and stored in `Photo` (and `PhotoEntity` in Room v2).
    - `Photo` clamps aspect ratios between 0.5 (1:2 vertical portrait) and 2.0 (2:1 horizontal landscape) to keep feeds balanced.
    - `PhotoAdapter` sets `dimensionRatio` on `ConstraintLayout.LayoutParams` synchronously on bind, pre-sizing placeholders to the exact bitmap target before Glide downloads, eliminating layout jumps.
-   - `StaggeredGridLayoutManager` gap handling is configured to `GAP_HANDLING_NONE` with span invalidation on scroll idle to eliminate column swapping.
+   - `StaggeredGridLayoutManager` gap handling is configured to `GAP_HANDLING_NONE`, preserving span assignments when scrolling stops to prevent column swapping.

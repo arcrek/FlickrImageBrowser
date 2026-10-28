@@ -99,6 +99,23 @@ public class PhotoRepositoryTest {
     }
 
     @Test
+    public void demoPhotos_preserveThumbnailDimensions() {
+        PhotoRepositoryImpl demo = new PhotoRepositoryImpl(
+                apiService, photoDao, collectionDao, directExecutors, "demo");
+        List<Photo> photos = demo.searchPhotos("mountains", 1, 3).getValue().getData();
+        int[] expectedHeights = {260, 430, 310};
+
+        assertEquals(expectedHeights.length, photos.size());
+        for (int i = 0; i < photos.size(); i++) {
+            Photo photo = photos.get(i);
+            assertEquals(300, photo.getWidth());
+            assertEquals(expectedHeights[i], photo.getHeight());
+            assertTrue(photo.getThumbnailUrl().endsWith("/300/" + expectedHeights[i]));
+            assertEquals(300f / expectedHeights[i], photo.getAspectRatio(), 0.0001f);
+        }
+    }
+
+    @Test
     public void collectionWrites_reportSuccess() {
         when(collectionDao.renameCollection(5L, "New Name")).thenReturn(1);
         assertEquals(Resource.Status.SUCCESS, repository.createCollectionResult("Name", "").getValue().getStatus());
