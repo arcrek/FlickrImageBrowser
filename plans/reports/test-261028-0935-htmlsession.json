@@ -1,0 +1,63 @@
+{
+  "library": "requests-html 0.10.0",
+  "get": [
+    {
+      "route": "minimal-red-roses",
+      "status": 429,
+      "content_type": "text/html; charset=UTF-8",
+      "challenge": true,
+      "http_version": 11
+    },
+    {
+      "route": "search",
+      "status": 429,
+      "content_type": "text/html; charset=UTF-8",
+      "challenge": true,
+      "http_version": 11
+    },
+    {
+      "route": "featured",
+      "status": 429,
+      "content_type": "text/html; charset=UTF-8",
+      "challenge": true,
+      "http_version": 11
+    },
+    {
+      "route": "image",
+      "status": 429,
+      "content_type": "text/html; charset=UTF-8",
+      "challenge": true,
+      "http_version": 11
+    },
+    {
+      "route": "minimal-red-roses",
+      "status": 429,
+      "content_type": "text/html; charset=UTF-8",
+      "challenge": true,
+      "http_version": 11
+    },
+    {
+      "route": "minimal-red-roses",
+      "status": 429,
+      "content_type": "text/html; charset=UTF-8",
+      "challenge": true,
+      "http_version": 11
+    }
+  ],
+  "render": {
+    "error_type": "BrowserError",
+    "verified": false,
+    "limitation": "Browser setup raised BrowserError before HTMLSession.render could be evaluated; retries with headless Chromium and localhost proxy bypass also failed."
+  },
+  "browser_closed": true,
+  "get_summary": {
+    "attempts": 6,
+    "successful": 0,
+    "routes": [
+      "featured",
+      "image",
+      "minimal-red-roses",
+      "search"
+    ]
+  }
+}

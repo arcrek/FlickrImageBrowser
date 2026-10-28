@@ -1,0 +1,230 @@
+{
+  "transport": "curl_cffi 0.17.0, HTTP/3 only, Edge HAR headers",
+  "rounds_requested": 5,
+  "pause_seconds_between_rounds": 60,
+  "acceptance": "All three routes return valid HTTP 200 over HTTP/3 in all five rounds",
+  "rounds": [
+    {
+      "round": 1,
+      "started_utc": "2026-10-28T09:23:48.775361+00:00",
+      "passed": false,
+      "exit_code": 1,
+      "requests": [
+        {
+          "route": "/search",
+          "status": 200,
+          "content_type": "application/json",
+          "challenge": false,
+          "quota_remaining": "99",
+          "bytes": 31602,
+          "http_version": "3",
+          "transport_error": null,
+          "hits": 20
+        },
+        {
+          "route": "/featured",
+          "status": 429,
+          "content_type": "text/html; charset=UTF-8",
+          "challenge": true,
+          "quota_remaining": null,
+          "bytes": 6864,
+          "http_version": "3",
+          "transport_error": null
+        },
+        {
+          "route": "/image",
+          "status": 429,
+          "content_type": "text/html; charset=UTF-8",
+          "challenge": true,
+          "quota_remaining": null,
+          "bytes": 6819,
+          "http_version": "3",
+          "transport_error": null
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "started_utc": "2026-10-28T09:24:51.036600+00:00",
+      "passed": false,
+      "exit_code": 1,
+      "requests": [
+        {
+          "route": "/search",
+          "status": 429,
+          "content_type": "text/html; charset=UTF-8",
+          "challenge": true,
+          "quota_remaining": null,
+          "bytes": 6635,
+          "http_version": "3",
+          "transport_error": null
+        },
+        {
+          "route": "/featured",
+          "status": 429,
+          "content_type": "text/html; charset=UTF-8",
+          "challenge": true,
+          "quota_remaining": null,
+          "bytes": 6864,
+          "http_version": "3",
+          "transport_error": null
+        },
+        {
+          "route": "/image",
+          "status": 429,
+          "content_type": "text/html; charset=UTF-8",
+          "challenge": true,
+          "quota_remaining": null,
+          "bytes": 6819,
+          "http_version": "3",
+          "transport_error": null
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "started_utc": "2026-10-28T09:25:52.713925+00:00",
+      "passed": false,
+      "exit_code": 1,
+      "requests": [
+        {
+          "route": "/search",
+          "status": 429,
+          "content_type": "text/html; charset=UTF-8",
+          "challenge": true,
+          "quota_remaining": null,
+          "bytes": 6635,
+          "http_version": "3",
+          "transport_error": null
+        },
+        {
+          "route": "/featured",
+          "status": 429,
+          "content_type": "text/html; charset=UTF-8",
+          "challenge": true,
+          "quota_remaining": null,
+          "bytes": 6864,
+          "http_version": "3",
+          "transport_error": null
+        },
+        {
+          "route": "/image",
+          "status": 429,
+          "content_type": "text/html; charset=UTF-8",
+          "challenge": true,
+          "quota_remaining": null,
+          "bytes": 6819,
+          "http_version": "3",
+          "transport_error": null
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "started_utc": "2026-10-28T09:26:54.425175+00:00",
+      "passed": false,
+      "exit_code": 1,
+      "requests": [
+        {
+          "route": "/search",
+          "status": 429,
+          "content_type": "text/html; charset=UTF-8",
+          "challenge": true,
+          "quota_remaining": null,
+          "bytes": 6635,
+          "http_version": "3",
+          "transport_error": null
+        },
+        {
+          "route": "/featured",
+          "status": 200,
+          "content_type": "application/json",
+          "challenge": false,
+          "quota_remaining": "99",
+          "bytes": 42564,
+          "http_version": "3",
+          "transport_error": null,
+          "hits": 30
+        },
+        {
+          "route": "/image",
+          "status": 200,
+          "content_type": "image/jpeg",
+          "challenge": false,
+          "quota_remaining": null,
+          "bytes": 69191,
+          "http_version": "3",
+          "transport_error": null
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "started_utc": "2026-10-28T09:27:57.175252+00:00",
+      "passed": false,
+      "exit_code": 1,
+      "requests": [
+        {
+          "route": "/search",
+          "status": 429,
+          "content_type": "text/html; charset=UTF-8",
+          "challenge": true,
+          "quota_remaining": null,
+          "bytes": 6635,
+          "http_version": "3",
+          "transport_error": null
+        },
+        {
+          "route": "/featured",
+          "status": 429,
+          "content_type": "text/html; charset=UTF-8",
+          "challenge": true,
+          "quota_remaining": null,
+          "bytes": 6864,
+          "http_version": "3",
+          "transport_error": null
+        },
+        {
+          "route": "/image",
+          "status": 429,
+          "content_type": "text/html; charset=UTF-8",
+          "challenge": true,
+          "quota_remaining": null,
+          "bytes": 6819,
+          "http_version": "3",
+          "transport_error": null
+        }
+      ]
+    }
+  ],
+  "passed": false,
+  "successful_requests": 3,
+  "total_requests": 15,
+  "additional_minimal_query_checks": [
+    {
+      "query": "red roses",
+      "http_version": "3",
+      "statuses_in_order": [
+        200,
+        429
+      ],
+      "initial_hits": 20
+    },
+    {
+      "query": "red roses",
+      "http_version": "1.1",
+      "status": 429
+    },
+    {
+      "query": "yellow flowers",
+      "http_version": "3",
+      "status": 429
+    },
+    {
+      "editors_choice": true,
+      "http_version": "3",
+      "status": 429
+    }
+  ],
+  "decision": "Do not integrate HTTP/3 into Android: no full round passed; minimal query success also failed on repetition."
+}

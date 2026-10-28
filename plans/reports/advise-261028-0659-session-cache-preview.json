@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Đề xuất: cache kết quả trong phiên mở app",
+    "visual_preset": "classic",
+    "theme": "light",
+    "views": [
+      {
+        "id": "behavior",
+        "title": "Hành vi đề xuất, chưa triển khai",
+        "narrative": "Tìm lại dùng RAM. Kéo xuống hoặc Search lại từ khóa đang xem bỏ qua cache. Làm mới thành công thay trang 1 và bỏ các trang cũ của riêng truy vấn. Giả định: lỗi làm mới giữ ảnh và cache cũ; cache mất khi tiến trình kết thúc.",
+        "focus_nodes": [
+          "ui",
+          "repo",
+          "cache",
+          "api"
+        ]
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "ui",
+      "label": "Search / kéo xuống làm mới",
+      "role": "frontend",
+      "layer": 0
+    },
+    {
+      "id": "repo",
+      "label": "Repository: query + page + perPage",
+      "role": "backend",
+      "layer": 1
+    },
+    {
+      "id": "cache",
+      "label": "Cache RAM theo phiên, không TTL",
+      "role": "cache",
+      "layer": 2
+    },
+    {
+      "id": "api",
+      "label": "Pixabay: cache miss hoặc làm mới",
+      "role": "external",
+      "layer": 3
+    }
+  ],
+  "connections": [
+    {
+      "from": "ui",
+      "to": "repo",
+      "label": "Tìm lại hoặc yêu cầu làm mới"
+    },
+    {
+      "from": "repo",
+      "to": "cache",
+      "label": "Đọc cache; bỏ qua khi làm mới"
+    },
+    {
+      "from": "repo",
+      "to": "api",
+      "label": "Thiếu cache hoặc chủ động làm mới"
+    },
+    {
+      "from": "api",
+      "to": "cache",
+      "label": "Thành công: cập nhật kết quả"
+    }
+  ]
+}
