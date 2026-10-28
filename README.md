@@ -64,7 +64,6 @@ Additional documentation:
 - [docs/PROJECT_EVALUATION.md](docs/PROJECT_EVALUATION.md) — Repository audit, requirements, risks, scope boundaries, and 4–8-week roadmap.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Component responsibilities, data flow diagrams, and key architectural decisions.
 - [docs/TEAM_WORKLOAD_PLAN.md](docs/TEAM_WORKLOAD_PLAN.md) — Full 7-member team workload breakdown, TODOs, Java methods to implement, and expected verification results.
-
 ---
 
 ## 4. Build, Run & Test Commands
