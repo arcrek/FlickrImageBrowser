@@ -30,6 +30,11 @@
     <color name="mint_pill_text">#004A9F</color>
     <color name="header_background">#202124</color>
     <color name="header_foreground">#FFFFFF</color>
+    <color name="search_container_background">#17191C</color>
+    <color name="search_box_background">#26292E</color>
+    <color name="search_box_stroke">#4E545E</color>
+    <color name="search_box_text">#FFFFFF</color>
+    <color name="search_box_hint">#D0D5DD</color>
     <color name="image_viewer_background">#111214</color>
     <color name="image_viewer_foreground">#FFFFFF</color>
     <color name="brand_blue">#1688FF</color>

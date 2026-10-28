@@ -37,14 +37,16 @@
             app:layout_constraintEnd_toEndOf="@id/image_thumbnail"
             app:layout_constraintStart_toStartOf="@id/image_thumbnail" />
 
-        <!-- Top Right Frosted Favorite Pill (48dp accessible touch target) -->
+        <!-- Top Right Frosted Favorite Pill (Subtle 32dp pill with 44dp touch padding) -->
         <ImageButton
             android:id="@+id/button_item_favorite"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginEnd="6dp"
             android:background="@drawable/bg_favorite_pill"
             android:contentDescription="@string/action_toggle_favorite"
-            android:padding="12dp"
+            android:padding="7dp"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_favorite_border"
             app:layout_constraintEnd_toEndOf="parent"
