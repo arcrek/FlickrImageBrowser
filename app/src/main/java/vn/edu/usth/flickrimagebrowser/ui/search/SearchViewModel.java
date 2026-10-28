@@ -204,7 +204,8 @@ public class SearchViewModel extends ViewModel {
      * existing accumulated list.
      */
     public void loadNextPage() {
-        if (isLoadingNextPage || !hasMorePages || lastQuery == null || accumulatedPhotos.isEmpty()) {
+        if (isLoadingNextPage || lastFailedOnNextPage || !hasMorePages
+                || lastQuery == null || accumulatedPhotos.isEmpty()) {
             return;
         }
 
@@ -284,6 +285,7 @@ public class SearchViewModel extends ViewModel {
             return;
         }
         if (lastFailedOnNextPage && !accumulatedPhotos.isEmpty()) {
+            lastFailedOnNextPage = false;
             loadNextPage();
         } else {
             submitQuery(lastQuery, true);
