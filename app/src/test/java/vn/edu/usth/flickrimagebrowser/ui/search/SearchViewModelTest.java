@@ -92,10 +92,59 @@ public class SearchViewModelTest {
                 "mountains", SearchViewModel.DEFAULT_PAGE, SearchViewModel.DEFAULT_PER_PAGE
         );
 
+        when(repository.searchPhotos("mountains", 1, 30, true)).thenReturn(repoLive);
         viewModel.retryLastQuery();
-        verify(repository, times(2)).searchPhotos(
-                "mountains", SearchViewModel.DEFAULT_PAGE, SearchViewModel.DEFAULT_PER_PAGE
-        );
+        verify(repository).searchPhotos("mountains", 1, 30, true);
+    }
+
+    @Test
+    public void refresh_retainsRowsOnFailureAndRetriesWithoutAppendingOldPages() {
+        Photo old = new Photo("old", "Old", "Author", "", "thumb", "detail", false, 0L);
+        List<Photo> fullPage = new ArrayList<>(Collections.nCopies(30, old));
+        when(repository.searchPhotos("cat", 1, 30)).thenReturn(
+                new MutableLiveData<>(Resource.success(fullPage)));
+        when(repository.searchPhotos("cat", 2, 30)).thenReturn(
+                new MutableLiveData<>(Resource.success(fullPage)));
+        MutableLiveData<Resource<List<Photo>>> refresh = new MutableLiveData<>(Resource.loading(null));
+        when(repository.searchPhotos("cat", 1, 30, true)).thenReturn(refresh);
+        viewModel.getSearchResults().observeForever(observer);
+        viewModel.submitQuery("cat", false);
+        viewModel.loadNextPage();
+        viewModel.refresh();
+        viewModel.refresh();
+        viewModel.loadNextPage();
+        verify(repository).searchPhotos("cat", 1, 30, true);
+        assertTrue(viewModel.getIsRefreshing().getValue());
+        assertEquals(60, viewModel.getSearchResults().getValue().getData().size());
+        refresh.setValue(Resource.error("Offline", null));
+        assertFalse(viewModel.getIsRefreshing().getValue());
+        assertEquals(2, viewModel.getCurrentPage());
+        assertEquals(60, viewModel.getSearchResults().getValue().getData().size());
+        viewModel.loadNextPage();
+        verify(repository, never()).searchPhotos("cat", 3, 30);
+
+        Photo fresh = new Photo("new", "New", "Author", "", "thumb", "detail", false, 0L);
+        when(repository.searchPhotos("cat", 1, 30, true)).thenReturn(
+                new MutableLiveData<>(Resource.success(Collections.singletonList(fresh))));
+        viewModel.retryLastQuery();
+        assertEquals(1, viewModel.getCurrentPage());
+        assertEquals("new", viewModel.getSearchResults().getValue().getData().get(0).getId());
+        assertEquals(1, viewModel.getSearchResults().getValue().getData().size());
+        assertFalse(viewModel.hasMorePages());
+    }
+
+    @Test
+    public void refresh_emptyResponseClearsRowsAndStopsSpinner() {
+        when(repository.searchPhotos("", 1, 30)).thenReturn(new MutableLiveData<>(
+                Resource.success(Collections.singletonList(new Photo(
+                        "1", "Featured", "Author", "", "thumb", "detail", false, 0L)))));
+        when(repository.searchPhotos("", 1, 30, true)).thenReturn(new MutableLiveData<>(Resource.empty()));
+        viewModel.getSearchResults().observeForever(observer);
+        viewModel.loadInitialFeaturedIfNeeded();
+        viewModel.refresh();
+        assertEquals(Resource.Status.EMPTY, viewModel.getSearchResults().getValue().getStatus());
+        assertFalse(viewModel.getIsRefreshing().getValue());
+        assertFalse(viewModel.hasMorePages());
     }
 
     @Test

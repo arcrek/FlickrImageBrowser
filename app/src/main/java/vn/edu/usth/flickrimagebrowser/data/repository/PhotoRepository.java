@@ -18,6 +18,11 @@ public interface PhotoRepository {
     @NonNull
     LiveData<Resource<List<Photo>>> searchPhotos(@NonNull String query, int page, int perPage);
 
+    /** Bypasses cached pages; successful refresh replaces this query's cached pagination. */
+    @NonNull
+    LiveData<Resource<List<Photo>>> searchPhotos(@NonNull String query, int page, int perPage,
+                                               boolean forceRefresh);
+
     @NonNull
     LiveData<List<Photo>> observeFavorites();
 
