@@ -2,6 +2,7 @@ package vn.edu.usth.flickrimagebrowser.ui.common;
 
 import android.graphics.Color;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -62,6 +63,7 @@ public class PhotoAdapter extends ListAdapter<Photo, PhotoAdapter.PhotoViewHolde
         }
 
         void bind(@NonNull Photo photo, @NonNull OnPhotoActionListener listener) {
+            binding.textPhotoTitle.setVisibility(View.GONE);
             binding.textPhotoTitle.setText(photo.getTitle());
             binding.textPhotoOwner.setText(photo.getOwnerName());
 

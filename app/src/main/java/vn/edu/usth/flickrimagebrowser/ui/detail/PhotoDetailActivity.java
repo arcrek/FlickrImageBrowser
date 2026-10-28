@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -133,12 +134,24 @@ public class PhotoDetailActivity extends AppCompatActivity {
         if (photo == null) {
             return;
         }
-        binding.textDetailTitle.setText(photo.getTitle());
+        String title = photo.getTitle() != null ? photo.getTitle().trim() : "";
+        String description = photo.getDescription() != null ? photo.getDescription().trim() : "";
+
+        if (title.isEmpty()) {
+            binding.textDetailTitle.setVisibility(View.GONE);
+        } else {
+            binding.textDetailTitle.setVisibility(View.VISIBLE);
+            binding.textDetailTitle.setText(title);
+        }
+
         binding.textDetailOwner.setText(getString(R.string.detail_by_owner, photo.getOwnerName()));
-        String description = photo.getDescription().isEmpty()
-                ? getString(R.string.detail_no_description)
-                : photo.getDescription();
-        binding.textDetailDescription.setText(description);
+
+        if (description.isEmpty() || description.equalsIgnoreCase(title)) {
+            binding.textDetailDescription.setVisibility(View.GONE);
+        } else {
+            binding.textDetailDescription.setVisibility(View.VISIBLE);
+            binding.textDetailDescription.setText(description);
+        }
 
         Glide.with(this)
                 .load(photo.getDetailUrl())
