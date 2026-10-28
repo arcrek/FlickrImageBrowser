@@ -40,6 +40,21 @@ public class SearchViewModel extends ViewModel {
     @Nullable
     private String lastQuery;
 
+    private final MutableLiveData<Boolean> isRefreshing = new MutableLiveData<>(false);
+    private boolean isLoadingFirstPage;
+    private boolean refreshFailed;
+
+    @NonNull
+    public LiveData<Boolean> getIsRefreshing() {
+        return isRefreshing;
+    }
+
+    public void refresh() {
+        if (lastQuery != null) {
+            submitQuery(lastQuery, true);
+        }
+    }
+
     private int currentPage = DEFAULT_PAGE;
     private boolean isLoadingNextPage = false;
     private boolean hasMorePages = true;
@@ -145,30 +160,45 @@ public class SearchViewModel extends ViewModel {
             return;
         }
 
+        if (isLoadingFirstPage && normalized.equals(lastQuery)) {
+            return;
+        }
+        boolean retainPhotos = forceRefresh && normalized.equals(lastQuery);
         lastQuery = normalized;
-        currentPage = DEFAULT_PAGE;
-        hasMorePages = true;
+        if (!retainPhotos) {
+            currentPage = DEFAULT_PAGE;
+            hasMorePages = true;
+            accumulatedPhotos.clear();
+        }
+        isLoadingFirstPage = true;
+        refreshFailed = false;
+        isRefreshing.setValue(forceRefresh);
         isLoadingNextPage = false;
         lastFailedOnNextPage = false;
         isLoadingMore.setValue(false);
-        accumulatedPhotos.clear();
 
         if (activePageSource != null) {
             searchResults.removeSource(activePageSource);
             activePageSource = null;
         }
 
-        searchResults.setValue(Resource.loading(null));
-        activePageSource = repository.searchPhotos(normalized, DEFAULT_PAGE, DEFAULT_PER_PAGE);
+        searchResults.setValue(Resource.loading(new ArrayList<>(accumulatedPhotos)));
+        activePageSource = forceRefresh
+                ? repository.searchPhotos(normalized, DEFAULT_PAGE, DEFAULT_PER_PAGE, true)
+                : repository.searchPhotos(normalized, DEFAULT_PAGE, DEFAULT_PER_PAGE);
 
         searchResults.addSource(activePageSource, resource -> {
             if (resource == null) {
                 return;
             }
 
+            if (resource.getStatus() != Resource.Status.LOADING) {
+                isLoadingFirstPage = false;
+                isRefreshing.setValue(false);
+            }
             switch (resource.getStatus()) {
                 case LOADING:
-                    searchResults.setValue(Resource.loading(null));
+                    searchResults.setValue(Resource.loading(new ArrayList<>(accumulatedPhotos)));
                     break;
 
                 case SUCCESS:
@@ -176,12 +206,14 @@ public class SearchViewModel extends ViewModel {
                         searchResults.removeSource(activePageSource);
                         activePageSource = null;
                     }
+                    currentPage = DEFAULT_PAGE;
+                    hasMorePages = true;
+                    accumulatedPhotos.clear();
                     List<Photo> data = resource.getData();
                     if (data == null || data.isEmpty()) {
                         hasMorePages = false;
                         searchResults.setValue(Resource.empty());
                     } else {
-                        accumulatedPhotos.clear();
                         accumulatedPhotos.addAll(data);
                         if (data.size() < DEFAULT_PER_PAGE) {
                             hasMorePages = false;
@@ -195,6 +227,8 @@ public class SearchViewModel extends ViewModel {
                         searchResults.removeSource(activePageSource);
                         activePageSource = null;
                     }
+                    currentPage = DEFAULT_PAGE;
+                    accumulatedPhotos.clear();
                     hasMorePages = false;
                     searchResults.setValue(Resource.empty());
                     break;
@@ -207,7 +241,8 @@ public class SearchViewModel extends ViewModel {
                     String errorMessage = resource.getMessage() != null
                             ? resource.getMessage()
                             : "Error loading photos";
-                    searchResults.setValue(Resource.error(errorMessage, null));
+                    refreshFailed = retainPhotos;
+                    searchResults.setValue(Resource.error(errorMessage, new ArrayList<>(accumulatedPhotos)));
                     break;
             }
         });
@@ -218,7 +253,7 @@ public class SearchViewModel extends ViewModel {
      * existing accumulated list.
      */
     public void loadNextPage() {
-        if (isLoadingNextPage || lastFailedOnNextPage || !hasMorePages
+        if (isLoadingFirstPage || refreshFailed || isLoadingNextPage || lastFailedOnNextPage || !hasMorePages
                 || lastQuery == null || accumulatedPhotos.isEmpty()) {
             return;
         }

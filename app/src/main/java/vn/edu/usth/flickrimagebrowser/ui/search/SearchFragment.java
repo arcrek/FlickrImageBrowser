@@ -126,6 +126,8 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
                 triggerSearch();
             });
 
+            binding.swipeRefresh.setColorSchemeResources(R.color.primary);
+            binding.swipeRefresh.setOnRefreshListener(viewModel::refresh);
             binding.buttonSearch.setOnClickListener(v -> triggerSearch());
             binding.buttonRetry.setOnClickListener(v -> viewModel.retryLastQuery());
             binding.inputLayoutQuery.setEndIconOnClickListener(v -> {
@@ -141,6 +143,11 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
             });
         }
 
+        viewModel.getIsRefreshing().observe(getViewLifecycleOwner(), refreshing -> {
+            if (binding != null) {
+                binding.swipeRefresh.setRefreshing(Boolean.TRUE.equals(refreshing));
+            }
+        });
         viewModel.getSearchResults().observe(getViewLifecycleOwner(), this::renderState);
         viewModel.getIsLoadingMore().observe(getViewLifecycleOwner(), isLoading -> {
             if (binding != null) {
@@ -157,7 +164,7 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
             return;
         }
         String query = binding.editQuery.getText().toString();
-        viewModel.submitQuery(query, false);
+        viewModel.submitQuery(query, query.trim().equals(viewModel.getLastQuery()));
     }
 
     private void renderState(@Nullable Resource<List<Photo>> resource) {
@@ -170,6 +177,7 @@ public class SearchFragment extends Fragment implements PhotoAdapter.OnPhotoActi
         }
 
         boolean hasExistingData = resource.getData() != null && !resource.getData().isEmpty();
+        binding.swipeRefresh.setEnabled(hasExistingData || resource.getStatus() != Resource.Status.LOADING);
 
         switch (resource.getStatus()) {
             case LOADING:

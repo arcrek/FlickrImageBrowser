@@ -30,7 +30,7 @@ public class SearchFragmentTest {
         SearchFragment fragment = new SearchFragment();
         Snackbar snackbar = mock(Snackbar.class);
         FragmentSearchBinding binding = mock(FragmentSearchBinding.class);
-        for (String name : new String[]{"progressLoading", "recyclerPhotos", "layoutState"}) {
+        for (String name : new String[]{"progressLoading", "recyclerPhotos", "layoutState", "swipeRefresh"}) {
             Field field = FragmentSearchBinding.class.getField(name);
             field.setAccessible(true);
             field.set(binding, mock(field.getType()));
@@ -67,7 +67,7 @@ public class SearchFragmentTest {
                 Arrays.asList(Resource.loading(photos), Resource.error("Timeout", photos))) {
             SearchFragment fragment = new SearchFragment();
             FragmentSearchBinding binding = mock(FragmentSearchBinding.class);
-            for (String name : new String[]{"progressLoading", "recyclerPhotos", "layoutState"}) {
+            for (String name : new String[]{"progressLoading", "recyclerPhotos", "layoutState", "swipeRefresh"}) {
                 Field field = FragmentSearchBinding.class.getField(name);
                 field.setAccessible(true);
                 field.set(binding, mock(field.getType()));
@@ -87,8 +87,33 @@ public class SearchFragmentTest {
                 render.setAccessible(true);
                 render.invoke(fragment, state);
             }
+            verify(binding.swipeRefresh).setEnabled(true);
             verify(adapter).submitList(photos);
             verify(binding.recyclerPhotos).setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Test
+    public void searchButton_refreshesOnlyWhenSubmittingActiveQuery() throws Exception {
+        for (boolean sameQuery : new boolean[]{false, true}) {
+            SearchFragment fragment = new SearchFragment();
+            FragmentSearchBinding binding = mock(FragmentSearchBinding.class);
+            Field editQuery = FragmentSearchBinding.class.getField("editQuery");
+            editQuery.setAccessible(true);
+            com.google.android.material.textfield.TextInputEditText input =
+                    mock(com.google.android.material.textfield.TextInputEditText.class);
+            android.text.Editable text = mock(android.text.Editable.class);
+            Mockito.when(text.toString()).thenReturn(" cat ");
+            Mockito.when(input.getText()).thenReturn(text);
+            editQuery.set(binding, input);
+            SearchViewModel viewModel = mock(SearchViewModel.class);
+            Mockito.when(viewModel.getLastQuery()).thenReturn(sameQuery ? "cat" : "dog");
+            field("binding").set(fragment, binding);
+            field("viewModel").set(fragment, viewModel);
+            Method trigger = SearchFragment.class.getDeclaredMethod("triggerSearch");
+            trigger.setAccessible(true);
+            trigger.invoke(fragment);
+            verify(viewModel).submitQuery(" cat ", sameQuery);
         }
     }
 

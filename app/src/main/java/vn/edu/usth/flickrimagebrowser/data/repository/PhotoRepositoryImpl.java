@@ -1,6 +1,7 @@
 package vn.edu.usth.flickrimagebrowser.data.repository;
 
 import android.database.sqlite.SQLiteConstraintException;
+import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -9,10 +10,16 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.function.LongSupplier;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -45,17 +52,47 @@ public class PhotoRepositoryImpl implements PhotoRepository {
     public static final int MIN_PER_PAGE = 3;
     public static final int MAX_PER_PAGE = 200;
 
+    private static final long CACHE_TTL_MILLIS = TimeUnit.MINUTES.toMillis(30);
+
+    private final LongSupplier clock;
     private final PixabayApiService apiService;
     private final PhotoDao photoDao;
     private final CollectionDao collectionDao;
     private final AppExecutors executors;
     private final String apiKey;
+    private final Map<String, SearchCache> searchCache = new HashMap<>();
+
+    private static final class SearchCache {
+        final Map<List<Integer>, CachedPage> pages = new HashMap<>();
+        final Map<List<Integer>, MutableLiveData<Resource<List<Photo>>>> pending = new HashMap<>();
+        Object generation = new Object();
+    }
+
+    private static final class CachedPage {
+        final List<PixabayHitDto> photos;
+        final long receivedAt;
+
+        CachedPage(List<PixabayHitDto> photos, long receivedAt) {
+            this.photos = photos;
+            this.receivedAt = receivedAt;
+        }
+    }
 
     public PhotoRepositoryImpl(@NonNull PixabayApiService apiService,
                                @NonNull PhotoDao photoDao,
                                @NonNull CollectionDao collectionDao,
                                @NonNull AppExecutors executors,
                                @Nullable String apiKey) {
+        this(apiService, photoDao, collectionDao, executors, apiKey, SystemClock::elapsedRealtime);
+    }
+
+    PhotoRepositoryImpl(@NonNull PixabayApiService apiService,
+                        @NonNull PhotoDao photoDao,
+                        @NonNull CollectionDao collectionDao,
+                        @NonNull AppExecutors executors,
+                        @Nullable String apiKey,
+                        @NonNull LongSupplier clock) {
+        this.clock = Objects.requireNonNull(clock, "clock must not be null");
         this.apiService = Objects.requireNonNull(apiService, "apiService must not be null");
         this.photoDao = Objects.requireNonNull(photoDao, "photoDao must not be null");
         this.collectionDao = Objects.requireNonNull(collectionDao, "collectionDao must not be null");
@@ -66,6 +103,13 @@ public class PhotoRepositoryImpl implements PhotoRepository {
     @NonNull
     @Override
     public LiveData<Resource<List<Photo>>> searchPhotos(@NonNull String query, int page, int perPage) {
+        return searchPhotos(query, page, perPage, false);
+    }
+
+    @NonNull
+    @Override
+    public synchronized LiveData<Resource<List<Photo>>> searchPhotos(@NonNull String query,
+            int page, int perPage, boolean forceRefresh) {
         MutableLiveData<Resource<List<Photo>>> result = new MutableLiveData<>();
         String trimmedQuery = query.trim();
 
@@ -87,6 +131,30 @@ public class PhotoRepositoryImpl implements PhotoRepository {
 
         int clampedPage = Math.max(1, page);
         int clampedPerPage = Math.max(MIN_PER_PAGE, Math.min(MAX_PER_PAGE, perPage));
+
+        SearchCache cache = searchCache.computeIfAbsent(trimmedQuery, ignored -> new SearchCache());
+        List<Integer> pageKey = Arrays.asList(clampedPage, clampedPerPage);
+        if (!forceRefresh) {
+            MutableLiveData<Resource<List<Photo>>> pendingResult = cache.pending.get(pageKey);
+            if (pendingResult != null) {
+                return pendingResult;
+            }
+            CachedPage cachedPage = cache.pages.get(pageKey);
+            if (cachedPage != null) {
+                if (clock.getAsLong() - cachedPage.receivedAt < CACHE_TTL_MILLIS) {
+                    emitPhotos(cachedPage.photos, result);
+                    return result;
+                }
+                cache.pages.remove(pageKey);
+            }
+        }
+        if (forceRefresh) {
+            // Detached callbacks may still finish; only this generation may write refreshed pages.
+            cache.generation = new Object();
+            cache.pending.clear();
+        }
+        Object generation = cache.generation;
+        cache.pending.put(pageKey, result);
 
         Call<PixabaySearchResponse> call = trimmedQuery.isEmpty()
                 ? apiService.getFeaturedPhotos(
@@ -121,29 +189,38 @@ public class PhotoRepositoryImpl implements PhotoRepository {
                     } else {
                         errorMsg = "Server returned HTTP " + code;
                     }
+                    finishRequest(cache, pageKey, result);
                     result.postValue(Resource.error(errorMsg, null));
                     return;
                 }
 
+                long receivedAt = clock.getAsLong();
                 PixabaySearchResponse body = response.body();
                 List<PixabayHitDto> dtos = body.getHits();
 
+                List<PixabayHitDto> snapshot = dtos == null
+                        ? Collections.emptyList() : new ArrayList<>(dtos);
                 executors.diskIO().execute(() -> {
-                    Set<String> favoriteIds = new HashSet<>(photoDao.getFavoriteIdsSync());
-                    List<Photo> mapped = PhotoMapper.fromDtoList(dtos, favoriteIds);
-                    if (mapped.isEmpty()) {
-                        result.postValue(Resource.empty());
-                    } else {
-                        result.postValue(Resource.success(mapped));
+                    Resource<List<Photo>> resource = readPhotos(snapshot);
+                    synchronized (PhotoRepositoryImpl.this) {
+                        if (cache.generation == generation
+                                && (!forceRefresh || resource.getStatus() != Resource.Status.ERROR)) {
+                            if (forceRefresh) {
+                                cache.pages.clear();
+                                cache.pending.clear();
+                                cache.generation = new Object();
+                            }
+                            cache.pages.put(pageKey, new CachedPage(snapshot, receivedAt));
+                        }
+                        finishRequest(cache, pageKey, result);
                     }
+                    result.postValue(resource);
                 });
             }
 
             @Override
             public void onFailure(@NonNull Call<PixabaySearchResponse> call, @NonNull Throwable t) {
-                if (call.isCanceled()) {
-                    return;
-                }
+                finishRequest(cache, pageKey, result);
                 String message = t.getMessage() != null && !t.getMessage().trim().isEmpty()
                         ? "Network error: " + t.getMessage().trim()
                         : "Network error: Unable to reach Pixabay.";
@@ -152,6 +229,28 @@ public class PhotoRepositoryImpl implements PhotoRepository {
         });
 
         return result;
+    }
+
+    private synchronized void finishRequest(SearchCache cache, List<Integer> pageKey,
+            MutableLiveData<Resource<List<Photo>>> result) {
+        if (cache.pending.get(pageKey) == result) {
+            cache.pending.remove(pageKey);
+        }
+    }
+
+    private void emitPhotos(List<PixabayHitDto> dtos,
+            MutableLiveData<Resource<List<Photo>>> result) {
+        executors.diskIO().execute(() -> result.postValue(readPhotos(dtos)));
+    }
+
+    private Resource<List<Photo>> readPhotos(List<PixabayHitDto> dtos) {
+        try {
+            Set<String> favoriteIds = new HashSet<>(photoDao.getFavoriteIdsSync());
+            List<Photo> mapped = PhotoMapper.fromDtoList(dtos, favoriteIds);
+            return mapped.isEmpty() ? Resource.empty() : Resource.success(mapped);
+        } catch (RuntimeException exception) {
+            return Resource.error("Unable to load saved favorite state. Please retry.", null);
+        }
     }
 
     /**
